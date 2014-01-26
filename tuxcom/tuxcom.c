@@ -538,7 +538,7 @@ int RenderChar(FT_ULong currentchar, int _sx, int _sy, int _ex, int color)
  ******************************************************************************/
 
 #ifdef MARTII
-static char *sc = "aouAOUzd", *su= "\xA4\xB6\xBC\x84\x96\x9C\x9F", *tc="\xE4\xF6\xFC\xDE\xC4\xD6\xDC\xB0";
+static char *sc = "aouAOUzd", *su= "\xA4\xB6\xBC\x84\x96\x9C\x9F", *tc="\xE4\xF6\xFC\xC4\xD6\xDC\xDF\xB0";
 // from neutrino/src/driver/fontrenderer.cpp
 int UTF8ToUnicode(char **textp, const int utf8_encoded) // returns -1 on error
 {
