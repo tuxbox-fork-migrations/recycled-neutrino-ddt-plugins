@@ -233,7 +233,7 @@ void RenderCircle(int sx, int sy, char col)
 	int x, y;
 	uint32_t pix = bgra[col];
 	uint32_t *p = lbb + startx + sx;
-	int s = stride * (starty + sy + y);
+	int s = stride * (starty + sy);
 
 	for(y = 0; y < 12 * 12; y += 12, s += stride)
 		for(x = 0; x < 12; x++)
