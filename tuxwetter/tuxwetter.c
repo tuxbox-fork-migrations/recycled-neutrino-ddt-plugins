@@ -911,6 +911,11 @@ char *lcptr = NULL, *lcstr= NULL, *lcdptr = NULL;
 				mloop=0;
 				break;
 
+			case KEY_HOME:
+				rv=0;
+				mloop=0;
+				break;
+
 			case KEY_MUTE:	break;
 
 			case KEY_HELP:
