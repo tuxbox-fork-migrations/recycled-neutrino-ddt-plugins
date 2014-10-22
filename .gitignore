@@ -1,3 +1,5 @@
+config.*
+Makefile
 # automake stuff
 *.in
 COPYING
@@ -10,6 +12,8 @@ config.sub
 configure
 depcomp
 install-sh
+libtool
 ltmain.sh
 missing
+stamp-h1
 *~
