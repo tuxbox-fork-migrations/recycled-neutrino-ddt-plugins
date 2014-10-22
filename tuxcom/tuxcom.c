@@ -1014,7 +1014,11 @@ int main()
 	rc = open("/dev/input/nevis_ir", O_RDONLY);
 #if HAVE_SPARK_HARDWARE
 	if (rc < 0)
+#if HAVE_DUCKBOX_HARDWARE
+		rc = open("/dev/input/event0", O_RDONLY);
+#else
 		rc = open("/dev/input/event1", O_RDONLY);
+#endif
 #endif
 #else
 #error your hardware is not yet implemented.
