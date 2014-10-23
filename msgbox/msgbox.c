@@ -62,7 +62,7 @@ unsigned rc,sc[8]={'a','o','u','A','O','U','z','d'}, tc[8]={0xE4,0xF6,0xFC,0xC4,
 char INST_FILE[]="/tmp/rc.locked";
 int instance=0;
 #ifdef MARTII
-#ifdef HAVE_SPARK_HARDWARE
+#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 int sync_blitter = 0;
 
 void blit(void) {
@@ -828,7 +828,7 @@ FILE *fh;
 			return -1;
 		}
 #ifdef MARTII
-#ifdef HAVE_SPARK_HARDWARE
+#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 		var_screeninfo.xres = DEFAULT_XRES;
 		var_screeninfo.yres = DEFAULT_YRES;
 #endif
@@ -1119,7 +1119,7 @@ FILE *fh;
 #endif
 	munmap(lfb, fix_screeninfo.smem_len);
 	close(fb);
-#ifndef HAVE_SPARK_HARDWARE
+#if !defined(HAVE_SPARK_HARDWARE) && !defined(HAVE_DUCKBOX_HARDWARE)
 	free(lbb);
 #endif
 

@@ -79,7 +79,7 @@ int sol_exec( int fdfb, int fdrc, int fdlcd, char *cfgfile )
 		  
 		  RcGetActCode( );
 		  MoveMouse();
-#if defined(USEX) || defined(HAVE_SPARK_HARDWARE)
+#if defined(USEX) || defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 		  FBFlushGrafic();
 #endif
 		}
@@ -104,7 +104,7 @@ int sol_exec( int fdfb, int fdrc, int fdlcd, char *cfgfile )
 		      
 				//DrawGameOver();
 		    }
-#if defined(USEX) || defined(HAVE_SPARK_HARDWARE)
+#if defined(USEX) || defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 #ifdef SOLBOARD_DEBUG
 		    printf("somain: FBFlushGrafic()\n");
 #endif

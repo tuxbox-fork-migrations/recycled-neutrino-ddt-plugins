@@ -17,11 +17,9 @@ solitair_SOURCES = \
 	pnm_res.cpp \
 	backbuffer.cpp
 
-solitair_LDFLAGS = \
-	-rpath $(PLUGINDIR) -R$(TARGET_PLUGINDIR)
+solitair_LDFLAGS = -rpath $(PLUGINDIR) -R$(TARGET_PLUGINDIR)
 
-solitair_LDADD = \
-	-lfx2 -lz
+solitair_LDADD = -lfx2 -lz
 
 install-exec-local:
 	install -d $(DESTDIR)$(PLUGINDIR)

@@ -1,6 +1,4 @@
-#ifdef MARTII
-#include "../../config.h"
-#endif
+#include "config.h"
 #include <fcntl.h>
 #include <pthread.h>
 #include <stdio.h>
@@ -73,14 +71,14 @@ void	SoundStart( void )
 	int					rc;
 	int format = AFMT_S8;	// signed, 8 Bit
 	int channels = 1;	// 1=mono, 2=stereo
-#ifdef HAVE_SPARK_HARDWARE
+#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 	int speed = 11025;
 #else
 	int speed = 12000;		// 11025 is not availible when video playback is enabled
 #endif
 
 	if ( sound_fd == -1 )
-#ifdef HAVE_SPARK_HARDWARE
+#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 		sound_fd=open("/dev/dsp1",O_WRONLY);
 #else
 #ifdef __i386__

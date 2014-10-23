@@ -157,7 +157,7 @@ void	KbClose( void )
 
 int	RcInitialize( int extfd )
 {
-#ifdef HAVE_SPARK_HARDWARE
+#if HAVE_SPARK_HARDWARE || HAVE_DUCKBOX_HARDWARE
 #ifndef RC_DEVICE
 #define RC_DEVICE "/dev/input/nevis_ir"
 #endif
@@ -365,7 +365,7 @@ void		RcGetActCode( void )
 	}
 #else
 	struct input_event ev;
-#ifdef HAVE_SPARK_HARDWARE
+#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 	memset(&ev, 0, sizeof(ev));
 #endif
 
@@ -373,7 +373,7 @@ void		RcGetActCode( void )
 
 		do {
 
-#ifdef HAVE_SPARK_HARDWARE
+#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 			ev.code = 0xee;
 #endif
 			x = read(fd, &ev, sizeof(struct input_event));
@@ -422,7 +422,7 @@ void		RcGetActCode( void )
 			cw=0;
 		}
 		break;
-#ifdef HAVE_SPARK_HARDWARE
+#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 	case KEY_INFO:
 	case KEY_FIND:
 		actcode = RC_HELP;
@@ -436,7 +436,7 @@ void		RcGetActCode( void )
 	case RC_HOME:
 		doexit=3;
 		break;
-#if defined(HAVE_DBOX_HARDWARE) || defined(HAVE_SPARK_HARDWARE)
+#if defined(HAVE_DBOX_HARDWARE) || defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 	case KEY_1:
 		actcode = 1;
 		break;

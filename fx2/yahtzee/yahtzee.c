@@ -84,7 +84,7 @@ void	EnterPlayer( void )
 	for( y=0; y < 576; y+=4 )
 	{
 		FBFillRect( 0, y, 720, 4, BLACK );
-#if defined(USEX) || defined(HAVE_SPARK_HARDWARE)
+#if defined(USEX) || defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 		FBFlushGrafic();
 #endif
 		tv.tv_sec = 0;
@@ -97,7 +97,7 @@ void	EnterPlayer( void )
 	if ( numplayers )
 	{
 		x=FBDrawString( 150,200,64,"same player ? : OK / BLUE",RED,0);
-#if defined(USEX) || defined(HAVE_SPARK_HARDWARE)
+#if defined(USEX) || defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 		FBFlushGrafic();
 #endif
 		while( realcode != 0xee )
@@ -125,7 +125,7 @@ void	EnterPlayer( void )
 #else
 	x=FBDrawString( 100,232,64,"how many player (1-4): ",RED,0);
 #endif
-#if defined(USEX) || defined(HAVE_SPARK_HARDWARE)
+#if defined(USEX) || defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 	FBFlushGrafic();
 #endif
 
@@ -222,7 +222,7 @@ static	void	Roll( void )
 			}
 			y+=68;
 		}
-#if defined(USEX) || defined(HAVE_SPARK_HARDWARE)
+#if defined(USEX) || defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 		FBFlushGrafic();
 #endif
 		actcode=0xee;
@@ -319,13 +319,13 @@ static	void	SelectForRoll( void )
 			FBDrawLine( x,y+37,x+15,y+32, RED );
 			FBDrawLine( x,y+36,x+13,y+32, RED );
 		}
-#if defined(USEX) || defined(HAVE_SPARK_HARDWARE)
+#if defined(USEX) || defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 		FBFlushGrafic();
 #endif
 	}
 	y=nr*68+128;
 	FBFillRect( x,y+27,16,12,BLACK );
-#if defined(USEX) || defined(HAVE_SPARK_HARDWARE)
+#if defined(USEX) || defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 	FBFlushGrafic();
 #endif
 }
@@ -494,7 +494,7 @@ static	void	SelectInBoard( void )
 			FBFillRect( 126+30+i*150, 62+28*nr, 100, 28, WHITE );
 			FBDrawString( 126+30+i*150, 62+28*nr, 32, cnum, RED, 0 );
 		}
-#if defined(USEX) || defined(HAVE_SPARK_HARDWARE)
+#if defined(USEX) || defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 		FBFlushGrafic();
 #endif
 	}
@@ -512,7 +512,7 @@ void	RunYahtzee( void )
 	char			cnum[ 64 ];
 
 	/* clear screen */
-#ifdef HAVE_SPARK_HARDWARE
+#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 	FBFillRect( 0, 0, 720, 576, BLACK );
 #else
 	for( y=0; y < 576; y+=4 )
@@ -612,7 +612,7 @@ void	RunYahtzee( void )
 			return;
 		SelectInBoard();
 
-#if defined(USEX) || defined(HAVE_SPARK_HARDWARE)
+#if defined(USEX) || defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 		FBFlushGrafic();
 #endif
 		while(( realcode != 0xee ) && !doexit )
@@ -652,7 +652,7 @@ void	DrawWinner( void )
 		sprintf(text,"with %d points",player[w].nums[16] );
 		FBDrawString( 200, 264, 64, text, RED, 0 );
 	}
-#if defined(USEX) || defined(HAVE_SPARK_HARDWARE)
+#if defined(USEX) || defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 	FBFlushGrafic();
 #endif
 
@@ -727,7 +727,7 @@ void	DrawWinner( void )
 		n = FBDrawString( 400, 100+i*48, 48, text, BLACK, BLACK );
 		FBDrawString( 500-n, 100+i*48, 48, text, WHITE, BLACK );
 	}
-#if defined(USEX) || defined(HAVE_SPARK_HARDWARE)
+#if defined(USEX) || defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 	FBFlushGrafic();
 #endif
 
@@ -748,7 +748,7 @@ void	DrawWinner( void )
 		if ( i==50 )
 		{
 			FBDrawString( 190, 480, 48, "press OK for new game",GRAY,0);
-#if defined(USEX) || defined(HAVE_SPARK_HARDWARE)
+#if defined(USEX) || defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 			FBFlushGrafic();
 #endif
 		}

@@ -59,7 +59,7 @@ int tank_exec( int fdfb, int fdrc, int fdlcd, char *cfgfile )
 	{
 		TankInitialize();
 
-#if defined(USEX) || defined(HAVE_SPARK_HARDWARE)
+#if defined(USEX) || defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 		FBFlushGrafic();
 #endif
 
@@ -73,7 +73,7 @@ int tank_exec( int fdfb, int fdrc, int fdlcd, char *cfgfile )
 			actcode=0xee;
 			RcGetActCode( );
 			Play();
-#if defined(USEX) || defined(HAVE_SPARK_HARDWARE)
+#if defined(USEX) || defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 			FBFlushGrafic();
 #endif
 			while( realcode != 0xee )

@@ -25,10 +25,7 @@ extern "C"
 
 
 
-#ifdef MARTII
-const
-#endif
-char*			suits[4] = { "h", "d", "c", "s" };
+const char*			suits[4] = { "h", "d", "c", "s" };
 
 const char*		terms[] =
 {

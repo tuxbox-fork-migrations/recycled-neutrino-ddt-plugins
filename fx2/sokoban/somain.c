@@ -236,7 +236,7 @@ int soko_exec( int fdfb, int fdrc, int fdlcd, char *cfgfile )
 	{
 		doexit=0;
 		BoardInitialize();
-#if defined(USEX) || defined(HAVE_SPARK_HARDWARE)
+#if defined(USEX) || defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 		FBFlushGrafic();
 #endif
 

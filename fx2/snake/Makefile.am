@@ -4,11 +4,9 @@ noinst_PROGRAMS = snake
 
 snake_SOURCES = snake.c somain.c
 
-snake_LDFLAGS = \
-	-rpath $(PLUGINDIR) -R$(TARGET_PLUGINDIR)
+snake_LDFLAGS = -rpath $(PLUGINDIR) -R$(TARGET_PLUGINDIR)
 
-snake_LDADD = \
-	-lfx2
+snake_LDADD = -lfx2
 
 install-exec-local:
 	install -d $(DESTDIR)$(PLUGINDIR)

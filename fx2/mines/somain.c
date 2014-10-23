@@ -62,7 +62,7 @@ int mines_exec( int fdfb, int fdrc, int fdlcd, char *cfgfile )
 	
 			RcGetActCode( );
 			MoveMouse();
-#if defined(USEX) || defined(HAVE_SPARK_HARDWARE)
+#if defined(USEX) || defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 			FBFlushGrafic();
 #endif
 		}
@@ -74,7 +74,7 @@ int mines_exec( int fdfb, int fdrc, int fdlcd, char *cfgfile )
 				DrawScore();
 			else
 				DrawGameOver();
-#if defined(USEX) || defined(HAVE_SPARK_HARDWARE)
+#if defined(USEX) || defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 			FBFlushGrafic();
 #endif
 			doexit=0;

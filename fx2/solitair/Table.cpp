@@ -557,7 +557,7 @@ int CTable::Run()
 	FBCopyImage( 0, 0, WIDTH, HEIGHT, BBGetData() );
 
 	FBDrawString( 300, 255, 42, "Loading...", 250, 0 );
-#ifdef HAVE_SPARK_HARDWARE
+#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 	FBFlushGrafic();
 #endif
 
@@ -701,7 +701,7 @@ bool CTable::Setup()
 				loiShowCards==1?FC:Convert_24_8( 255,255,255), 0 );
 
 			FBDrawString( Hx + 5, Hy + 333, 24, "(OK) - Accept changes, (DBOX) - Cancel", Convert_24_8( 255,255,255), 0 );
-#ifdef HAVE_SPARK_HARDWARE
+#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 			FBFlushGrafic();
 #endif
 
@@ -731,7 +731,7 @@ void CTable::HandleKeysPressed()
 	if( true == HelpOnScreen )
 	{
 		FBCopyImage( 0, 0, WIDTH, HEIGHT, BBGetData() );
-#ifdef HAVE_SPARK_HARDWARE
+#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 		FBFlushGrafic();
 #endif
 		HelpOnScreen = false;
@@ -842,13 +842,13 @@ void CTable::HandleKeysPressed()
 			break;
 		case RC_RED	 :
 			this->Init();
-#ifdef HAVE_SPARK_HARDWARE
+#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 			FBFlushGrafic();
 #endif
 			break;
 		case RC_BLUE :
 			Wizard();
-#ifdef HAVE_SPARK_HARDWARE
+#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 			FBFlushGrafic();
 #endif
 			break;
@@ -863,7 +863,7 @@ void CTable::HandleKeysPressed()
 		case RC_HELP :
 
 			this->ShowHelp();
-#ifdef HAVE_SPARK_HARDWARE
+#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 			FBFlushGrafic();
 #endif
 			HelpOnScreen = true;
@@ -873,7 +873,7 @@ void CTable::HandleKeysPressed()
 			if( this->Setup() )
 				this->Init();
 			FBCopyImage( 0, 0, WIDTH, HEIGHT, BBGetData() );
-#ifdef HAVE_SPARK_HARDWARE
+#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 			FBFlushGrafic();
 #endif
 			break;
@@ -951,7 +951,7 @@ void CTable::Display()
 
 	memset( changed, 0, sizeof( changed ) );
 
-#ifdef HAVE_SPARK_HARDWARE
+#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 	if( some_changes ) {
 		FBCopyImage( 0, 0, WIDTH, HEIGHT, BBGetData() );
 		FBFlushGrafic();

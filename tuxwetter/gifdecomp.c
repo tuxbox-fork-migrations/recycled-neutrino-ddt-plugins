@@ -18,9 +18,8 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
 */
-#ifdef MARTII
+
 #include <config.h>
-#endif
 #define HAVE_VARARGS_H
 #include <stdio.h>
 #include <stdlib.h>
@@ -266,11 +265,11 @@ void QuitGifError(GifFileType *GifFileIn, GifFileType *GifFileOut)
 //    exit(EXIT_FAILURE);
 }
 
+
 #ifdef ENABLE_GIFLIB
 static void GIF_EXIT(char *err) {
 	fprintf(stderr, "%s\n", err);
 	exit(-1);
-	
 }
 #endif
 int LoadImage(GifFileType *GifFile, GifRowType **ImageBufferPtr)

@@ -4,11 +4,9 @@ noinst_PROGRAMS = yahtzee
 
 yahtzee_SOURCES = yahtzee.c somain.c
 
-yahtzee_LDFLAGS = \
-	-rpath $(PLUGINDIR) -R$(TARGET_PLUGINDIR)
+yahtzee_LDFLAGS = -rpath $(PLUGINDIR) -R$(TARGET_PLUGINDIR)
 
-yahtzee_LDADD = \
-	-lfx2
+yahtzee_LDADD = -lfx2
 
 install-exec-local:
 	install -d $(DESTDIR)$(PLUGINDIR)

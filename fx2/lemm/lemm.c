@@ -712,7 +712,7 @@ int	InitLemm( void )
 {
 	int				i;
 
-#if defined(USEX) || defined(HAVE_SPARK_HARDWARE)
+#if defined(USEX) || defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 			FBFlushGrafic();
 #endif
 	FBFillRect( 0, 0, 720, 576, STEELBLUE );
@@ -722,7 +722,7 @@ int	InitLemm( void )
 	{
 		FBDrawString(64,482,32,"Initialize...",WHITE,0);
 		FBDrawFx2Logo( 320, 486 );
-#if defined(USEX) || defined(HAVE_SPARK_HARDWARE)
+#if defined(USEX) || defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 		FBFlushGrafic();
 #endif
 

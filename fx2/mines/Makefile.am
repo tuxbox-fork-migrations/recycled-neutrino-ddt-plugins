@@ -4,11 +4,9 @@ noinst_PROGRAMS = mines
 
 mines_SOURCES = board.c somain.c
 
-mines_LDFLAGS = \
-	-rpath $(PLUGINDIR) -R$(TARGET_PLUGINDIR)
+mines_LDFLAGS = -rpath $(PLUGINDIR) -R$(TARGET_PLUGINDIR)
 
-mines_LDADD = \
-	-lfx2
+mines_LDADD = -lfx2
 
 install-exec-local:
 	install -d $(DESTDIR)$(PLUGINDIR)

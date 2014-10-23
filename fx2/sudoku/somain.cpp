@@ -146,10 +146,9 @@ int main_exec(int fdfb, int fdrc, int fdlcd, char *cfgfile)
 		RcGetActCode();
 
 		Board.MoveCursor();
-#ifdef HAVE_SPARK_HARDWARE
+#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 		FBFlushGrafic();
 #endif
-
 
 		while(realcode != 0xEE)
 			RcGetActCode();

@@ -309,7 +309,7 @@ void blit2FB(void *fbbuff,
 #ifdef MARTII
 void clearBB()
 {
-#ifdef HAVE_SPARK_HARDWARE
+#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 	FillRect(0, 0, DEFAULT_XRES, DEFAULT_YRES, 0);
 #else
 	memset(lbb, 0, DEFAULT_XRES * DEFAULT_YRES * sizeof(uint32_t));

@@ -4,11 +4,9 @@ noinst_PROGRAMS = pacman
 
 pacman_SOURCES = maze.c somain.c
 
-pacman_LDFLAGS = \
-	-rpath $(PLUGINDIR) -R$(TARGET_PLUGINDIR)
+pacman_LDFLAGS = -rpath $(PLUGINDIR) -R$(TARGET_PLUGINDIR)
 
-pacman_LDADD = \
-	-lfx2
+pacman_LDADD = -lfx2
 
 install-exec-local:
 	install -d $(DESTDIR)$(PLUGINDIR)

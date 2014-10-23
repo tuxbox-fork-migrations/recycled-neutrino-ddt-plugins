@@ -4,11 +4,9 @@ noinst_PROGRAMS = soko
 
 soko_SOURCES = board.c somain.c
 
-soko_LDFLAGS = \
-	-rpath $(PLUGINDIR) -R$(TARGET_PLUGINDIR)
+soko_LDFLAGS = -rpath $(PLUGINDIR) -R$(TARGET_PLUGINDIR)
 
-soko_LDADD = \
-	-lfx2
+soko_LDADD = -lfx2
 
 install-exec-local:
 	install -d $(DESTDIR)$(PLUGINDIR)

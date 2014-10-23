@@ -91,7 +91,7 @@ int ixw=600, iyw=680, xoffs=13, vfd=0;
 char INST_FILE[]="/tmp/rc.locked";
 int instance=0;
 #ifdef MARTII
-#ifdef HAVE_SPARK_HARDWARE
+#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 int sync_blitter = 0;
 
 void blit(void) {
@@ -921,7 +921,7 @@ time_t tm1,tm2;
 
 			case RC_MUTE:
 #ifdef MARTII
-#ifdef HAVE_SPARK_HARDWARE
+#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 				FillRect(0, 0, DEFAULT_XRES, DEFAULT_YRES, 0);
 #else
 				memset(lbb, TRANSP, var_screeninfo.xres * var_screeninfo.yres * sizeof(uint32_t));
@@ -1723,7 +1723,7 @@ PLISTENTRY pl;
 		return -1;
 	}
 #ifdef MARTII
-#ifdef HAVE_SPARK_HARDWARE
+#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 	var_screeninfo.xres = DEFAULT_XRES;
 	var_screeninfo.yres = DEFAULT_YRES;
 #endif
@@ -1809,7 +1809,7 @@ PLISTENTRY pl;
 	//init backbuffer
 
 #ifdef MARTII
-# ifdef HAVE_SPARK_HARDWARE
+#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 	lbb = lfb + 1920 * 1080;
 	fix_screeninfo.line_length = DEFAULT_XRES * sizeof(uint32_t);
 	stride = DEFAULT_XRES;
@@ -1829,7 +1829,7 @@ PLISTENTRY pl;
 
 //	lbb=lfb;
 #ifdef MARTII
-#ifdef HAVE_SPARK_HARDWARE
+#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 	FillRect(0, 0, DEFAULT_XRES, DEFAULT_YRES, 0);
 #else
 	memset(lbb, TRANSP, var_screeninfo.xres*var_screeninfo.yres*sizeof(uint32_t));
@@ -1930,7 +1930,7 @@ PLISTENTRY pl;
 								else
 								{
 #ifdef MARTII
-#ifdef HAVE_SPARK_HARDWARE
+#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 									FillRect(0, 0, DEFAULT_XRES, DEFAULT_YRES, 0);
 #else
 									memset(lbb, TRANSP, var_screeninfo.xres * var_screeninfo.yres * sizeof(uint32_t));
@@ -1994,7 +1994,7 @@ PLISTENTRY pl;
 
 	// clear Display
 #ifdef MARTII
-#ifdef HAVE_SPARK_HARDWARE
+#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 	FillRect(0, 0, DEFAULT_XRES, DEFAULT_YRES, 0);
 #else
 	memset(lbb, TRANSP,var_screeninfo.xres*var_screeninfo.yres*sizeof(uint32_t));
@@ -2007,7 +2007,7 @@ PLISTENTRY pl;
 	munmap(lfb, fix_screeninfo.smem_len);
 
 	close(fb);
-#if !defined(MARTII) && !defined(HAVE_SPARK_HARDWARE)
+#if !defined(MARTII) && !defined(HAVE_SPARK_HARDWARE) && !defined(HAVE_DUCKBOX_HARDWARE)
 	free(lbb);
 #endif
 

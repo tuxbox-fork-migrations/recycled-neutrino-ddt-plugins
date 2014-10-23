@@ -9,14 +9,8 @@
 
 struct PNM_FILE
 {
-#ifdef MARTII
-   const
-#endif
-   char*            file_name;
-#ifdef MARTII
-   const
-#endif
-   unsigned char*   body;
+   const char*            file_name;
+   const unsigned char*   body;
    unsigned int     lenght;
    unsigned int     current_position;
    unsigned char	current_rle_pos;

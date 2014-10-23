@@ -21,10 +21,8 @@
 
 #include "menu.h"
 
+#include <cstdio>
 #include <stdarg.h>
-#ifdef MARTII
-#include <stdio.h>
-#endif
 
 //#define TEST
 #ifndef TEST

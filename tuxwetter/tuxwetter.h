@@ -2,10 +2,8 @@
 
 #define __TUXWETTER_H__
 
-#ifdef MARTII
 #include <config.h>
 #define _FILE_OFFSET_BITS 64
-#endif
 #include <errno.h>
 #include <fcntl.h>
 #include <signal.h>
@@ -23,7 +21,7 @@
 #include <sys/un.h>
 #ifdef MARTII
 #include <stdint.h>
-#ifdef HAVE_SPARK_HARDWARE
+#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 #include <linux/stmfb.h>
 #define DEFAULT_XRES 1280
 #define DEFAULT_YRES 720

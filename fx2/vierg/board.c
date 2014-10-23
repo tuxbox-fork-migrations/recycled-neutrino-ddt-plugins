@@ -90,7 +90,7 @@ static	void	Fall( int x, unsigned char *dr, char v )
 		maze[ (5-y)*7 + x ] = v;
 		FBOverlayImage( x*48+64+6, y*48+96+4, 36, 40, 0, 0, WHITE,
 				dr, dgray, dgray, dgray);
-#ifdef HAVE_SPARK_HARDWARE
+#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 		FBFlushGrafic();
 #endif
 	}

@@ -4,11 +4,9 @@ noinst_PROGRAMS = master
 
 master_SOURCES = board.c somain.c
 
-master_LDFLAGS = \
-	-rpath $(PLUGINDIR) -R$(TARGET_PLUGINDIR)
+master_LDFLAGS = -rpath $(PLUGINDIR) -R$(TARGET_PLUGINDIR)
 
-master_LDADD = \
-	-lfx2
+master_LDADD = -lfx2
 
 install-exec-local:
 	install -d $(DESTDIR)$(PLUGINDIR)

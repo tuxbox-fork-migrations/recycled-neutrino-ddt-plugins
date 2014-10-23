@@ -76,7 +76,7 @@ int pacman_exec( int fdfb, int fdrc, int fdlcd, char *cfgfile )
 			MoveGhosts( );
 			DrawGhosts( );
 			DrawPac( );
-#if defined(USEX) || defined(HAVE_SPARK_HARDWARE)
+#if defined(USEX) || defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 			FBFlushGrafic();
 #endif
 			RcGetActCode( );
@@ -90,7 +90,7 @@ int pacman_exec( int fdfb, int fdrc, int fdlcd, char *cfgfile )
 				DrawScore();
 			if ( !gametime )
 				DrawGameOver();
-#if defined(USEX) || defined(HAVE_SPARK_HARDWARE)
+#if defined(USEX) || defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 			FBFlushGrafic();
 #endif
 			doexit=0;

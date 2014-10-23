@@ -4,11 +4,9 @@ noinst_PROGRAMS = tank
 
 tank_SOURCES = board.c somain.c
 
-tank_LDFLAGS = \
-	-rpath $(PLUGINDIR) -R$(TARGET_PLUGINDIR)
+tank_LDFLAGS = -rpath $(PLUGINDIR) -R$(TARGET_PLUGINDIR)
 
-tank_LDADD = \
-	-lfx2
+tank_LDADD = -lfx2
 
 install-exec-local:
 	install -d $(DESTDIR)$(PLUGINDIR)

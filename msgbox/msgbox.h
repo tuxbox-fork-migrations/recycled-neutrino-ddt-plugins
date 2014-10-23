@@ -23,7 +23,7 @@
 #include <sys/un.h>
 #ifdef MARTII
 #include <stdint.h>
-#ifdef HAVE_SPARK_HARDWARE
+#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 #include <linux/stmfb.h>
 #define DEFAULT_XRES 1280
 #define DEFAULT_YRES 720

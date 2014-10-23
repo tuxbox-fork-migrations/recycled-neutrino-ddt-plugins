@@ -78,7 +78,7 @@ static char TCF_FILE[128]="";
 #define LCD_RDIST 	10
 
 #ifdef MARTII
-#ifdef HAVE_SPARK_HARDWARE
+#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 int sync_blitter = 0;
 
 void blit(void) {
@@ -3347,7 +3347,7 @@ PLISTENTRY pl=&epl;
 			return -1;
 		}
 #ifdef MARTII
-#ifdef HAVE_SPARK_HARDWARE
+#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 		var_screeninfo.xres = DEFAULT_XRES;
 		var_screeninfo.yres = DEFAULT_YRES;
 #endif
@@ -3415,7 +3415,7 @@ PLISTENTRY pl=&epl;
 	//init backbuffer
 
 #ifdef MARTII
-# ifdef HAVE_SPARK_HARDWARE
+#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 		lbb = lfb + 1920 * 1080;
 		fix_screeninfo.line_length = DEFAULT_XRES * sizeof(uint32_t);
 		stride = DEFAULT_XRES;
@@ -3433,7 +3433,7 @@ PLISTENTRY pl=&epl;
 		}
 #endif
 
-#if defined(MARTII) && defined(HAVE_SPARK_HARDWARE)
+#if defined(MARTII) && defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 		FillRect(0, 0, DEFAULT_XRES, DEFAULT_YRES, 0);
 #else
 		memset(lbb, TRANSP, fix_screeninfo.line_length*var_screeninfo.yres);
@@ -4106,7 +4106,7 @@ PLISTENTRY pl=&epl;
 	
 
 	// clear Display
-#if defined(MARTII) && defined(HAVE_SPARK_HARDWARE)
+#if defined(MARTII) && defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 		FillRect(0, 0, DEFAULT_XRES, DEFAULT_YRES, 0);
 #else
 	memset(lbb, TRANSP, fix_screeninfo.line_length*var_screeninfo.yres);
@@ -4119,7 +4119,7 @@ PLISTENTRY pl=&epl;
 //	memset(lfb, TRANSP, fix_screeninfo.line_length*var_screeninfo.yres);
 	munmap(lfb, fix_screeninfo.smem_len);
 	close(fb);
-#ifndef HAVE_SPARK_HARDWARE
+#if !defined(HAVE_SPARK_HARDWARE) && !defined(HAVE_DUCKBOX_HARDWARE)
 	free(lbb);
 #endif
 	return 0;

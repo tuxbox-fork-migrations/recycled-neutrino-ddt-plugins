@@ -4,11 +4,9 @@ noinst_PROGRAMS = tetris
 
 tetris_SOURCES = board.c somain.c
 
-tetris_LDFLAGS = \
-	-rpath $(PLUGINDIR) -R$(TARGET_PLUGINDIR)
+tetris_LDFLAGS = -rpath $(PLUGINDIR) -R$(TARGET_PLUGINDIR)
 
-tetris_LDADD = \
-	-lfx2
+tetris_LDADD = -lfx2
 
 if !BOXTYPE_DREAMBOX
 

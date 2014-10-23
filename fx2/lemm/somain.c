@@ -95,7 +95,7 @@ int lemmings_exec( int fdfb, int fdrc, int fdlcd, char *cfgfile )
 			AnimateDeko();
 			RunLemm();
 			dblDrawFrame( 0 );
-#if defined(USEX) || defined(HAVE_SPARK_HARDWARE)
+#if defined(USEX) || defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 			FBFlushGrafic();
 #endif
 		}
@@ -107,7 +107,7 @@ int lemmings_exec( int fdfb, int fdrc, int fdlcd, char *cfgfile )
 		if ( doexit != 3 )
 		{
 			actcode=0xee;
-#if defined(USEX) || defined(HAVE_SPARK_HARDWARE)
+#if defined(USEX) || defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 			FBFlushGrafic();
 #endif
 			doexit=0;

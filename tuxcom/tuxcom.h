@@ -39,7 +39,7 @@
 #include <sys/dir.h>
 #include <sys/stat.h>
 //#include <plugin.h>
-#ifdef HAVE_SPARK_HARDWARE
+#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 #include <linux/stmfb.h>
 #endif
 
@@ -68,7 +68,7 @@
 #include FT_CACHE_SMALL_BITMAPS_H
 
 
-#if HAVE_COOL_HARDWARE || HAVE_TRIPLEDRAGON || HAVE_SPARK_HARDWARE
+#if HAVE_COOL_HARDWARE || HAVE_TRIPLEDRAGON || HAVE_SPARK_HARDWARE || defined(HAVE_DUCKBOX_HARDWARE)
 #include <linux/input.h>
 #endif
 
@@ -173,7 +173,7 @@ static const signed char rccodes[0x23] =
 #endif
 
 
-#if defined HAVE_DBOX_HARDWARE || defined HAVE_COOL_HARDWARE || HAVE_TRIPLEDRAGON || HAVE_SPARK_HARDWARE
+#if defined HAVE_DBOX_HARDWARE || defined HAVE_COOL_HARDWARE || HAVE_TRIPLEDRAGON || HAVE_SPARK_HARDWARE || defined(HAVE_DUCKBOX_HARDWARE)
 // rc codes
 #define	RC_0			'0'
 #define	RC_1			'1'
@@ -355,6 +355,7 @@ static unsigned char bgra[][4] = {
 "\x80\x00\x00\xC0", "\x50\x50\x50\xC0", "\xFF\x40\x00\xFf" };
 #endif
 #endif
+
 #define CONFIG_FILE "/var/tuxbox/config/tuxcom.conf"
 
 #ifndef MARTII

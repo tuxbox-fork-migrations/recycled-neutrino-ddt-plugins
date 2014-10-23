@@ -181,7 +181,7 @@ static	void	Flame( int x )
 	{
 		k=myrand(3);
 		FBCopyImage( x, 496, 16, 16, flame[k] );
-#if defined(USEX) || defined(HAVE_SPARK_HARDWARE)
+#if defined(USEX) || defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 		FBFlushGrafic();
 #endif
 		tv.tv_usec = myrand(100000)+50000;
@@ -213,14 +213,14 @@ static	int	Fly( float ang_x, float ang_y )
 		if ( xo2 && yo2 )
 		{
 			FBFillRect( can_x+xo2, can_y-yo2, 2, 2, AIR );
-#if defined(USEX) || defined(HAVE_SPARK_HARDWARE)
+#if defined(USEX) || defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 		FBFlushGrafic();
 #endif
 		}
 		if ( xo && yo )
 		{
 			FBFillRect( can_x+xo, can_y-yo, 2, 2, WHITE );
-#if defined(USEX) || defined(HAVE_SPARK_HARDWARE)
+#if defined(USEX) || defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 		FBFlushGrafic();
 #endif
 			xo2=xo;
@@ -241,7 +241,7 @@ static	int	Fly( float ang_x, float ang_y )
 					((x!=xo-1) || (y!=yo-1)) )
 				{
 					FBFillRect( can_x+x, can_y-y, 2, 2, AIR );
-#if defined(USEX) || defined(HAVE_SPARK_HARDWARE)
+#if defined(USEX) || defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 					FBFlushGrafic();
 #endif
 					break;
@@ -250,7 +250,7 @@ static	int	Fly( float ang_x, float ang_y )
 
 			if ( y > -32 )
 				FBFillRect( can_x+x, can_y-y, 2, 2, RED );
-#if defined(USEX) || defined(HAVE_SPARK_HARDWARE)
+#if defined(USEX) || defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 			FBFlushGrafic();
 #endif
 			xo=x;
@@ -282,14 +282,14 @@ static	int	Fly( float ang_x, float ang_y )
 	if ( xo2 && yo2 )
 	{
 		FBFillRect( can_x+xo2, can_y-yo2, 2, 2, AIR );
-#if defined(USEX) || defined(HAVE_SPARK_HARDWARE)
+#if defined(USEX) || defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 		FBFlushGrafic();
 #endif
 	}
 	if ( xo && yo )
 	{
 		FBFillRect( can_x+xo, can_y-yo, 2, 2, AIR );
-#if defined(USEX) || defined(HAVE_SPARK_HARDWARE)
+#if defined(USEX) || defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 		FBFlushGrafic();
 #endif
 	}
@@ -413,7 +413,7 @@ static	void	Bomb( void )
 			FBDrawVLine( 301+118-89, 529, 3, BLACK );
 		}
 
-#if defined(USEX) || defined(HAVE_SPARK_HARDWARE)
+#if defined(USEX) || defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 		FBFlushGrafic();
 #endif
 		actcode=0xee;

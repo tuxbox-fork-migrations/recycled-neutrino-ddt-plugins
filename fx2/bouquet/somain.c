@@ -86,7 +86,7 @@ static	void	SortBouquet( Channel *ch, int num )
 		FBDrawString( 62, 160, 32, "save",GRAY,0);
 		FBFillRect( 50, 202, 8, 8, YELLOW );
 		FBDrawString( 62, 190, 32, ch==tv_ch?"radio":"tv",GRAY,0);
-#if defined(USEX) || defined(HAVE_SPARK_HARDWARE)
+#if defined(USEX) || defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 	FBFlushGrafic();
 #endif
 		while( realcode != 0xee )
@@ -188,7 +188,7 @@ static	void	SortBouquet( Channel *ch, int num )
 				doexit=2;
 				break;
 			}
-#if defined(USEX) || defined(HAVE_SPARK_HARDWARE)
+#if defined(USEX) || defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 			FBFlushGrafic();
 #endif
 			while( realcode != 0xee )
@@ -260,7 +260,7 @@ static	void	SaveServices( void )
 	int		lp=-1;
 
 	FBDrawString( 62, 160, 32, "save",BLACK,GRAY);
-#if defined(USEX) || defined(HAVE_SPARK_HARDWARE)
+#if defined(USEX) || defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 		FBFlushGrafic();
 #endif
 	fp = fopen( CONFIGDIR "/zapit/services.xml", "w" );
@@ -274,7 +274,7 @@ static	void	SaveServices( void )
 		if ( perc != lp )
 		{
 			FBFillRect( 100, 230, perc, 16, GRAY );
-#if defined(USEX) || defined(HAVE_SPARK_HARDWARE)
+#if defined(USEX) || defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 			FBFlushGrafic();
 #endif
 		}
@@ -344,7 +344,7 @@ int bouquet_exec( int fdfb, int fdrc, int fdlcd, char *cfgfile )
 	if ( !fp )
 	{
 		FBDrawString( 190, 100, 64, "services.xml not found !", RED, 0 );
-#if defined(USEX) || defined(HAVE_SPARK_HARDWARE)
+#if defined(USEX) || defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 		FBFlushGrafic();
 #endif
 		tv.tv_sec = 5;

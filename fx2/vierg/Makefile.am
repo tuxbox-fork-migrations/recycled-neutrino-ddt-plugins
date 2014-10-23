@@ -4,11 +4,9 @@ noinst_PROGRAMS = vierg
 
 vierg_SOURCES = board.c somain.c
 
-vierg_LDFLAGS = \
-	-rpath $(PLUGINDIR) -R$(TARGET_PLUGINDIR)
+vierg_LDFLAGS = -rpath $(PLUGINDIR) -R$(TARGET_PLUGINDIR)
 
-vierg_LDADD = \
-	-lfx2
+vierg_LDADD = -lfx2
 
 install-exec-local:
 	install -d $(DESTDIR)$(PLUGINDIR)

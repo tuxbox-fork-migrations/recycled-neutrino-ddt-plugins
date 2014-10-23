@@ -19,15 +19,13 @@
 	If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifdef MARTII
-#include "../../config.h"
-#endif
+#include "config.h"
 #include <sys/time.h>
 
 // ----------------------------------------------------------------------------
 // Rand
 // ----------------------------------------------------------------------------
-#ifndef HAVE_SPARK_HARDWARE
+#if !defined(HAVE_SPARK_HARDWARE) && !defined(HAVE_DUCKBOX_HARDWARE)
 int Rand(void)
 {
 //	return rand();

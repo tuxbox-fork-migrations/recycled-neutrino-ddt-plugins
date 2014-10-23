@@ -46,7 +46,7 @@ void Center_Screen(int wx, int wy, int *csx, int *csy)
 	*csy = ((ey-sy) - wy)/2;
 }
 #ifdef MARTII
-# ifdef HAVE_SPARK_HARDWARE
+#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 void FillRect(int _sx, int _sy, int _dx, int _dy, uint32_t color)
 {
 	uint32_t *p1, *p2, *p3, *p4;
@@ -107,7 +107,7 @@ void RenderBox(int rsx, int rsy, int rex, int rey, int rad, int col)
 
 	if(R)
 	{
-#if defined(MARTII) && defined(HAVE_SPARK_HARDWARE)
+#if defined(MARTII) && defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 		if(sync_blitter) {
 			sync_blitter = 0;
 			if (ioctl(fb, STMFBIO_SYNC_BLITTER) < 0)
@@ -216,7 +216,7 @@ void RenderBox(int rsx, int rsy, int rex, int rey, int rad, int col)
 #endif
 	}
 
-#if defined(MARTII) && defined(HAVE_SPARK_HARDWARE)
+#if defined(MARTII) && defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 	FillRect(sx + rsx, sy + rsy + R, dxx + 1, dyy - 2 * R + 1, pix);
 #else
 	for (count=R; count<(dyy-R); count++)

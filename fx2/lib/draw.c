@@ -2,11 +2,10 @@
 ** initial coding by fx2
 */
 
-#ifdef MARTII
+
 #define _FILE_OFFSET_BITS 64
 #include "draw.h"
 #include <png.h>
-#endif
 
 #include <stdio.h>
 #include <fcntl.h>
@@ -19,7 +18,7 @@
 
 #ifndef USEX
 
-#if defined(HAVE_SPARK_HARDWARE)
+#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 # include <stdint.h>
 # include <sys/ioctl.h>
 # include <linux/stmfb.h>
@@ -45,19 +44,17 @@
 #include <rcinput.h>
 #include <pig.h>
 
-
-
 static	int							fd = -1;
 static	struct fb_var_screeninfo	screeninfo;
 static	struct fb_var_screeninfo	oldscreen;
 static	int							available = 0;
 static	unsigned char				*lfb = 0;
-#if defined(HAVE_SPARK_HARDWARE)
+#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 static	unsigned char				*lbb = 0;
 static	STMFBIO_PALETTE				lut;
 #endif
 static	int							stride;
-#ifndef HAVE_SPARK_HARDWARE
+#if !defined(HAVE_SPARK_HARDWARE) && !defined(HAVE_DUCKBOX_HARDWARE)
 static	int							bpp = 8;
 static	struct fb_cmap				cmap;
 static	unsigned short				red[ 256 ];
@@ -73,7 +70,7 @@ extern	int							doexit;
 
 void	FBSetColor( int idx, uchar r, uchar g, uchar b )
 {
-#if defined(HAVE_SPARK_HARDWARE)
+#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 	lut.entries[idx] = (idx ? 0xff : 0) << 24 | r<<16 | g<<8 | b;
 #else
 	red[idx] = r<<8;
@@ -88,7 +85,7 @@ void	FBSetColor( int idx, uchar r, uchar g, uchar b )
 
 void	FBSetColorEx( int idx, uchar r, uchar g, uchar b, uchar transp )
 {
-#if defined(HAVE_SPARK_HARDWARE)
+#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 	lut.entries[idx] = (0xff - transp) << 24 | r<<16 | g<<8 | b;
 #else
 	red[idx] = r<<8;
@@ -96,6 +93,7 @@ void	FBSetColorEx( int idx, uchar r, uchar g, uchar b, uchar transp )
 	blue[idx] = b<<8;
 	trans[idx] = transp<<8;
 #endif
+
 	if ( idx > lastcolor )
 		lastcolor=idx;
 
@@ -128,7 +126,7 @@ int	FBInitialize( int xRes, int yRes, int nbpp, int extfd )
 		}
 #endif
 	}
-#if defined(HAVE_SPARK_HARDWARE)
+#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 	memset(&lut, 0, sizeof(STMFBIO_PALETTE));
 	screeninfo.xres = DEFAULT_XRES;
 	screeninfo.yres = DEFAULT_YRES;
@@ -167,7 +165,7 @@ int	FBInitialize( int xRes, int yRes, int nbpp, int extfd )
 	FBSetColor( WHITE, 210, 210, 210 );
 	FBSetColor( RED, 240, 50, 80 );
 
-#if defined(HAVE_SPARK_HARDWARE)
+#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 	FBSetupColors();
 #else
 	if (ioctl(fd, FBIOPUTCMAP, &cmap )<0)
@@ -195,7 +193,7 @@ int	FBInitialize( int xRes, int yRes, int nbpp, int extfd )
 		return(-1);
 	}
 
-#if defined(HAVE_SPARK_HARDWARE)
+#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 	lbb = lfb + 1920 * 1080 * sizeof(uint32_t);
 	stride = DEFAULT_XRES;
 	memset(lbb,BLACK,stride * screeninfo.yres);
@@ -210,7 +208,7 @@ int	FBInitialize( int xRes, int yRes, int nbpp, int extfd )
 
 void	FBSetupColors( void )
 {
-#if defined(HAVE_SPARK_HARDWARE)
+#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 	lut.numEntries = lastcolor;
 	if (ioctl(fd, STMFBIO_SET_BLITTER_PALETTE, &lut )<0)
 		perror("STMFBIO_SET_BLITTER_PALETTE");
@@ -223,7 +221,7 @@ void	FBSetupColors( void )
 void	FBClose( void )
 {
 	/* clear screen */
-#ifndef HAVE_SPARK_HARDWARE
+#if !defined(HAVE_SPARK_HARDWARE) && !defined(HAVE_DUCKBOX_HARDWARE)
 	memset(lbb,0,stride * screeninfo.yres);
 	FBFlushGrafic();
 #else
@@ -232,8 +230,8 @@ void	FBClose( void )
 
 	if (available)
 	{
-#ifndef HAVE_SPARK_HARDWARE
-        ioctl(fd, FBIOPUT_VSCREENINFO, &oldscreen);
+#if !defined(HAVE_SPARK_HARDWARE) && !defined(HAVE_DUCKBOX_HARDWARE)
+		ioctl(fd, FBIOPUT_VSCREENINFO, &oldscreen);
 #endif
 		if (lfb)
 			munmap(lfb, available);
@@ -242,7 +240,7 @@ void	FBClose( void )
 
 void	FBPaintPixel( int x, int y, unsigned char farbe )
 {
-#if defined(HAVE_SPARK_HARDWARE)
+#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 	*(lbb + stride*y + x) = farbe;
 #else
 	*(lfb + stride*y + x) = farbe;
@@ -251,7 +249,7 @@ void	FBPaintPixel( int x, int y, unsigned char farbe )
 
 unsigned char	FBGetPixel( int x, int y )
 {
-#if defined(HAVE_SPARK_HARDWARE)
+#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 	return *(lbb + stride*y + x);
 #else
 	return *(lfb + stride*y + x);
@@ -261,7 +259,7 @@ unsigned char	FBGetPixel( int x, int y )
 void	FBGetImage( int x1, int y1, int width, int height, unsigned char *to )
 {
 	int				y;
-#if defined(HAVE_SPARK_HARDWARE)
+#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 	unsigned char	*p=lbb + stride*y1 + x1;
 #else
 	unsigned char	*p=lfb + stride*y1 + x1;
@@ -360,7 +358,7 @@ void	FBDrawLine( int xa, int ya, int xb, int yb, unsigned char farbe )
 
 void	FBDrawHLine( int x, int y, int dx, unsigned char farbe )
 {
-#if defined(HAVE_SPARK_HARDWARE)
+#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 	memset(lbb+x+stride*y,farbe,dx);
 #else
 	memset(lfb+x+stride*y,farbe,dx);
@@ -369,7 +367,7 @@ void	FBDrawHLine( int x, int y, int dx, unsigned char farbe )
 
 void	FBDrawVLine( int x, int y, int dy, unsigned char farbe )
 {
-#if defined(HAVE_SPARK_HARDWARE)
+#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 	unsigned char	*pos = lbb + x + stride*y;
 #else
 	unsigned char	*pos = lfb + x + stride*y;
@@ -382,7 +380,7 @@ void	FBDrawVLine( int x, int y, int dy, unsigned char farbe )
 
 void	FBFillRect( int x, int y, int dx, int dy, unsigned char farbe )
 {
-#if defined(HAVE_SPARK_HARDWARE)
+#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 	unsigned char	*pos = lbb + x + stride*y;
 #else
 	unsigned char	*pos = lfb + x + stride*y;
@@ -408,7 +406,7 @@ void	FBCopyImage( int x, int y, int dx, int dy, unsigned char *src )
 	if ( !dx || !dy )
 		return;
 	for( i=0; i < dy; i++ )
-#if defined(HAVE_SPARK_HARDWARE)
+#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 		memcpy(lbb+(y+i)*stride+x,src+dx*i,dx);
 #else
 		memcpy(lfb+(y+i)*stride+x,src+dx*i,dx);
@@ -434,7 +432,7 @@ void	FB2CopyImage( int x1, int y1, int dx, int dy, unsigned char *src, int dbl )
 			for( x=0; (x < dx) && (x+x1<688) && (y+y1>=0); x++ )
 			{
 				if ( ( x+x1>=0 ) && *(src+dx*y+x) )
-#if defined(HAVE_SPARK_HARDWARE)
+#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 					*(lbb+(y1+y)*stride+x1+x) = *(src+dx*y+x);
 #else
 					*(lfb+(y1+y)*stride+x1+x) = *(src+dx*y+x);
@@ -448,7 +446,7 @@ void	FB2CopyImage( int x1, int y1, int dx, int dy, unsigned char *src, int dbl )
 	{
 		if ( y+y1+y<0 )
 			continue;
-#if defined(HAVE_SPARK_HARDWARE)
+#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 		d=lbb+(y1+y+y)*stride+x1;
 #else
 		d=lfb+(y1+y+y)*stride+x1;
@@ -486,7 +484,7 @@ void	FBCopyImageCol( int x, int y, int dx, int dy, unsigned char col,
 		return;
 	for( i=0; i < dy; i++ )
 	{
-#if defined(HAVE_SPARK_HARDWARE)
+#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 		to=lbb+(y+i)*stride+x;
 #else
 		to=lfb+(y+i)*stride+x;
@@ -515,7 +513,7 @@ void	FBOverlayImage( int x, int y, int dx, int dy,
 		return;
 	for( i=0; i < dy; i++ )
 	{
-#if defined(HAVE_SPARK_HARDWARE)
+#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 		p = lbb+(y+i)*stride+x;
 #else
 		p = lfb+(y+i)*stride+x;
@@ -562,7 +560,7 @@ void	FBOverlayImage( int x, int y, int dx, int dy,
 	}
 }
 
-#ifdef HAVE_SPARK_HARDWARE
+#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 void	FBPrintScreen( void ) {
 	STMFBIO_BLT_DATA  bltData;
 	uint32_t *b = (uint32_t *) (lfb + (1920 * 1080 + DEFAULT_XRES * DEFAULT_YRES) * sizeof(uint32_t));
@@ -577,12 +575,12 @@ void	FBPrintScreen( void ) {
 	bltData.src_right  = DEFAULT_XRES - 1;
 	bltData.src_bottom = DEFAULT_YRES - 1;
 
-	bltData.srcFormat = SURF_CLUT8;
+	bltData.srcFormat  = SURF_CLUT8;
 	bltData.srcMemBase = STMFBGP_FRAMEBUFFER;
 
 	bltData.dstOffset  = (1920 * 1080 + DEFAULT_XRES * DEFAULT_YRES) * 4;
 	bltData.dstPitch   = DEFAULT_XRES * 4;
-	bltData.dstFormat = SURF_ARGB8888;
+	bltData.dstFormat  = SURF_ARGB8888;
 	bltData.dstMemBase = STMFBGP_FRAMEBUFFER;
 
 	if(ioctl(fd, STMFBIO_SYNC_BLITTER) < 0)
@@ -634,24 +632,15 @@ void	FBPrintScreen( void ) {
 #else
 void	FBPrintScreen( void )
 {
-#ifndef HAVE_SPARK_HARDWARE
 	FILE			*fp;
-#if defined(HAVE_SPARK_HARDWARE)
-	unsigned char	*p = lbb;
-#else
 	unsigned char	*p = lfb;
-#endif
 	int				y;
 	int				x=0;
 
 #define H(x)	((x/26)+65)
 #define L(x)	((x%26)+65)
 
-#ifdef MARTII
-	fp = fopen( "/tmp/screen.xpm", "w" );
-#else
 	fp = fopen( "/var/tmp/screen.xpm", "w" );
-#endif
 	if ( !fp )
 	{
 		return;
@@ -689,7 +678,6 @@ void	FBPrintScreen( void )
 	fflush(fp);
 
 	fclose(fp);
-#endif
 }
 #endif
 
@@ -702,7 +690,7 @@ void	FBBlink( int x, int y, int dx, int dy, int count )
 /* copy out */
 	back = malloc(dx*dy);
 	for( i=0; i < dy; i++ )
-#if defined(HAVE_SPARK_HARDWARE)
+#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 		memcpy(back+dx*i,lbb+(y+i)*stride+x,dx);
 #else
 		memcpy(back+dx*i,lfb+(y+i)*stride+x,dx);
@@ -718,7 +706,7 @@ void	FBBlink( int x, int y, int dx, int dy, int count )
 		tv.tv_sec = 0;
 		select(0,0,0,0,&tv);
 		FBCopyImage( x, y, dx, dy, back );
-#if defined(HAVE_SPARK_HARDWARE)
+#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 		FBFlushGrafic();
 #endif
 	}
@@ -736,7 +724,7 @@ void	FBMove( int x, int y, int x2, int y2, int dx, int dy )
 	{
 		back=malloc(dx*dy);
 		for( i=0; i < dy; i++, f+=stride )
-#if defined(HAVE_SPARK_HARDWARE)
+#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 			memcpy(back+(i*dx),lbb+f,dx);
 #else
 			memcpy(back+(i*dx),lfb+f,dx);
@@ -747,7 +735,7 @@ void	FBMove( int x, int y, int x2, int y2, int dx, int dy )
 		return;
 	}
 	for( i=0; i < dy; i++, f+=stride, t+=stride )
-#if defined(HAVE_SPARK_HARDWARE)
+#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 		memcpy(lbb+t,lbb+f,dx);
 #else
 		memcpy(lfb+t,lfb+f,dx);
@@ -890,14 +878,14 @@ void	FBPause( void )
 	Fx2PigResume();
 #else
 	int j;
-#if defined(HAVE_SPARK_HARDWARE)
+#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 	STMFBIO_PALETTE				lut_sav;
 #else
 	unsigned short	trans_sav[ 256 ];
 #endif
 	unsigned char 	img_sav[ 42*100];
 
-#if defined(HAVE_SPARK_HARDWARE)
+#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 	memcpy(&lut_sav, &lut, sizeof(lut));
 #else
 	memcpy(trans_sav, trans, 256 * sizeof( unsigned short) );
@@ -911,7 +899,7 @@ void	FBPause( void )
 		FBGetImage( 50, 50, 100, 42, img_sav );
 
 		/* dimm out */
-#if defined(HAVE_SPARK_HARDWARE)
+#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 		for( i = 0; i < 256; i++ )
 #else
 		for( i = 0; i < 129; i++ )
@@ -919,7 +907,7 @@ void	FBPause( void )
 		{
 			for( j = 0; j < 256; j++ )
 			{
-#if defined(HAVE_SPARK_HARDWARE)
+#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 				if ((lut.entries[j] & 0xff000000))
 					lut.entries[j] -= 0x01000000;
 #else
@@ -930,7 +918,7 @@ void	FBPause( void )
 #endif
   			}
 			FBSetupColors();
-#if defined(HAVE_SPARK_HARDWARE)
+#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 			FBFlushGrafic();
 #endif
 		}
@@ -938,7 +926,7 @@ void	FBPause( void )
 		FBSetColor( RESERVED, 150, 210, 210 );
 		FBSetupColors();
 		FBDrawString( 50, 50, 42, "Pause", RESERVED, 0 );
-#if defined(HAVE_SPARK_HARDWARE)
+#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 		FBFlushGrafic();
 #endif
 	}
@@ -960,7 +948,7 @@ void	FBPause( void )
 		FBCopyImage( 50, 50, 100, 42, img_sav );
 
 		/* dimm in */
-#if defined(HAVE_SPARK_HARDWARE)
+#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 		for( i = 0; i < 256; i++ )
 #else
 		for( i = 0; i < 129; i++ )
@@ -968,7 +956,7 @@ void	FBPause( void )
 		{
 			for( j = 0; j < 256; j++ )
 			{
-#if defined(HAVE_SPARK_HARDWARE)
+#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 				if ((lut.entries[j] < lut_sav.entries[j]))
 					lut.entries[j] += 0x01000000;
 #else
@@ -979,7 +967,7 @@ void	FBPause( void )
 #endif
 			}
 			FBSetupColors();
-#if defined(HAVE_SPARK_HARDWARE)
+#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 			FBFlushGrafic();
 #endif
 		}
@@ -990,13 +978,13 @@ void	FBPause( void )
 	actcode = 0xee;
 
 	Fx2PigResume();
-#if defined(HAVE_SPARK_HARDWARE)
+#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 	FBFlushGrafic();
 #endif
 #endif
 }
 
-#if defined(HAVE_SPARK_HARDWARE)
+#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 static int pig_x = -1;
 static int pig_y = -1;
 static int pig_dx = -1;
@@ -2576,7 +2564,7 @@ char	*FBEnterWord( int xpos, int ypos, int height,int len,unsigned char col)
 
 		last = actcode;
 		blocker=1;
-#if defined(USEX) || defined(HAVE_SPARK_HARDWARE)
+#if defined(USEX) || defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 		FBFlushGrafic();
 #endif
 		autot9=0;
@@ -2675,4 +2663,3 @@ char	*FBEnterWord( int xpos, int ypos, int height,int len,unsigned char col)
 	FBFillRect( xoffs,yoffs, 3*52+3,4*52+4+2,BLACK);
 	return( text );
 }
-// vim:ts=4

@@ -4,11 +4,9 @@ noinst_PROGRAMS = sol
 
 sol_SOURCES = solboard.c somain.c
 
-sol_LDFLAGS = \
-	-rpath $(PLUGINDIR) -R$(TARGET_PLUGINDIR)
+sol_LDFLAGS = -rpath $(PLUGINDIR) -R$(TARGET_PLUGINDIR)
 
-sol_LDADD = \
-	-lfx2
+sol_LDADD = -lfx2
 
 install-exec-local:
 	install -d $(DESTDIR)$(PLUGINDIR)

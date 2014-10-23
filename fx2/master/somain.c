@@ -53,7 +53,7 @@ int master_exec( int fdfb, int fdrc, int fdlcd, char *cfgfile )
 	{
 		MasterInitialize();
 
-#if defined(USEX) || defined(HAVE_SPARK_HARDWARE)
+#if defined(USEX) || defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 		FBFlushGrafic();
 #endif
 		Fx2ShowPig( 430, 355, 176, 144 );
@@ -68,7 +68,7 @@ int master_exec( int fdfb, int fdrc, int fdlcd, char *cfgfile )
 			actcode=0xee;
 			RcGetActCode( );
 			Play();
-#if defined(USEX) || defined(HAVE_SPARK_HARDWARE)
+#if defined(USEX) || defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 			FBFlushGrafic();
 #endif
 			while( realcode != 0xee )
@@ -83,7 +83,7 @@ int master_exec( int fdfb, int fdrc, int fdlcd, char *cfgfile )
 		if ( doexit != 3 )
 		{
 			actcode=0xee;
-#if defined(USEX) || defined(HAVE_SPARK_HARDWARE)
+#if defined(USEX) || defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 			FBFlushGrafic();
 #endif
 			doexit=0;
