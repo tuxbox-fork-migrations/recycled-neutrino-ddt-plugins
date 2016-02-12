@@ -28,7 +28,6 @@
 //#include "lcd.h"
 #include "tuxwetter.h"
 
-
 double spdsize[3]={100000.0,16000.0,8000.0};
 int speed=0;
 
