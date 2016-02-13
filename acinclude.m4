@@ -11,7 +11,7 @@ AC_ARG_WITH(target,
 
 AC_ARG_WITH(targetprefix,
 	[  --with-targetprefix=PATH  prefix relative to target root (only applicable in cdk mode)],
-	[targetprefix="$withval"],[targetprefix="NONE"])
+	[TARGET_PREFIX="$withval"],[TARGET_PREFIX=""])
 
 AC_ARG_WITH(debug,
 	[  --without-debug         disable debugging code],
@@ -34,6 +34,10 @@ if test "$TARGET" = "native"; then
 	if test "$prefix" = "NONE"; then
 		prefix=/usr/local
 	fi
+	TARGET_PREFIX=$prefix
+	if test "$exec_prefix" = "NONE"; then
+		exec_prefix=$prefix
+	fi
 	targetprefix=$prefix
 elif test "$TARGET" = "cdk"; then
 	AC_MSG_RESULT(cdk)
@@ -46,10 +50,14 @@ elif test "$TARGET" = "cdk"; then
 		CXXFLAGS="-Wall -Os -mcpu=823 -pipe $DEBUG_CFLAGS"
 	fi
 	if test "$prefix" = "NONE"; then
-		AC_MSG_ERROR(invalid prefix, you need to specify one in cdk mode)
+		AC_MSG_ERROR([invalid prefix, you need to specify one in cdk mode])
 	fi
-	if test "$targetprefix" = "NONE"; then
-		targetprefix=""
+	if test "$TARGET_PREFIX" != "NONE"; then
+		AC_DEFINE_UNQUOTED(TARGET_PREFIX, "$TARGET_PREFIX",[The targets prefix])
+	fi
+	if test "$TARGET_PREFIX" = "NONE"; then
+		AC_MSG_ERROR([invalid targetprefix, you need to specify one in cdk mode])
+		TARGET_PREFIX=""
 	fi
 	if test "$host_alias" = ""; then
 		cross_compiling=yes
@@ -69,26 +77,37 @@ check_path () {
 
 ])
 
+dnl expand nested ${foo}/bar
+AC_DEFUN([TUXBOX_EXPAND_VARIABLE],[__$1="$2"
+	for __CNT in false false false false true; do dnl max 5 levels of indirection
+
+		$1=`eval echo "$__$1"`
+		echo ${$1} | grep -q '\$' || break # 'grep -q' is POSIX, exit if no $ in variable
+		__$1="${$1}"
+	done
+	$__CNT && AC_MSG_ERROR([can't expand variable $1=$2]) dnl bail out if we did not expand
+])
+
 AC_DEFUN([TUXBOX_APPS_DIRECTORY_ONE],[
 AC_ARG_WITH($1,[  $6$7 [[PREFIX$4$5]]],[
 	_$2=$withval
 	if test "$TARGET" = "cdk"; then
-		$2=`eval echo "${targetprefix}$withval"`
+		$2=`eval echo "$TARGET_PREFIX$withval"` # no indirection possible IMNSHO
 	else
 		$2=$withval
 	fi
-	TARGET_$2=$_$2
+	TARGET_$2=${$2}
 ],[
-	$2="\${$3}$5"
+	# RFC 1925: "you can always add another level of indirection..."
+	TUXBOX_EXPAND_VARIABLE($2,"${$3}$5")
 	if test "$TARGET" = "cdk"; then
-		_$2=`eval echo "${target$3}$5"`
+		TUXBOX_EXPAND_VARIABLE(_$2,"${target$3}$5")
 	else
-		_$2=`eval echo "${$3}$5"`
+		_$2=${$2}
 	fi
 	TARGET_$2=$_$2
 ])
 
-dnl automake <= 1.6 don't support this
 dnl AC_SUBST($2)
 AC_DEFINE_UNQUOTED($2,"$_$2",$7)
 AC_SUBST(TARGET_$2)
@@ -102,29 +121,27 @@ if test "$TARGET" = "cdk"; then
 	sysconfdir="\${prefix}/etc"
 	localstatedir="\${prefix}/var"
 	libdir="\${prefix}/lib"
-	targetdatadir="\${targetprefix}/share"
-	targetsysconfdir="\${targetprefix}/etc"
-	targetlocalstatedir="\${targetprefix}/var"
-	targetlibdir="\${targetprefix}/lib"
-	
-	TUXBOX_APPS_DIRECTORY_ONE(configdir,CONFIGDIR,localstatedir,/var,/tuxbox/config,
-		[--with-configdir=PATH   ],[where to find the config files])
-	
-	TUXBOX_APPS_DIRECTORY_ONE(gamesdir,GAMESDIR,localstatedir,/var,/tuxbox/games,
-		[--with-gamesdir=PATH    ],[where games data is stored])
+	mntdir="\${prefix}/mnt"
+	targetdatadir="\${TARGET_PREFIX}/share"
+	targetsysconfdir="\${TARGET_PREFIX}/etc"
+	targetlocalstatedir="\${TARGET_PREFIX}/var"
+	targetlibdir="\${TARGET_PREFIX}/lib"
+	targetmntdir="\${TARGET_PREFIX}/mnt"
 else
-	TUXBOX_APPS_DIRECTORY_ONE(configdir,CONFIGDIR,sysconfdir,/etc,/tuxbox,
-		[--with-configdir=PATH   ],[where to find the config files])
-	
-	TUXBOX_APPS_DIRECTORY_ONE(gamesdir,GAMESDIR,localstatedir,/etc,/tuxbox/games,
-		[--with-gamesdir=PATH    ],[where games data is stored])
+	mntdir="/mnt" # hack
 fi
+
+TUXBOX_APPS_DIRECTORY_ONE(configdir,CONFIGDIR,localstatedir,/var,/tuxbox/config,
+	[--with-configdir=PATH   ],[where to find the config files])
 
 TUXBOX_APPS_DIRECTORY_ONE(datadir,DATADIR,datadir,/share,/tuxbox,
 	[--with-datadir=PATH     ],[where to find data])
 
 TUXBOX_APPS_DIRECTORY_ONE(fontdir,FONTDIR,datadir,/share,/fonts,
 	[--with-fontdir=PATH     ],[where to find the fonts])
+
+TUXBOX_APPS_DIRECTORY_ONE(gamesdir,GAMESDIR,localstatedir,/var,/tuxbox/games,
+	[--with-gamesdir=PATH    ],[where games data is stored])
 
 TUXBOX_APPS_DIRECTORY_ONE(libdir,LIBDIR,libdir,/lib,/tuxbox,
 	[--with-libdir=PATH      ],[where to find the internal libs])
@@ -155,9 +172,7 @@ AC_ARG_WITH(driver,
 if test -d "$DRIVER/include"; then
 	AC_DEFINE(HAVE_DBOX2_DRIVER,1,[Define to 1 if you have the dbox2 driver sources])
 else
-	if test "$TARGET" = "cdk"; then
-		AC_MSG_ERROR([can't find driver sources])
-	fi
+	AC_MSG_ERROR([can't find driver sources])
 fi
 
 AC_SUBST(DRIVER)
@@ -171,7 +186,9 @@ AC_ARG_WITH(dvbincludes,
 	[DVBINCLUDES="$withval"],[DVBINCLUDES=""])
 
 if test "$DVBINCLUDES"; then
-	CPPFLAGS="$CPPFLAGS -I$DVBINCLUDES"
+	CPPFLAGS="-I$DVBINCLUDES $CPPFLAGS"
+	CFLAGS="-I$DVBINCLUDES $CFLAGS"
+	CXXFLAGS="-I$DVBINCLUDES $CXXFLAGS"
 fi
 
 AC_CHECK_HEADERS(ost/dmx.h,[
@@ -188,9 +205,15 @@ AC_CHECK_HEADERS(linux/dvb/version.h,[
 version DVB_API_VERSION
 	]])])
 	DVB_API_VERSION=`(eval "$ac_cpp conftest.$ac_ext") 2>&AS_MESSAGE_LOG_FD | $EGREP "^version" | sed "s,version\ ,,"`
+
+	AC_LANG_CONFTEST([AC_LANG_SOURCE([[
+#include <linux/dvb/version.h>
+version DVB_API_VERSION_MINOR
+	]])])
+	DVB_API_VERSION_MINOR=`(eval "$ac_cpp conftest.$ac_ext") 2>&AS_MESSAGE_LOG_FD | $EGREP "^version" | sed "s,version\ ,,"`
 	rm -f conftest*
 
-	AC_MSG_NOTICE([found dvb version $DVB_API_VERSION])
+	AC_MSG_NOTICE([found dvb version $DVB_API_VERSION.$DVB_API_VERSION_MINOR])
 ])
 fi
 
@@ -200,6 +223,12 @@ if test "$DVB_API_VERSION"; then
 else
 	AC_MSG_ERROR([can't find dvb headers])
 fi
+
+if test "$DVB_API_VERSION_MINOR"; then
+	AC_DEFINE_UNQUOTED(HAVE_DVB_API_VERSION_MINOR,$DVB_API_VERSION_MINOR,[Define to the minor version of the dvb api])
+else
+	AC_DEFINE_UNQUOTED(HAVE_DVB_API_VERSION_MINOR,0,[Define to the minor version of the dvb api])
+fi
 ])
 
 AC_DEFUN([_TUXBOX_APPS_LIB_CONFIG],[
@@ -208,8 +237,18 @@ if test "$$1_CONFIG" != "no"; then
 	if test "$TARGET" = "cdk" && check_path "$$1_CONFIG"; then
 		AC_MSG_$3([could not find a suitable version of $2]);
 	else
-		$1_CFLAGS=$($$1_CONFIG --cflags)
-		$1_LIBS=$($$1_CONFIG --libs)
+		if test "$1" = "CURL"; then
+			$1_CFLAGS=$($$1_CONFIG --cflags)
+			$1_LIBS=$($$1_CONFIG --libs)
+		else
+			if test "$1" = "FREETYPE"; then
+			$1_CFLAGS=$($$1_CONFIG --cflags)
+				$1_LIBS=$($$1_CONFIG --libs)
+			else
+				$1_CFLAGS=$($$1_CONFIG --prefix=$TARGET_PREFIX --cflags)
+				$1_LIBS=$($$1_CONFIG --prefix=$TARGET_PREFIX --libs)
+			fi
+		fi
 	fi
 fi
 
@@ -229,26 +268,27 @@ _TUXBOX_APPS_LIB_CONFIG($1,$2,WARN)
 ])
 
 AC_DEFUN([TUXBOX_APPS_PKGCONFIG],[
-AC_PATH_PROG(PKG_CONFIG, pkg-config,no)
-if test "$PKG_CONFIG" = "no" ; then
+m4_pattern_forbid([^_?PKG_[A-Z_]+$])
+m4_pattern_allow([^PKG_CONFIG(_PATH)?$])
+AC_ARG_VAR([PKG_CONFIG], [path to pkg-config utility])dnl
+if test "x$ac_cv_env_PKG_CONFIG_set" != "xset"; then
+	AC_PATH_TOOL([PKG_CONFIG], [pkg-config])
+fi
+if test x"$PKG_CONFIG" = x"" ; then
 	AC_MSG_ERROR([could not find pkg-config]);
 fi
 ])
 
 AC_DEFUN([_TUXBOX_APPS_LIB_PKGCONFIG],[
 AC_REQUIRE([TUXBOX_APPS_PKGCONFIG])
-
-if test "$TARGET" = "cdk"; then
-	AC_MSG_CHECKING(for package $2)
-	if PKG_CONFIG_PATH="${prefix}/lib/pkgconfig" $PKG_CONFIG --exists "$2" ; then
-		AC_MSG_RESULT(yes)
-		$1_CFLAGS=$(PKG_CONFIG_PATH="${prefix}/lib/pkgconfig" $PKG_CONFIG --cflags "$2")
-		$1_LIBS=$(PKG_CONFIG_PATH="${prefix}/lib/pkgconfig" $PKG_CONFIG --libs "$2")
-	else
-		AC_MSG_RESULT(no)
-	fi
+AC_MSG_CHECKING(for package $2)
+if $PKG_CONFIG --exists "$2" ; then
+	AC_MSG_RESULT(yes)
+	$1_CFLAGS=$($PKG_CONFIG --cflags "$2")
+	$1_LIBS=$($PKG_CONFIG --libs "$2")
+	$1_EXISTS=yes
 else
-	PKG_CHECK_MODULES($1,$2)
+	AC_MSG_RESULT(no)
 fi
 
 AC_SUBST($1_CFLAGS)
@@ -257,7 +297,7 @@ AC_SUBST($1_LIBS)
 
 AC_DEFUN([TUXBOX_APPS_LIB_PKGCONFIG],[
 _TUXBOX_APPS_LIB_PKGCONFIG($1,$2)
-if test -z "$$1_CFLAGS" ; then
+if test x"$$1_EXISTS" != xyes; then
 	AC_MSG_ERROR([could not find package $2]);
 fi
 ])
@@ -287,23 +327,10 @@ _TUXBOX_APPS_LIB_SYMBOL($1,$2,$3,WARN)
 ])
 
 AC_DEFUN([TUXBOX_APPS_GETTEXT],[
-AM_PATH_PROG_WITH_TEST(MSGFMT, msgfmt,
-        [$ac_dir/$ac_word --statistics /dev/null >/dev/null 2>&1 &&
-        (if $ac_dir/$ac_word --statistics /dev/null 2>&1 >/dev/null | grep usage >/dev/null; then exit 1; else exit 0; fi)],
-        :)
+AC_PATH_PROG(MSGFMT, msgfmt, no)
 AC_PATH_PROG(GMSGFMT, gmsgfmt, $MSGFMT)
-
-if test "$TARGET" = "cdk"; then
-	AC_PATH_PROG(XGETTEXT, xgettext, no)
-	AC_PATH_PROG(MSGMERGE, msgmerge, no)
-else
-	AM_PATH_PROG_WITH_TEST(XGETTEXT, xgettext,
-		[$ac_dir/$ac_word --omit-header --copyright-holder= /dev/null >/dev/null 2>&1 &&
-		(if $ac_dir/$ac_word --omit-header --copyright-holder= /dev/null 2>&1 >/dev/null | grep usage >/dev/null; then exit 1; else exit 0; fi)],
-		:)
-
-	AM_PATH_PROG_WITH_TEST(MSGMERGE, msgmerge,[$ac_dir/$ac_word --update -q /dev/null /dev/null >/dev/null 2>&1],:)
-fi
+AC_PATH_PROG(XGETTEXT, xgettext, no)
+AC_PATH_PROG(MSGMERGE, msgmerge, no)
 
 AC_MSG_CHECKING([whether NLS is requested])
 AC_ARG_ENABLE(nls,
@@ -672,6 +699,3 @@ AC_DEFUN([AC_PROG_EGREP],
  AC_SUBST([EGREP])
 ])
 
-dnl Pick up AM_PATH_PROG_WITH_TEST from our version of progtest.m4 
-dnl (this is not a standard file).
-m4_include([progtest.m4])
