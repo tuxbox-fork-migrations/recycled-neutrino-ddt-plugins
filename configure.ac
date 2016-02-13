@@ -3,6 +3,7 @@ AM_INIT_AUTOMAKE
 
 TUXBOX_APPS
 TUXBOX_APPS_DIRECTORY
+TUXBOX_APPS_PKGCONFIG
 
 AC_PROG_CC
 AC_PROG_CXX
@@ -21,7 +22,7 @@ fi
 fi
 
 # needed by enigma/movieplayer
-TUXBOX_APPS_LIB_CONFIG(CURL,curl-config)
+TUXBOX_APPS_LIB_PKGCONFIG(CURL,libcurl)
 
 # needed by tuxmail
 TUXBOX_APPS_LIB_PKGCONFIG(FREETYPE,freetype2)
@@ -48,15 +49,6 @@ fi
 
 # CPPFLAGS="$CPPFLAGS $TUXTXT_CFLAGS"
 # CFLAGS="$CFLAGS $TUXTXT_CFLAGS"
-
-AC_ARG_ENABLE(giflib,
-	AS_HELP_STRING(--enable-giflib,use giflib instead of libungif),
-	,[enable_giflib=no])
-
-AM_CONDITIONAL(ENABLE_GIFLIB,test "$enable_giflib" = "yes")
-if test "$enable_giflib" = "yes"; then
-	AC_DEFINE(ENABLE_GIFLIB,1,[use giflib instead of libungif])
-fi
 
 AC_OUTPUT([
 Makefile
