@@ -1,6 +1,7 @@
 
 AM_CPPFLAGS =  \
 	@FREETYPE_CFLAGS@ \
+	-I$(top_builddir) \
 	-I$(top_srcdir)/include
 
 noinst_PROGRAMS = tuxcom
