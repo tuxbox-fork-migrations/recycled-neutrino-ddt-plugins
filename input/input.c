@@ -8,14 +8,14 @@
 #include "gfx.h"
 #include "inputd.h"
 
-#define NCF_FILE 	"/var/tuxbox/config/neutrino.conf"
+#define NCF_FILE CONFIGDIR "/neutrino.conf"
 #define BUFSIZE 	1024
 #define I_VERSION	1.08
 
 //#define FONT "/usr/share/fonts/md_khmurabi_10.ttf"
-#define FONT2 "/share/fonts/pakenham.ttf"
+#define FONT2 FONTDIR "/pakenham.ttf"
 // if font is not in usual place, we look here:
-#define FONT "/share/fonts/neutrino.ttf"
+#define FONT FONTDIR "/neutrino.ttf"
 
 //					   CMCST,   CMCS,  CMCT,    CMC,    CMCIT,  CMCI,   CMHT,   CMH
 //					   WHITE,   BLUE0, TRANSP,  CMS,    ORANGE, GREEN,  YELLOW, RED

@@ -23,7 +23,7 @@
 #include "io.h"
 
 #ifndef MARTII
-#define RC_DEVICE	"/dev/input/nevis_ir"
+#define RC_DEVICE "/dev/input/nevis_ir"
 #endif
 
 extern int instance;

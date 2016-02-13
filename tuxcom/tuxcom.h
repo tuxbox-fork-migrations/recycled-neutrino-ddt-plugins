@@ -289,9 +289,9 @@ int rcaltgrtable[] =
 
 //freetype stuff
 
-#define FONT "/share/fonts/neutrino.ttf"
+#define FONT FONTDIR "/neutrino.ttf"
 // if font is not in usual place, we look here:
-#define FONT2 "/share/fonts/pakenham.ttf"
+#define FONT2 FONTDIR "/pakenham.ttf"
 
 enum {LANG_INT,LANG_DE, LANG_IT, LANG_SV, LANG_PT};
 enum {RC_NORMAL,RC_EDIT};

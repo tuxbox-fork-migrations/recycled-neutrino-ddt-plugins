@@ -6,15 +6,15 @@
 #include "io.h"
 #include "gfx.h"
 
-static char CFG_FILE[128]="/var/tuxbox/config/shellexec.conf";
+static char CFG_FILE[128] = CONFIGDIR "/shellexec.conf";
 
 //#define FONT "/usr/share/fonts/md_khmurabi_10.ttf"
-#define FONT2 "/share/fonts/pakenham.ttf"
+#define FONT2 FONTDIR "/pakenham.ttf"
 // if font is not in usual place, we look here:
 #ifdef MARTII
-char FONT[128]="/share/fonts/neutrino.ttf";
+char FONT[128] = FONTDIR "/neutrino.ttf";
 #else
-unsigned char FONT[128]="/share/fonts/neutrino.ttf";
+unsigned char FONT[128] = FONTDIR "/neutrino.ttf";
 #endif
 
 //					  CMCST,    CMCS,   CMCT,   CMC,    CMCIT,  CMCI,   CMHT,   CMH
