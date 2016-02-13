@@ -2,7 +2,8 @@
 
 #define __IO_H__
 
-#define RC_DEVICE	"/dev/input/nevis_ir"
+#include <config.h>
+#define RC_DEVICE "/dev/input/nevis_ir"
 #ifdef MARTII
 #ifdef HAVE_DUCKBOX_HARDWARE
 #define RC_DEVICE_FALLBACK "/dev/input/event0"

@@ -1,5 +1,5 @@
-AC_INIT(tuxbox-plugins,0.0.1)
-AM_INIT_AUTOMAKE(tuxbox-plugins,0.0.1)
+AC_INIT([tuxbox-plugins], [0.0.1])
+AM_INIT_AUTOMAKE
 
 TUXBOX_APPS
 TUXBOX_APPS_DIRECTORY
@@ -24,7 +24,7 @@ fi
 TUXBOX_APPS_LIB_CONFIG(CURL,curl-config)
 
 # needed by tuxmail
-TUXBOX_APPS_LIB_CONFIG(FREETYPE,freetype-config)
+TUXBOX_APPS_LIB_PKGCONFIG(FREETYPE,freetype2)
 TUXBOX_APPS_LIB_PKGCONFIG(PNG,libpng)
 
 # needed by enigma-demo

@@ -132,7 +132,7 @@ int HTTP_downloadFile(char *URL, char *downloadTarget, int showprogress, int tmo
 			}
 			else
 			{
-				curl_easy_setopt(curl, CURLOPT_PROXY, 0);
+				curl_easy_setopt(curl, CURLOPT_PROXY, NULL);
 			}
 			if(proxyuserpwd && strstr(URL,"//127.0.0.1/")==NULL && strstr(URL,"//localhost/")==NULL)
 			{
