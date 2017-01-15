@@ -1,5 +1,4 @@
-
-AM_CPPFLAGS =  \
+AM_CPPFLAGS = \
 	-DWWEATHER \
 	@FREETYPE_CFLAGS@ \
 	@CURL_CFLAGS@ \
@@ -30,8 +29,6 @@ tuxwetter_LDADD = \
 	-ljpeg \
 	-lgif
 
-
-
 install-exec-local:
 	install -d $(DESTDIR)$(PLUGINDIR)
 	install -d $(DESTDIR)$(CONFIGDIR)
@@ -39,3 +36,4 @@ install-exec-local:
 	install -m 0755 tuxwetter $(DESTDIR)$(PLUGINDIR)/tuxwetter.so
 	install -m 0644 $(srcdir)/tuxwetter.cfg $(DESTDIR)$(PLUGINDIR)
 	install -m 0644 $(srcdir)/tuxwetter.conf $(srcdir)/tuxwetter.mcfg $(srcdir)/convert.list $(srcdir)/startbild.jpg $(DESTDIR)$(CONFIGDIR)/tuxwetter
+	install -m 0644 $(srcdir)/tuxwetter_hint.png $(DESTDIR)$(PLUGINDIR)
