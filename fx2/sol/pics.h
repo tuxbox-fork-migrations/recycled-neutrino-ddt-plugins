@@ -72,8 +72,8 @@ g,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B };
 #define	B	DARK
 #define	W	WHITE
 #define	R	RED
-#define _       GRAY
-#define O       ORANGE
+#define _	GRAY
+#define O	ORANGE
 
 // a taken board cell
 static unsigned char	dtux[] = {

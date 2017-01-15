@@ -28,33 +28,33 @@
 #ifndef TEST
 extern "C"
 {
-	#include <draw.h>
+#include "draw.h"
 }
 #else
-	#define RED	0
+#define RED		0
 #endif
 
 #include "colors.h"
 
-#define SCREEN_WIDTH										720
-#define SCREEN_HEIGHT										576
+#define SCREEN_WIDTH	720
+#define SCREEN_HEIGHT	576
 
 #undef BLACK
-#define BLACK														BLACKBLACK
+#define BLACK		BLACKBLACK
 
-#define	COLOR_TEXTBG										0
+#define	COLOR_TEXTBG	0
 
-#define FORMAT_TMP_LEN									1024
+#define FORMAT_TMP_LEN	1024
 
 
 // ----------------------------------------------------------------------------
 // tMenuItem::tMenuItem()
 // ----------------------------------------------------------------------------
 tMenuItem::tMenuItem()
-	: nLeft(-1)
-	, nTop(-1)
-	, nWidth(-1)
-	, nHeight(-1)
+		: nLeft(-1)
+		, nTop(-1)
+		, nWidth(-1)
+		, nHeight(-1)
 {
 }
 /*
@@ -71,21 +71,21 @@ tMenuItem &tMenuItem::operator = (const tMenuItem &rMenuItem)
 // tMenu
 // ----------------------------------------------------------------------------
 tMenu::tMenu()
-	: nLeft(128)
-	, nTop(64)
-	, nWidth(SCREEN_WIDTH-(2*nLeft))
-	, nColorMenuBorder(BLACK)
-	, nColorMenuBackground(STEELBLUE)
-	, nColorItemText(WHITE)
-	, nColorItemTextHighlighted(YELLOW)
-	, nColorItemBgHighlighted(BLUE)
-	, nColorCaptionBorder(RED)
-	, nColorCaptionBackground(BLACK)
-	, nColorCaptionText(RED)
-	, nCaptionHeight(48)
-	, nItemHeight(34)
-	, nItemsCount(0)
-	, nSelectedItem(0)
+		: nLeft(128)
+		, nTop(64)
+		, nWidth(SCREEN_WIDTH-(2*nLeft))
+		, nColorMenuBorder(BLACK)
+		, nColorMenuBackground(STEELBLUE)
+		, nColorItemText(WHITE)
+		, nColorItemTextHighlighted(YELLOW)
+		, nColorItemBgHighlighted(BLUE)
+		, nColorCaptionBorder(RED)
+		, nColorCaptionBackground(BLACK)
+		, nColorCaptionText(RED)
+		, nCaptionHeight(48)
+		, nItemHeight(34)
+		, nItemsCount(0)
+		, nSelectedItem(0)
 {
 }
 
@@ -94,27 +94,18 @@ tMenu::tMenu()
 // ----------------------------------------------------------------------------
 tMenuItemIterator MenuGetItem(tMenu *pMenu, int nIndex)
 {
-	if(nIndex < 0 || nIndex > (pMenu->nItemsCount-1))
-#ifdef MARTII
+	if (nIndex < 0 || nIndex > (pMenu->nItemsCount-1))
 		return pMenu->MenuItemsList.end();
-#else
-		return NULL;
-#endif
 
 	int i=0;
 	tMenuItemIterator pMenuItem;
-	for(pMenuItem = pMenu->MenuItemsList.begin(); pMenuItem != pMenu->MenuItemsList.end(); pMenuItem++)
-	{
-		if(i == nIndex)
+	for (pMenuItem = pMenu->MenuItemsList.begin(); pMenuItem != pMenu->MenuItemsList.end(); pMenuItem++) {
+		if (i == nIndex)
 			return pMenuItem;
 		i++;
 	}
 
-#ifdef MARTII
 	return pMenu->MenuItemsList.end();
-#else
-	return NULL;
-#endif
 }
 
 // ----------------------------------------------------------------------------
@@ -127,10 +118,10 @@ void MenuAddItem(tMenu *pMenu, const char *pszFormat, ...)
 	va_list argList;
 	va_start(argList, pszFormat);
 
-		// TODO:
-		char szString[FORMAT_TMP_LEN];
-		vsprintf(szString, pszFormat, argList);
-		Item.sText = szString;
+	// TODO:
+	char szString[FORMAT_TMP_LEN];
+	vsprintf(szString, pszFormat, argList);
+	Item.sText = szString;
 
 	va_end(argList);
 
@@ -147,14 +138,14 @@ void MenuSetItem(tMenu *pMenu, int nIndex, const char *pszFormat, ...)
 	va_list argList;
 	va_start(argList, pszFormat);
 
-		// TODO:
-		char szString[FORMAT_TMP_LEN];
-		vsprintf(szString, pszFormat, argList);
-		pMenuItem->sText = szString;
+	// TODO:
+	char szString[FORMAT_TMP_LEN];
+	vsprintf(szString, pszFormat, argList);
+	pMenuItem->sText = szString;
 
 	va_end(argList);
 
-	if(pMenuItem->nLeft != -1 && pMenuItem->nTop != -1 && pMenuItem->nWidth != -1 && pMenuItem->nHeight != -1)
+	if (pMenuItem->nLeft != -1 && pMenuItem->nTop != -1 && pMenuItem->nWidth != -1 && pMenuItem->nHeight != -1)
 		MenuDrawItem(pMenu, pMenuItem, (nIndex == pMenu->nSelectedItem));
 }
 
@@ -181,13 +172,12 @@ void MenuDrawItem(tMenu *pMenu, int nIndex)
 void MenuDraw(tMenu *pMenu)
 {
 #ifndef TEST
-	int x		= pMenu->nLeft;
-	int y		= pMenu->nTop;
-	int w		= pMenu->nWidth;
+	int x	= pMenu->nLeft;
+	int y	= pMenu->nTop;
+	int w	= pMenu->nWidth;
 
-	if(pMenu->sCaption.length() > 0)
-	{
-		if(pMenu->nCaptionHeight <= 0)
+	if (pMenu->sCaption.length() > 0) {
+		if (pMenu->nCaptionHeight <= 0)
 			pMenu->nCaptionHeight = 48;
 
 		FBFillRect(x, y, w, pMenu->nCaptionHeight, pMenu->nColorCaptionBackground);
@@ -202,13 +192,11 @@ void MenuDraw(tMenu *pMenu)
 
 	int i=0;
 	tMenuItemIterator pMenuItem;
-	for(pMenuItem = pMenu->MenuItemsList.begin(); pMenuItem != pMenu->MenuItemsList.end(); pMenuItem++)
-	{
-		if(pMenuItem->sText.length() > 0)
-		{
-			pMenuItem->nLeft		= x;
-			pMenuItem->nTop			= y;
-			pMenuItem->nWidth		= w;	
+	for (pMenuItem = pMenu->MenuItemsList.begin(); pMenuItem != pMenu->MenuItemsList.end(); pMenuItem++) {
+		if (pMenuItem->sText.length() > 0) {
+			pMenuItem->nLeft	= x;
+			pMenuItem->nTop		= y;
+			pMenuItem->nWidth	= w;
 			pMenuItem->nHeight	= pMenu->nItemHeight;
 			MenuDrawItem(pMenu, pMenuItem, (i == pMenu->nSelectedItem));
 
@@ -220,4 +208,3 @@ void MenuDraw(tMenu *pMenu)
 	}
 #endif
 }
-// vim:ts=4

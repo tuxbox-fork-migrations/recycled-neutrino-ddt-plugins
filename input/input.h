@@ -1,11 +1,11 @@
 #ifndef __INPUT_H__
-
 #define __INPUT_H__
 
 #ifdef MARTII
 #include <config.h>
-#define _FILE_OFFSET_BITS 64
 #endif
+
+#define _FILE_OFFSET_BITS 64
 #include <errno.h>
 #include <fcntl.h>
 #include <signal.h>
@@ -18,7 +18,6 @@
 #include <sys/ioctl.h>
 #include <sys/mman.h>
 #include <sys/un.h>
-#ifdef MARTII
 #include <stdint.h>
 #if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 #include <linux/stmfb.h>
@@ -27,14 +26,13 @@
 void blit();
 extern int sync_blitter;
 #endif
-#endif
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include FT_CACHE_H
 #include FT_CACHE_SMALL_BITMAPS_H
 
-//freetype stuff
+#define BUFSIZE 1024
 
 enum {LEFT, CENTER, RIGHT};
 enum {SMALL, MED, BIG};
@@ -115,27 +113,40 @@ int fb;
 
 //framebuffer stuff
 
-enum {FILL, GRID};
+enum {
+	FILL,
+	GRID
+};
 
-enum {CMCST, CMCS, CMCT, CMC, CMCIT, CMCI, CMHT, CMH, WHITE, BLUE1, GTRANSP, CMS, ORANGE, GREEN, YELLOW, RED};
+enum {
+	CMCST,
+	CMCS,
+	CMCT,
+	CMC,
+	CMCIT,
+	CMCI,
+	CMHT,
+	CMH,
+	WHITE,
+	BLUE1,
+	GTRANSP,
+	CMS,
+	ORANGE,
+	GREEN,
+	YELLOW,
+	RED
+};
 #define TRANSP 0
 
-#ifdef MARTII
 extern uint32_t *lfb, *lbb, *obb;
 extern uint32_t bgra[];
 extern int stride;
-#else
-extern unsigned char *lfb, *lbb, *obb;
-extern unsigned char rd[], gn[], bl[], tr[];
-#endif
 
 struct fb_fix_screeninfo fix_screeninfo;
 struct fb_var_screeninfo var_screeninfo;
 
 int startx, starty, sx, ex, sy, ey;
-#ifndef MARTII
-extern unsigned char sc[8], tc[8];
-#endif
+
 extern char *butmsg[3];
 extern int buttons,selection;
 
@@ -145,8 +156,6 @@ extern int buttons,selection;
 #ifndef FB_DEVICE_FALLBACK
 #define FB_DEVICE_FALLBACK	"/dev/fb0"
 #endif
-
-#define BUFSIZE 1024
 
 #endif
 

@@ -8,27 +8,25 @@
 #include <sys/time.h>
 #include <malloc.h>
 
-#include <colors.h>
-#include <draw.h>
-#include <pics.h>
-#include <rcinput.h>
+#include "colors.h"
+#include "draw.h"
+#include "pics.h"
+#include "rcinput.h"
 
-#define	STATUS_X		80
-#define STATUS_Y		50
-#define LOGO_X			600
-#define LOGO_Y			30
+#define	STATUS_X	80
+#define STATUS_Y	50
+#define LOGO_X		600
+#define LOGO_Y		30
 
-extern	double	sqrt( double in );
-
+extern	double		sqrt( double in );
 extern	int		doexit;
 
-#define LEFT	0
-#define RIGHT	1
+#define LEFT		0
+#define RIGHT		1
 #define UP		2
-#define DOWN	3
+#define DOWN		3
 
-typedef struct _snake_ele
-{
+typedef struct _snake_ele {
 	unsigned char	x;
 	unsigned char	y;
 	unsigned char	dir;
@@ -36,12 +34,12 @@ typedef struct _snake_ele
 
 extern	unsigned short	actcode;
 static	unsigned char	maze[ 44 * 40 ];
-static	int				score = 0;
-static	int				snake_len = 10;
-static	snake_ele		*snake = 0;
-static	snake_ele		last;
-static	snake_ele		goodie;
-static	int				count = 0;
+static	int		score = 0;
+static	int		snake_len = 10;
+static	snake_ele	*snake = 0;
+static	snake_ele	last;
+static	snake_ele	goodie;
+static	int		count = 0;
 
 static	int		myrand( int idx )
 {
@@ -53,18 +51,15 @@ static	int		myrand( int idx )
 
 static	void	SetNewGoodi()
 {
-	int		goodiok=0;
-	int		i;
+	int	goodiok=0;
+	int	i;
 
-	while( !goodiok )
-	{
+	while ( !goodiok ) {
 		goodie.x = myrand( MAZEW - 8 ) + 4;
 		goodie.y = myrand( MAZEH - 10 ) + 6;
 		goodiok=1;
-		for( i=0; i < snake_len; i++ )
-		{
-			if (( snake[i].x == goodie.x ) && ( snake[i].y == goodie.y ))
-			{
+		for ( i=0; i < snake_len; i++ ) {
+			if (( snake[i].x == goodie.x ) && ( snake[i].y == goodie.y )) {
 				goodiok=0;
 				break;
 			}
@@ -90,8 +85,7 @@ static	void	InitSnake( void )
 		free(snake);
 	snake_len = 10;
 	snake = malloc(sizeof(snake_ele)*snake_len);
-	for( i=0;i<snake_len;i++)
-	{
+	for ( i=0;i<snake_len;i++) {
 		snake[i].x = 20+i;
 		snake[i].y = 20;
 		snake[i].dir = LEFT;
@@ -113,22 +107,20 @@ static	void	DrawScore( void )
 
 void	DrawSnake( void )
 {
-	int		i;
+	int	i;
 
-	for( i=0; i <snake_len; i++ )
-	{
+	for ( i=0; i <snake_len; i++ ) {
 		FBFillRect( snake[i].x*16,snake[i].y*16,16,16,GREEN);
 	}
 }
 
 void	MoveSnake( void )
 {
-	int			i;
+	int		i;
 	snake_ele	*snake2;
 
 	memmove(snake+1,snake,sizeof(snake_ele)*(snake_len-1));
-	switch( actcode )
-	{
+	switch ( actcode ) {
 	case RC_LEFT :
 		if ( snake[1].dir != RIGHT )
 			snake[0].dir = LEFT;
@@ -146,8 +138,7 @@ void	MoveSnake( void )
 			snake[0].dir = DOWN;
 		break;
 	}
-	switch( snake[0].dir )
-	{
+	switch ( snake[0].dir ) {
 	case UP :
 		snake[0].y--;
 		break;
@@ -161,28 +152,21 @@ void	MoveSnake( void )
 		snake[0].x--;
 		break;
 	}
-	if (( snake[0].x == goodie.x ) && ( snake[0].y == goodie.y ))
-	{
+	if (( snake[0].x == goodie.x ) && ( snake[0].y == goodie.y )) {
 		score += 100;
 		DrawScore();
 		snake_len++;
 		snake2=realloc(snake,sizeof(snake_ele)*snake_len);
-		if ( snake2 )
-		{
+		if ( snake2 ) {
 			snake=snake2;
 			memcpy(snake+snake_len-1,snake+snake_len-2,sizeof(snake_ele));
-		}
-		else
-		{
+		} else {
 			snake_len--;
 		}
 		SetNewGoodi();
-	}
-	else
-	{
+	} else {
 		count--;
-		if ( !count )
-		{
+		if ( !count ) {
 			FBFillRect( goodie.x*16, goodie.y*16, 16, 16, BLACK );
 			SetNewGoodi();
 		}
@@ -192,15 +176,12 @@ void	MoveSnake( void )
 	FBFillRect( snake[0].x*16, snake[0].y*16, 16, 16, GREEN2 );
 	FBFillRect( snake[1].x*16, snake[1].y*16, 16, 16, GREEN );
 	memcpy(&last,snake+snake_len-1,sizeof(snake_ele));
-	if ( maze[ snake[0].y*MAZEW+snake[0].x ] == '#' )
-	{
+	if ( maze[ snake[0].y*MAZEW+snake[0].x ] == '#' ) {
 		doexit=1;
 		return;
 	}
-	for( i=1; i<snake_len;i++)
-	{
-		if ( snake[0].x == snake[i].x && snake[0].y == snake[i].y )
-		{
+	for ( i=1; i<snake_len;i++) {
+		if ( snake[0].x == snake[i].x && snake[0].y == snake[i].y ) {
 			doexit=1;
 			return;
 		}
@@ -209,8 +190,8 @@ void	MoveSnake( void )
 
 void	DrawMaze( void )
 {
-	int				x;
-	int				y;
+	int		x;
+	int		y;
 	unsigned char	*p = maze;
 
 	memset(maze,' ',sizeof(maze));
@@ -219,10 +200,8 @@ void	DrawMaze( void )
 
 	score=0;
 
-	for( y = 5; y < MAZEH-3; y++ )
-	{
-		for( x = 3; x < MAZEW-3; x++ )
-		{
+	for ( y = 5; y < MAZEH-3; y++ ) {
+		for ( x = 3; x < MAZEW-3; x++ ) {
 			if ( (y==5) || (x==3) || (y==MAZEH-4) || ( x==MAZEW-4))
 				maze[ y*MAZEW+x ]='#';
 
@@ -233,22 +212,17 @@ void	DrawMaze( void )
 				maze[ y*MAZEW+x ]='#';
 		}
 	}
-	for( y = MAZEH-9; y < MAZEH-1; y++ )
-	{
-		for( x = MAZEW-11; x < MAZEW-1; x++ )
-		{
+	for ( y = MAZEH-9; y < MAZEH-1; y++ ) {
+		for ( x = MAZEW-11; x < MAZEW-1; x++ ) {
 			if ( (y==MAZEH-9) || (x==MAZEW-11) || (y==MAZEH-2) || ( x==MAZEW-2))
 				maze[ y*MAZEW+x ]='#';
 			else
 				maze[ y*MAZEW+x ]='z';
 		}
 	}
-	for( y = 0; y < MAZEH; y++ )
-	{
-		for( x = 0; x < MAZEW; x++ )
-		{
-			switch ( *p )
-			{
+	for ( y = 0; y < MAZEH; y++ ) {
+		for ( x = 0; x < MAZEW; x++ ) {
+			switch ( *p ) {
 			case '#' :
 				FBFillRect( x*16, y*16, 16, 16, STEELBLUE );
 				break;

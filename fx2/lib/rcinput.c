@@ -15,11 +15,9 @@
 
 #include <config.h>
 
-#if defined HAVE_DREAMBOX_HARDWARE || defined HAVE_IPBOX_HARDWARE
-	static int fd_is_ext = 0;
-	static int keyboard = 0;
-	static int drop = 0;
-#endif
+static int fd_is_ext = 0;
+static int keyboard = 0;
+static int drop = 0;
 
 #define Debug	if (debug) printf
 
@@ -38,8 +36,7 @@ void	KbInitialize( void )
 
 	kbfd = 0;
 
-	if ( tcgetattr(kbfd,&tios) == -1 )
-	{
+	if ( tcgetattr(kbfd,&tios) == -1 ) {
 		kbfd=-1;
 		return;
 	}
@@ -49,7 +46,7 @@ void	KbInitialize( void )
 	return;
 }
 
-static	unsigned short kb_translate( unsigned char c )
+static unsigned short kb_translate( unsigned char c )
 {
 	switch(c)
 	{
@@ -188,21 +185,18 @@ int	RcInitialize( int extfd )
 #endif
 #if defined HAVE_DREAMBOX_HARDWARE || defined HAVE_IPBOX_HARDWARE
 	char	buf[32];
-	if ( extfd == -1 )
-	{
+	if ( extfd == -1 ) {
 		fd_is_ext = 0;
 		fd = open("/dev/dbox/rc0", O_RDONLY );
 		if ( fd == -1 )
 			return kbfd;
 		fcntl(fd, F_SETFL, O_NONBLOCK );
-	}
-	else
-	{
+	} else {
 		fd_is_ext = 1;
 		fd = extfd;
 		fcntl(fd, F_SETFL, O_NONBLOCK );
 	}
-/* clear rc-buffer */
+	/* clear rc-buffer */
 	read( fd, buf, 32 );
 #endif
 #ifdef HAVE_DBOX_HARDWARE
@@ -333,7 +327,7 @@ void RcClose(void)
 {
 }
 #else
-void		RcGetActCode( void )
+void RcGetActCode( void )
 {
 	int				x=0;
 	unsigned short	code = 0;
@@ -372,21 +366,16 @@ void		RcGetActCode( void )
 	if ( fd != -1 ) {
 
 		do {
-
 #if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 			ev.code = 0xee;
 #endif
 			x = read(fd, &ev, sizeof(struct input_event));
-
 			if ((x == sizeof(struct input_event)) && ((ev.value == 1)||(ev.value == 2)))
 				break;
-
 		} while (x == sizeof(struct input_event));
-
 	}
 
-	if ( x % sizeof(struct input_event) )
-	{
+	if ( x % sizeof(struct input_event) ) {
 		//KbGetActCode();
 		realcode=0xee;
 		return;
@@ -399,14 +388,12 @@ void		RcGetActCode( void )
 	Debug("code=%04x\n",code);
 #endif
 
-	if ( cw == 2 )
-	{
+	if ( cw == 2 ) {
 		actcode=code;
 		return;
 	}
 
-	switch(code)
-	{
+	switch (code) {
 #if 0
 	case RC_HELP:
 		if ( !cw )
@@ -415,8 +402,7 @@ void		RcGetActCode( void )
 		break;
 #endif
 	case RC_SPKR:
-		if ( !cw )
-		{
+		if ( !cw ) {
 			cw=2;
 			FBPause();
 			cw=0;
@@ -489,9 +475,7 @@ void	RcClose( void )
 	KbClose();
 	if ( fd == -1 )
 		return;
-#if defined HAVE_DREAMBOX_HARDWARE || defined HAVE_IPBOX_HARDWARE
 	if ( !fd_is_ext )
-#endif
-	close(fd);
+		close(fd);
 }
 #endif

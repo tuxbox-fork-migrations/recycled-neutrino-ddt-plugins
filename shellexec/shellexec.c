@@ -1,50 +1,57 @@
 #include <string.h>
 #include <stdio.h>
 #include <time.h>
-#include "shellexec.h"
+#include <sys/types.h>
+#include <sys/stat.h>
+
+#include "current.h"
 #include "text.h"
 #include "io.h"
 #include "gfx.h"
 
+#define SH_VERSION 1.20
+
 static char CFG_FILE[128] = CONFIGDIR "/shellexec.conf";
 
-//#define FONT "/usr/share/fonts/md_khmurabi_10.ttf"
 #define FONT2 FONTDIR "/pakenham.ttf"
 // if font is not in usual place, we look here:
-#ifdef MARTII
 char FONT[128] = FONTDIR "/neutrino.ttf";
-#else
-unsigned char FONT[128] = FONTDIR "/neutrino.ttf";
-#endif
 
 //					  CMCST,    CMCS,   CMCT,   CMC,    CMCIT,  CMCI,   CMHT,   CMH
 //					  WHITE,    BLUE0,  TRANSP, CMS,    ORANGE, GREEN,  YELLOW, RED
 
-unsigned char bl[] = {	0x00, 	0x00, 	0xFF, 	0x80, 	0xFF, 	0x80, 	0x00, 	0x80,
-						0xFF, 	0x80, 	0x00, 	0xFF, 	0x00, 	0x00, 	0x00, 	0x00,
-						0x00, 	0x00,  	0x00,  	0x00};
-unsigned char gn[] = {	0x00, 	0x00, 	0xFF, 	0x00, 	0xFF, 	0x00, 	0xC0, 	0x00,
-						0xFF, 	0x00, 	0x00, 	0x80, 	0x80, 	0x80, 	0x80, 	0x00,
-						0x00, 	0x00,  	0x00,  	0x00};
-unsigned char rd[] = {	0x00, 	0x00, 	0xFF, 	0x00, 	0xFF, 	0x00, 	0xFF, 	0x00,
-						0xFF, 	0x00, 	0x00, 	0x00, 	0xFF, 	0x00, 	0x80, 	0x80,
-						0x00, 	0x00,  	0x00,  	0x00};
-unsigned char tr[] = {	0xFF, 	0xFF, 	0xFF,  	0xA0,  	0xFF,  	0x80,  	0xFF,  	0xFF,
-						0xFF, 	0xFF, 	0x00,  	0xFF,  	0xFF,  	0xFF,  	0xFF,  	0xFF,
-						0x00, 	0x00,  	0x00,  	0x00};
+unsigned char bl[] = {	0x00,	0x00,	0xFF,	0x80,	0xFF,	0x80,	0x00,	0x80,
+						0xFF,	0x80,	0x00,	0xFF,	0x00,	0x00,	0x00,	0x00,
+						0x00,	0x00,	0x00,	0x00};
+unsigned char gn[] = {	0x00,	0x00,	0xFF,	0x00,	0xFF,	0x00,	0xC0,	0x00,
+						0xFF,	0x00,	0x00,	0x80,	0x80,	0x80,	0x80,	0x00,
+						0x00,	0x00,	0x00,	0x00};
+unsigned char rd[] = {	0x00,	0x00,	0xFF,	0x00,	0xFF,	0x00,	0xFF,	0x00,
+						0xFF,	0x00,	0x00,	0x00,	0xFF,	0x00,	0x80,	0x80,
+						0x00,	0x00,	0x00,	0x00};
+unsigned char tr[] = {	0xFF,	0xFF,	0xFF,	0xA0,	0xFF,	0x80,	0xFF,	0xFF,
+						0xFF,	0xFF,	0x00,	0xFF,	0xFF,	0xFF,	0xFF,	0xFF,
+						0x00,	0x00,	0x00,	0x00};
 
-#ifdef MARTII
 uint32_t bgra[20];
-#endif
 void TrimString(char *strg);
 
 // OSD stuff
-static char menucoltxt[][25]={"Content_Selected_Text","Content_Selected","Content_Text","Content","Content_inactive_Text","Content_inactive","Head_Text","Head"};
+static char menucoltxt[][25]={
+	"Content_Selected_Text",
+	"Content_Selected",
+	"Content_Text",
+	"Content",
+	"Content_inactive_Text",
+	"Content_inactive",
+	"Head_Text",
+	"Head"
+};
 static char spres[][5]={"","_crt","_lcd"};
 
 #define LIST_STEP 	10
 #define BUFSIZE 	4095
-#define SH_VERSION  1.20
+
 typedef struct {int fnum; FILE *fh[16];} FSTRUCT, *PFSTRUCT;
 
 static int direct[32];
@@ -53,7 +60,7 @@ static int STYP=1;
 
 typedef struct {char *entry; char *message; int headerpos; int type; int underline; int stay; int showalways;} LISTENTRY;
 typedef LISTENTRY *PLISTENTRY;
-typedef PLISTENTRY	*LIST;
+typedef PLISTENTRY *LIST;
 typedef struct {int num_headers; int act_header; int max_header; int *headerwait; int *headermed; char **headertxt; char **icon; int *headerlevels; int *lastheaderentrys; int num_entrys; int act_entry; int max_entrys; int num_active; char *menact; char *menactdep; LIST list;} MENU;
 enum {TYP_MENU, TYP_MENUDON, TYP_MENUDOFF, TYP_MENUFON, TYP_MENUFOFF, TYP_MENUSON, TYP_MENUSOFF, TYP_EXECUTE, TYP_COMMENT, TYP_DEPENDON, TYP_DEPENDOFF, TYP_FILCONTON, TYP_FILCONTOFF, TYP_SHELLRESON, TYP_SHELLRESOFF, TYP_ENDMENU, TYP_INACTIVE};
 static char TYPESTR[TYP_ENDMENU+1][13]={"MENU=","MENUDON=","MENUDOFF=","MENUFON=","MENUFOFF=","MENUSON=","MENUSOFF=","ACTION=","COMMENT=","DEPENDON=","DEPENDOFF=","FILCONTON=","FILCONTOFF=","SHELLRESON=","SHELLRESOFF=","ENDMENU"};
@@ -68,29 +75,17 @@ int AddListEntry(MENU *m, char *line, int pos);
 int Get_Menu(int showwait);
 static void ShowInfo(MENU *m, int knew);
 
-
-#ifdef MARTII
 uint32_t *lfb = NULL, *lbb = NULL;
 char title[256];
 char VFD[256]="";
-#else
-unsigned char *lfb = 0, *lbb = 0;
-unsigned char title[256];
-unsigned char VFD[256]="";
-#endif
 char url[256]="time.fu-berlin.de";
 char *line_buffer=NULL;
-#ifdef MARTII
 char *trstr;
 int paging=1, mtmo=120, radius=10;
-#else
-unsigned char *trstr;
-int mloop=1, paging=1, mtmo=120, radius=10;
-#endif
 int ixw=600, iyw=680, xoffs=13, vfd=0;
 char INST_FILE[]="/tmp/rc.locked";
 int instance=0;
-#ifdef MARTII
+
 #if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 int sync_blitter = 0;
 
@@ -127,18 +122,13 @@ void blit(void) {
 		perror("STMFBIO_BLT");
 	sync_blitter = 1;
 }
-#else
-void blit(void) {
-	memcpy(lfb, lbb, fix_screeninfo.line_length*var_screeninfo.yres);
-}
 #endif
 int stride;
-#endif
 
 int get_instance(void)
 {
-FILE *fh;
-int rval=0;
+	FILE *fh;
+	int rval=0;
 
 	if((fh=fopen(INST_FILE,"r"))!=NULL)
 	{
@@ -150,7 +140,7 @@ int rval=0;
 
 void put_instance(int pval)
 {
-FILE *fh;
+	FILE *fh;
 
 	if(pval)
 	{
@@ -168,15 +158,15 @@ FILE *fh;
 
 static void quit_signal(int sig)
 {
+	printf("%s Version %.2f killed, signal (%d)\n", __plugin__, SH_VERSION, sig);
 	put_instance(get_instance()-1);
-	printf("shellexec Version %.2f killed, signal %d\n",SH_VERSION,sig);
 	exit(1);
 }
 
 char *strxchr(char *xstr, char srch)
 {
-int quota=0;
-char *resptr=xstr;
+	int quota=0;
+	char *resptr=xstr;
 
 	if(resptr)
 	{
@@ -198,7 +188,7 @@ char *resptr=xstr;
 
 void TrimString(char *strg)
 {
-char *pt1=strg, *pt2=strg;
+	char *pt1=strg, *pt2=strg;
 
 	while(*pt2 && *pt2<=' ')
 	{
@@ -223,8 +213,8 @@ char *pt1=strg, *pt2=strg;
 
 int GetLine(char *buffer, int size, PFSTRUCT fstruct)
 {
-int rv=0;
-char *pt1;
+	int rv=0;
+	char *pt1;
 
 	if(fstruct->fnum<0)
 	{
@@ -258,18 +248,14 @@ char *pt1;
 				TrimString(buffer);
 			}
 		}
-#ifdef MARTII
 		TranslateString(buffer, size);
-#else
-		TranslateString(buffer);
-#endif
 	}
 	return rv;
 }
 
 int ExistFile(char *fname)
 {
-FILE *efh;
+	FILE *efh;
 
 	if((efh=fopen(fname,"r"))==NULL)
 	{
@@ -281,10 +267,10 @@ FILE *efh;
 
 int FileContainText(char *line)
 {
-int rv=0;
-long flength;
-char *pt1,*tline=strdup(line),*fbuf=NULL;
-FILE *ffh;
+	int rv=0;
+	long flength;
+	char *pt1,*tline=strdup(line),*fbuf=NULL;
+	FILE *ffh;
 
 	if((pt1=strchr(tline,' '))!=NULL)
 	{
@@ -313,9 +299,9 @@ FILE *ffh;
 
 int Read_Neutrino_Cfg(char *entry)
 {
-FILE *nfh;
-char tstr [512], *cfptr=NULL;
-int rv=-1;
+	FILE *nfh;
+	char tstr [512], *cfptr=NULL;
+	int rv=-1;
 
 	if((nfh=fopen(NCF_FILE,"r"))!=NULL)
 	{
@@ -346,7 +332,7 @@ int rv=-1;
 					}
 				}
 			}
-//			printf("%s\n%s=%s -> %d\n",tstr,entry,cfptr,rv);
+			//printf("%s\n%s=%s -> %d\n",tstr,entry,cfptr,rv);
 		}
 		fclose(nfh);
 	}
@@ -355,7 +341,7 @@ int rv=-1;
 
 int IsMenu(char *buf)
 {
-int i, res=0;
+	int i, res=0;
 
 	for(i=TYP_MENU; !res && i<=TYP_MENUSOFF; i++)
 	{
@@ -366,7 +352,6 @@ int i, res=0;
 	}
 	return res;
 }
-#ifdef MARTII
 static int mysystem(const char *command) {
 	if (!command)
 		return -1;
@@ -382,11 +367,10 @@ static int mysystem(const char *command) {
 	return system(command);
 }
 #define system mysystem
-#endif
 
 void OnMenuClose(char *cmd, char *dep)
 {
-int res=1;
+	int res=1;
 
 	if(dep)
 	{
@@ -402,9 +386,9 @@ int res=1;
 
 int Check_Config(void)
 {
-int rv=-1, level=0;
-char *pt1,*pt2;
-FSTRUCT fstr;
+	int rv=-1, level=0;
+	char *pt1,*pt2;
+	FSTRUCT fstr;
 
 	if((fstr.fh[0]=fopen(CFG_FILE,"r"))!=NULL)
 	{
@@ -469,11 +453,7 @@ FSTRUCT fstr;
 					++pt1;
 				}
 				pt2=pt1;
-#ifdef MARTII
-				while(*pt2 && ((*pt2=='*') || (*pt2=='&') || (*pt2==0302) ||(*pt2==0247) || (*pt2=='+') || (*pt2=='-') || (*pt2=='!') || (*pt2=='_')))
-#else
-				while(*pt2 && ((*pt2=='*') || (*pt2=='&') || (*pt2=='§') || (*pt2=='+') || (*pt2=='-') || (*pt2=='!') || (*pt2=='_')))
-#endif
+				while(*pt2 && ((*pt2=='*') || (*pt2=='&') || (*pt2==0302) || (*pt2==0247) || (*pt2=='+') || (*pt2=='-') || (*pt2=='!') || (*pt2=='_')))
 				{
 					if(*pt2=='_')
 					{
@@ -560,7 +540,7 @@ FSTRUCT fstr;
 					}
 				}
 			}
-//printf("Check_Config: Level: %d -> %s\n",level,line_buffer);
+			//printf("Check_Config: Level: %d -> %s\n",level,line_buffer);
 		}
 		rv=0;
 		fclose(fstr.fh[fstr.fnum]);
@@ -575,8 +555,8 @@ FSTRUCT fstr;
 
 int Clear_List(MENU *m, int mode)
 {
-int i;
-PLISTENTRY entr;
+	int i;
+	PLISTENTRY entr;
 
 	if(m->menact)
 	{
@@ -648,8 +628,8 @@ PLISTENTRY entr;
 
 int Get_Selection(MENU *m)
 {
-int rv=1,rccode, mloop=1,i,j,first,last,active,knew=1;
-time_t tm1,tm2;
+	int rv=1,rccode, mloop=1,i,j,first,last,active,knew=1;
+	time_t tm1,tm2;
 
 	if(m->num_active)
 	{
@@ -670,7 +650,7 @@ time_t tm1,tm2;
 	}
 	time(&tm1);
 	do{
-//		usleep(100000L);
+		//usleep(100000L);
 		first=(paging)?0:(MAX_FUNCS*(int)(m->act_entry/MAX_FUNCS));
 		last=(paging)?(m->num_entrys-1):(MAX_FUNCS*(int)(m->act_entry/MAX_FUNCS)+MAX_FUNCS-1);
 		if(last>=m->num_entrys)
@@ -690,11 +670,7 @@ time_t tm1,tm2;
 			ShowInfo(m, knew);
 		}
 		knew=1;
-#ifdef MARTII
 		switch(rccode = GetRCCode(mtmo * 1000))
-#else
-		switch(rccode = GetRCCode())
-#endif
 		{
 			case RC_RED:
 				if(active && direct[0]>=0)
@@ -841,7 +817,7 @@ time_t tm1,tm2;
 					}
 					m->act_entry=i;
 				}
-//				knew=1;
+				//knew=1;
 				break;
 
 			case RC_DOWN:
@@ -863,7 +839,7 @@ time_t tm1,tm2;
 					}
 					m->act_entry=i;
 				}
-//				knew=1;
+				//knew=1;
 				break;
 
 			case RC_PAGEUP:
@@ -978,16 +954,15 @@ time_t tm1,tm2;
 
 int AddListEntry(MENU *m, char *line, int pos)
 {
-int i,found=0,pfound=0;
-PLISTENTRY entr;
-char *ptr1,*ptr2,*ptr3,*ptr4, *wstr;
-
+	int i,found=0,pfound=0;
+	PLISTENTRY entr;
+	char *ptr1,*ptr2,*ptr3,*ptr4, *wstr;
 
 	if(!strlen(line))
 	{
 		return 1;
 	}
-//printf("AddListEntry: %s\n",line);
+	//printf("AddListEntry: %s\n",line);
 	wstr=strdup(line);
 
 	if(m->num_entrys>=m->max_entrys)
@@ -1024,11 +999,7 @@ char *ptr1,*ptr2,*ptr3,*ptr4, *wstr;
 			ptr1=strchr(wstr,'=');
 			ptr1++;
 			ptr2=ptr1;
-#ifdef MARTII
-			while(*ptr2 && ((*ptr2=='*') || (*ptr2=='&') || (*ptr2==0247) || (*ptr2==0302) || (*ptr2=='+') || (*ptr2=='-') || (*ptr2=='!') || (*ptr2=='_')))
-#else
-			while(*ptr2 && ((*ptr2=='*') || (*ptr2=='&') || (*ptr2=='§') || (*ptr2=='+') || (*ptr2=='-') || (*ptr2=='!') || (*ptr2=='_')))
-#endif
+			while(*ptr2 && ((*ptr2=='*') || (*ptr2=='&') || (*ptr2==0302) || (*ptr2==0247) || (*ptr2=='+') || (*ptr2=='-') || (*ptr2=='!') || (*ptr2=='_')))
 			{
 				switch(*ptr2)
 				{
@@ -1037,13 +1008,9 @@ char *ptr1,*ptr2,*ptr3,*ptr4, *wstr;
 					case '+': entr->showalways=1; break;
 					case '-': entr->showalways=2; break;
 					case '&': entr->stay=1; break;
-#ifdef MARTII
 					case 0302: if (*(ptr2 + 1) != 0247) break; // UTF-8 value of paragraph symbol
 						ptr2++;
 					case 0247: entr->stay=2; break;
-#else
-					case '§': entr->stay=2; break;
-#endif
 				}
 				while(*(++ptr2))
 				{
@@ -1226,14 +1193,13 @@ char *ptr1,*ptr2,*ptr3,*ptr4, *wstr;
 	}
 	free(wstr);
 	return !found;
-
 }
 
 int Get_Menu(int showwait)
 {
-int rv=-1, loop=1, mlevel=0, clevel=0, pos=0;
-char *pt1,*pt2;
-FSTRUCT fstr;
+	int rv=-1, loop=1, mlevel=0, clevel=0, pos=0;
+	char *pt1,*pt2;
+	FSTRUCT fstr;
 
 	if(showwait && menu.headerwait[menu.act_header] && menu.headertxt[menu.act_header])
 	{
@@ -1265,7 +1231,7 @@ FSTRUCT fstr;
 					mlevel--;
 				}
 			}
-//printf("Get_Menu: loop: %d, mlevel: %d, pos: %d -> %s\n",loop,mlevel,pos,line_buffer);
+			//printf("Get_Menu: loop: %d, mlevel: %d, pos: %d -> %s\n",loop,mlevel,pos,line_buffer);
 		}
 		if(loop)
 		{
@@ -1325,13 +1291,13 @@ FSTRUCT fstr;
 	return rv;
 }
 
-void clean_string(char *trstr, char *lcstr)
+void clean_string(char *_trstr, char *lcstr)
 {
-int i;
-char *lcdptr,*lcptr,*tptr;
+	int i;
+	char *lcdptr,*lcptr,*tptr;
 
 	lcdptr=lcstr;
-	lcptr=trstr;
+	lcptr=_trstr;
 	while(*lcptr)
 	{
 		if(*lcptr=='~')
@@ -1434,11 +1400,6 @@ static void ShowInfo(MENU *m, int knew )
 	clean_string(m->headertxt[m->act_header],lcstr);
 	RenderString(lcstr, (m->headermed[m->act_header]==1)?0:45, dy-soffs+2+FSIZE_BIG/10, ixw-sbw-((m->headermed[m->act_header]==1)?0:45) , (m->headermed[m->act_header]==1)?CENTER:LEFT, FSIZE_BIG, CMHT);
 	free(lcstr);
-
-	if(m->icon[m->act_header])
-	{
-//		PaintIcon(m->icon[m->act_header],xoffs-6,soffs+2,1);
-	}
 
 	index /= MAX_FUNCS;
 	dloop=0;
@@ -1564,7 +1525,7 @@ static void ShowInfo(MENU *m, int knew )
 #ifdef MARTII
 	blit();
 #else
-	memcpy(lfb, lbb,fix_screeninfo.line_length*var_screeninfo.yres);
+	memcpy(lfb, lbb, var_screeninfo.xres*var_screeninfo.yres*sizeof(uint32_t));
 #endif
 
 	if(m->num_active && knew)
@@ -1627,11 +1588,11 @@ int llev=m->headerlevels[m->act_header], lmen=m->act_header, lentr=m->lastheader
 
 int main (int argc, char **argv)
 {
-int index=0,cindex=0,mainloop=1,dloop=1,tv, spr;
-char tstr[BUFSIZE], *rptr;
-PLISTENTRY pl;
+	int index=0,cindex=0,mainloop=1,dloop=1,tv, spr;
+	char tstr[BUFSIZE]={0}, *rptr;
+	PLISTENTRY pl;
 
-	printf("shellexec Version %.2f\n",SH_VERSION);
+	printf("%s Version %.2f\n", __plugin__, SH_VERSION);
 	for(tv=1; tv<argc; tv++)
 	{
 		if(*argv[tv]=='/')
@@ -1697,10 +1658,9 @@ PLISTENTRY pl;
 		tr[index]=tr[cindex];
 		cindex=index;
 	}
-#ifdef MARTII
+
 	for (index = 0; index <= COL_MENUCONTENT_PLUS_3; index++)
 		bgra[index] = (tr[index] << 24) | (rd[index] << 16) | (gn[index] << 8) | bl[index];
-#endif
 
 	fb = open(FB_DEVICE, O_RDWR);
 #ifdef MARTII
@@ -1709,30 +1669,27 @@ PLISTENTRY pl;
 #endif
 	if(fb == -1)
 	{
-		perror("shellexec <open framebuffer device>");
+		perror(__plugin__ " <open framebuffer device>");
 		exit(1);
 	}
 
 	InitRC();
-//	InitVFD();
+	//InitVFD();
 
 	//init framebuffer
-
 	if(ioctl(fb, FBIOGET_FSCREENINFO, &fix_screeninfo) == -1)
 	{
-		perror("shellexec <FBIOGET_FSCREENINFO>\n");
+		perror(__plugin__ " <FBIOGET_FSCREENINFO>\n");
 		return -1;
 	}
 	if(ioctl(fb, FBIOGET_VSCREENINFO, &var_screeninfo) == -1)
 	{
-		perror("shellexec <FBIOGET_VSCREENINFO>\n");
+		perror(__plugin__ " <FBIOGET_VSCREENINFO>\n");
 		return -1;
 	}
-#ifdef MARTII
 #if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 	var_screeninfo.xres = DEFAULT_XRES;
 	var_screeninfo.yres = DEFAULT_YRES;
-#endif
 #endif
 #ifdef MARTII
 	if(!(lfb = (uint32_t*)mmap(0, fix_screeninfo.smem_len, PROT_READ | PROT_WRITE, MAP_SHARED, fb, 0)))
@@ -1740,22 +1697,21 @@ PLISTENTRY pl;
 	if(!(lfb = (unsigned char*)mmap(0, fix_screeninfo.smem_len, PROT_READ | PROT_WRITE, MAP_SHARED, fb, 0)))
 #endif
 	{
-		perror("shellexec <mapping of Framebuffer>\n");
+		perror(__plugin__ " <mapping of Framebuffer>\n");
 		return -1;
 	}
 
 	//init fontlibrary
-
 	if((error = FT_Init_FreeType(&library)))
 	{
-		printf("shellexec <FT_Init_FreeType failed with Errorcode 0x%.2X>", error);
+		printf("%s <FT_Init_FreeType failed with Errorcode 0x%.2X>", __plugin__, error);
 		munmap(lfb, fix_screeninfo.smem_len);
 		return -1;
 	}
 
 	if((error = FTC_Manager_New(library, 1, 2, 0, &MyFaceRequester, NULL, &manager)))
 	{
-		printf("shellexec <FTC_Manager_New failed with Errorcode 0x%.2X>\n", error);
+		printf("%s <FTC_Manager_New failed with Errorcode 0x%.2X>\n", __plugin__, error);
 		FT_Done_FreeType(library);
 		munmap(lfb, fix_screeninfo.smem_len);
 		return -1;
@@ -1763,7 +1719,7 @@ PLISTENTRY pl;
 
 	if((error = FTC_SBitCache_New(manager, &cache)))
 	{
-		printf("shellexec <FTC_SBitCache_New failed with Errorcode 0x%.2X>\n", error);
+		printf("%s <FTC_SBitCache_New failed with Errorcode 0x%.2X>\n", __plugin__, error);
 		FTC_Manager_Done(manager);
 		FT_Done_FreeType(library);
 		munmap(lfb, fix_screeninfo.smem_len);
@@ -1773,7 +1729,7 @@ PLISTENTRY pl;
 	memset(&menu,0,sizeof(MENU));
 	if(Check_Config())
 	{
-		printf("shellexec <Check_Config> Unable to read Config %s\n",CFG_FILE);
+		printf("%s <Check_Config> Unable to read Config %s\n", __plugin__, CFG_FILE);
 		FTC_Manager_Done(manager);
 		FT_Done_FreeType(library);
 		munmap(lfb, fix_screeninfo.smem_len);
@@ -1784,10 +1740,10 @@ PLISTENTRY pl;
 
 	if((error = FTC_Manager_LookupFace(manager, FONT, &face)))
 	{
-		printf("shellexec <FTC_Manager_LookupFace failed with Errorcode 0x%.2X, trying default font>\n", error);
+		printf("%s <FTC_Manager_LookupFace failed with Errorcode 0x%.2X, trying default font>\n", __plugin__, error);
 		if((error = FTC_Manager_LookupFace(manager, FONT2, &face)))
 		{
-			printf("shellexec <FTC_Manager_LookupFace failed with Errorcode 0x%.2X>\n", error);
+			printf("%s <FTC_Manager_LookupFace failed with Errorcode 0x%.2X>\n", __plugin__, error);
 			FTC_Manager_Done(manager);
 			FT_Done_FreeType(library);
 			munmap(lfb, fix_screeninfo.smem_len);
@@ -1798,14 +1754,10 @@ PLISTENTRY pl;
 	}
 	else
 		desc.face_id = FONT;
-	printf("shellexec <FTC_Manager_LookupFace Font \"%s\" loaded>\n", desc.face_id);
+	printf("%s <FTC_Manager_LookupFace Font \"%s\" loaded>\n", __plugin__, desc.face_id);
 
 	use_kerning = FT_HAS_KERNING(face);
-#ifdef MARTII
 	desc.flags = FT_LOAD_RENDER | FT_LOAD_FORCE_AUTOHINT;
-#else
-	desc.flags = FT_LOAD_MONOCHROME;
-#endif
 
 	if(Read_Neutrino_Cfg("rounded_corners")>0)
 		radius=9;
@@ -1825,7 +1777,7 @@ PLISTENTRY pl;
 #else
 	if(!(lbb = malloc(fix_screeninfo.line_length*var_screeninfo.yres)))
 	{
-		printf("shellexec <allocating of Backbuffer failed>\n");
+		printf("%s <allocating of Backbuffer failed>\n", __plugin__);
 		FTC_Manager_Done(manager);
 		FT_Done_FreeType(library);
 		munmap(lfb, fix_screeninfo.smem_len);
@@ -1849,7 +1801,6 @@ PLISTENTRY pl;
 	starty = sy + (((ey-sy) - (var_screeninfo.yres-150))/2);
 
 
-
 	index=0;
 	if(vfd)
 	{
@@ -1861,7 +1812,7 @@ PLISTENTRY pl;
 	menu.act_entry=0;
 	if(Get_Menu(1))
 	{
-		printf("ShellExec <unable to create menu>\n");
+		printf("%s <unable to create menu>\n", __plugin__);
 		FTC_Manager_Done(manager);
 		FT_Done_FreeType(library);
 		munmap(lfb, fix_screeninfo.smem_len);
@@ -1961,13 +1912,9 @@ PLISTENTRY pl;
 									rptr=tstr;
 								}
 							}
-#ifdef MARTII
 							CloseRC();
-#endif
 							system(rptr);
-#ifdef MARTII
 							InitRC();
-#endif
 
 							mainloop= pl->stay==1;
 							if(pl->stay==1)
@@ -1981,19 +1928,19 @@ PLISTENTRY pl;
 	}
 
 	//cleanup
-
 	Clear_List(&menu,-1);
 
 	FTC_Manager_Done(manager);
 	FT_Done_FreeType(library);
-/*	if(strlen(url))
+#if 0
+	if(strlen(url))
 	{
 		sprintf(line_buffer,"/sbin/rdate -s %s > /dev/null &",url);
 		system(line_buffer);
 	}
-*/
+#endif
 	CloseRC();
-//	CloseVFD();
+	//CloseVFD();
 
 	free(line_buffer);
 	free(trstr);
@@ -2021,4 +1968,3 @@ PLISTENTRY pl;
 
 	return 0;
 }
-

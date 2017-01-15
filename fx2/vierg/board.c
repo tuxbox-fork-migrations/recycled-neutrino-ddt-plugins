@@ -5,16 +5,17 @@
 
 #include <stdio.h>
 
-#include <draw.h>
+#include "draw.h"
 #include <sys/time.h>
-#include <rcinput.h>
-#include <colors.h>
-#include <pics.h>
+#include "rcinput.h"
+#include "colors.h"
+#include "pics.h"
+#include <string.h>
 
-#define	STATUS_X		80
-#define STATUS_Y		50
-#define LOGO_X			500
-#define LOGO_Y			30
+#define	STATUS_X	80
+#define STATUS_Y	50
+#define LOGO_X		500
+#define LOGO_Y		30
 
 extern	double	sqrt( double in );
 
@@ -46,15 +47,13 @@ static	void	msleep( int msec )
 
 void	DrawBoard( void )
 {
-	int				x;
-	int				y;
+	int	x;
+	int	y;
 
 	FBFillRect( 0, 0, 720, 576, BLACK );
 
-	for( y = 0; y < 6; y++ )
-	{
-		for( x = 0; x < 7; x++ )
-		{
+	for ( y = 0; y < 6; y++ ) {
+		for ( x = 0; x < 7; x++ ) {
 			FBCopyImage( x*48+64, y*48+96, 48, 48, dout );
 		}
 	}
@@ -73,19 +72,16 @@ void	BoardInitialize( void )
 
 static	void	Fall( int x, unsigned char *dr, char v )
 {
-	int		y;
+	int	y;
 
-	for( y=0; y<6; y++ )
-	{
+	for ( y=0; y<6; y++ ) {
 		if ( maze[ (5-y)*7 + x ] )
 			break;
-		if(y)
-		{
+		if (y) {
 			msleep(100);
 			FBCopyImage( x*48+64+6, y*48+48+4, 36, 40, dgray );
 			maze[ (6-y)*7 + x ] = 0;
-		}
-		else
+		} else
 			FBFillRect( x*48+64+6, y*48+48+4, 36, 40, BLACK );
 		maze[ (5-y)*7 + x ] = v;
 		FBOverlayImage( x*48+64+6, y*48+96+4, 36, 40, 0, 0, WHITE,
@@ -98,14 +94,12 @@ static	void	Fall( int x, unsigned char *dr, char v )
 
 static	int	vFall( int x, char v )
 {
-	int		y;
-	int		idx=-1;
+	int	y;
+	int	idx=-1;
 
 	idx=x;
-	for( y=0; y<6; y++, idx+=7 )
-	{
-		if ( !maze[ idx ] )
-		{
+	for ( y=0; y<6; y++, idx+=7 ) {
+		if ( !maze[ idx ] ) {
 			maze[ idx ] = v;
 			return idx;
 		}
@@ -115,72 +109,59 @@ static	int	vFall( int x, char v )
 
 static	int	TestGameOver( int mask )
 {
-	int		x;
-	int		y;
-	int		idx;
+	int	x;
+	int	y;
+	int	idx;
 
-	for( y=0, idx=0; y<3; y++ )
-	{
-		for( x=0; x<7; x++, idx++ )
-		{
-			if ( maze[ idx ] & mask )	// start-point
-			{
-				if ( x < 4 )
-				{
+	for ( y=0, idx=0; y<3; y++ ) {
+		for ( x=0; x<7; x++, idx++ ) {
+			if ( maze[ idx ] & mask ) {	// start-point
+				if ( x < 4 ) {
 					// vertikal nach rechts testen
 					if (( maze[ idx +1 ] & mask ) &&
-						( maze[ idx +2 ] & mask ) &&
-						( maze[ idx +3 ] & mask ))
-					{
+							( maze[ idx +2 ] & mask ) &&
+							( maze[ idx +3 ] & mask )) {
 						return 1;		// game over
 					}
 					// diagonale nach rechts testen
 					if (( maze[ idx +8 ] & mask ) &&
-						( maze[ idx +16 ] & mask ) &&
-						( maze[ idx +24 ] & mask ))
-					{
+							( maze[ idx +16 ] & mask ) &&
+							( maze[ idx +24 ] & mask )) {
 						return 1;		// game over
 					}
 				}
-				if ( x > 2 )
-				{
+				if ( x > 2 ) {
 					// diagonale nach links testen
 					if (( maze[ idx +6 ] & mask ) &&
-						( maze[ idx +12 ] & mask ) &&
-						( maze[ idx +18 ] & mask ))
-					{
+							( maze[ idx +12 ] & mask ) &&
+							( maze[ idx +18 ] & mask )) {
 						return 1;		// game over
 					}
 				}
 				// nach oben testen
 				if (( maze[ idx +7 ] & mask ) &&
-					( maze[ idx +14 ] & mask ) &&
-					( maze[ idx +21 ] & mask ))
-				{
+						( maze[ idx +14 ] & mask ) &&
+						( maze[ idx +21 ] & mask )) {
 					return 1;		// game over
 				}
 			}
 		}
 	}
 // der rest wird nur auf waagerecht untersucht
-	for( ; y<6; y++ )
-	{
-		for( x=0; x<7; x++, idx++ )
-		{
-			if (( x < 4 ) && maze[ idx ] & mask )	// start-point
-			{
+	for ( ; y<6; y++ ) {
+		for ( x=0; x<7; x++, idx++ ) {
+			if (( x < 4 ) && maze[ idx ] & mask ) {	// start-point
 				// vertikal nach rechts testen
 				if (( maze[ idx +1 ] & mask ) &&
-					( maze[ idx +2 ] & mask ) &&
-					( maze[ idx +3 ] & mask ))
-				{
+						( maze[ idx +2 ] & mask ) &&
+						( maze[ idx +3 ] & mask )) {
 					return 1;		// game over
 				}
 			}
 		}
 	}
 // test auf patt
-	for( idx=35, x=0; x<7; x++, idx++ )
+	for ( idx=35, x=0; x<7; x++, idx++ )
 		if ( !maze[idx] )
 			break;
 	return x==7 ? 2:0;
@@ -195,14 +176,13 @@ static	void	CPlay( int x )
 
 static	void	outmaze()
 {
-	int		x;
-	int		y;
-	int		idx;
+	int	x;
+	int	y;
+	int	idx;
 
 	printf("+-+-+-+-+-+-+-+%c\n",0x0d);
-	for( y=0, idx=35; y<6; y++ )
-	{
-		for( x=0; x<7; x++, idx++ )
+	for ( y=0, idx=35; y<6; y++ ) {
+		for ( x=0; x<7; x++, idx++ )
 			printf("|%c",maze[idx]?((maze[idx]&1)?'o':'*'):' ');
 		idx-=14;
 		printf("|%c\n",0x0d);
@@ -212,63 +192,52 @@ static	void	outmaze()
 
 static	void	MyPlay( void )
 {
-	int		x;
-	int		idx;
-	int		k;
-	int		vidx[7];
-	int		max=0;
+	int	x;
+	int	idx;
+	int	k;
+	int	vidx[7];
+	int	max=0;
 
-	for( x=0; x<7; x++ )
+	for ( x=0; x<7; x++ )
 		tst[x]=0;
-/* test: eigener sieg in 1nem zug */
-	for( x=0; x<7; x++ )
-	{
+	/* test: eigener sieg in 1nem zug */
+	for ( x=0; x<7; x++ ) {
 		idx=vFall( x, 6 );
 //printf("test %d (pos=%d)%c\n",x,idx,0x0d);
 //outmaze();
-		if ( idx != -1 )
-		{
-			if ( TestGameOver(2) )	// great ! - choose it
-			{
+		if ( idx != -1 ) {
+			if ( TestGameOver(2) ) {	// great ! - choose it
 				maze[idx]=0;	// remove virt. chip
 				CPlay( x );
 				return;
 			}
 			k=vFall( x, 5 ); // put playerchip over me
-			if ( k != -1 )
-			{
+			if ( k != -1 ) {
 				if ( TestGameOver(1) )	// fault - this field is ugly
 					tst[x] -= 50;
 				else
 					tst[x]++;
 				maze[k]=0;	// remove virt. chip
-			}
-			else
+			} else
 				tst[x]++;
 			maze[idx]=0;	// remove virt. chip
-		}
-		else
+		} else
 			tst[x]=-999999;	// neg val
 	}
-/* test: player sieg in 1-2 zuegen */
-	for( x=0; x<7; x++ )
-	{
+	/* test: player sieg in 1-2 zuegen */
+	for ( x=0; x<7; x++ ) {
 		idx=vFall( x, 5 );
-		if ( idx != -1 )
-		{
+		if ( idx != -1 ) {
 			if ( TestGameOver(1) )	// great ! - choose it
 				tst[x] += 50;
-			else
-			{
+			else {
 				int		idx2;
 
-				for( k=0;k<7;k++)
-				{
+				for ( k=0;k<7;k++) {
 					if ( k==x )
 						continue;
 					idx2=vFall(k,5);
-					if ( idx2 != -1 )
-					{
+					if ( idx2 != -1 ) {
 						if ( TestGameOver(1) )	// great ! - choose it
 							tst[x] += 10;
 						maze[idx2]=0;	// remove virt. chip
@@ -280,14 +249,12 @@ static	void	MyPlay( void )
 	}
 
 // search highest val
-	for( x=1; x<7; x++ )
+	for ( x=1; x<7; x++ )
 		if ( tst[x] > tst[max] )
 			max=x;
 	idx=0;
-	for( x=0; x<7; x++ )
-	{
-		if (( tst[x] == tst[max] ) && !maze[35+x] )
-		{
+	for ( x=0; x<7; x++ ) {
+		if (( tst[x] == tst[max] ) && !maze[35+x] ) {
 			vidx[idx] = x;
 			idx++;
 		}
@@ -296,18 +263,15 @@ static	void	MyPlay( void )
 	if ( !idx )	// never reached
 		return;
 
-	if ( idx > 1 )
-	{
-		int		i1;
-		int		i2;
+	if ( idx > 1 ) {
+		int	i1;
+		int	i2;
 
-		for( k=0;k<idx;k++)
-		{
+		for ( k=0;k<idx;k++) {
 			i1=vFall( vidx[k], 5 );
 			if ( i1 == -1 )
 				continue;
-			for( x=0;x<7;x++)
-			{
+			for ( x=0;x<7;x++) {
 				i2=vFall(x,5);
 				if ( i2 == -1 )
 					continue;
@@ -320,14 +284,12 @@ static	void	MyPlay( void )
 	}
 // search highest val again
 	max=0;
-	for( x=1; x<7; x++ )
+	for ( x=1; x<7; x++ )
 		if ( tst[x] > tst[max] )
 			max=x;
 	idx=0;
-	for( x=0; x<7; x++ )
-	{
-		if (( tst[x] == tst[max] ) && !maze[35+x] )
-		{
+	for ( x=0; x<7; x++ ) {
+		if (( tst[x] == tst[max] ) && !maze[35+x] ) {
 			vidx[idx] = x;
 			idx++;
 		}
@@ -346,25 +308,12 @@ static	int	GameOver( int mask )
 	k=TestGameOver( mask );
 	if ( !k )
 		return 0;
-	if ( k == 2 )		// patt
-	{
-#ifdef MARTII
-		FBDrawString( 190, 410, 64, "Good game !", WHITE, 0 );
-#else
-		FBDrawString( 190, 410, 64, "good game !", WHITE, 0 );
-#endif
-	}
-	else if ( mask == 1 )
-	{
+	if ( k == 2 ) {	// patt
+		FBDrawString( 190, 410, 64, "Good Game !", WHITE, 0 );
+	} else if ( mask == 1 ) {
 		FBDrawString( 190, 410, 64, "You won !", WHITE, 0 );
-	}
-	else
-	{
-#ifdef MARTII
+	} else {
 		FBDrawString( 190, 410, 64, "I am the Winner !", WHITE, 0 );
-#else
-		FBDrawString( 190, 410, 64, "Iam the Winner !", WHITE, 0 );
-#endif
 	}
 	doexit=1;
 	return 1;
@@ -372,18 +321,16 @@ static	int	GameOver( int mask )
 
 void	MoveMouse( void )
 {
-static	int	locked = 0;
+	static	int	locked = 0;
 	int		k;
 
-	if ( locked )
-	{
+	if ( locked ) {
 		locked--;
 		actcode=0xee;
 		return;
 	}
 	k=0;
-	switch( actcode )
-	{
+	switch ( actcode ) {
 	case RC_7 : k++;
 	case RC_6 : k++;
 	case RC_5 : k++;
@@ -395,25 +342,22 @@ static	int	locked = 0;
 	}
 	if ( k )
 		ipos=k-1;
-	switch( actcode )
-	{
+	switch ( actcode ) {
 	case RC_RIGHT :
-		if ( ipos < 6 )
-		{
+		if ( ipos < 6 ) {
 			FBFillRect( ipos*48+64+6, 48+4, 36, 40, BLACK );
 			ipos++;
 			FBOverlayImage( ipos*48+64+6, 48+4, 36, 40, 0, 0, WHITE,
-				dred, 0,0,0);
+					dred, 0,0,0);
 			locked=1;
 		}
 		break;
 	case RC_LEFT :
-		if ( ipos > 0 )
-		{
+		if ( ipos > 0 ) {
 			FBFillRect( ipos*48+64+6, 48+4, 36, 40, BLACK );
 			ipos--;
 			FBOverlayImage( ipos*48+64+6, 48+4, 36, 40, 0, 0, WHITE,
-				dred, 0,0,0);
+					dred, 0,0,0);
 			locked=1;
 		}
 		break;

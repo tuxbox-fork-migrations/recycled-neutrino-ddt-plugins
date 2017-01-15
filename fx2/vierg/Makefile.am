@@ -13,4 +13,4 @@ install-exec-local:
 	install -d $(DESTDIR)$(CONFIGDIR)
 	$(LIBTOOL) --mode=install install --strip-program=$(STRIP) -s -m 0755 vierg $(DESTDIR)$(PLUGINDIR)/vierg.so
 	install -m 0644 $(srcdir)/vierg.cfg $(DESTDIR)$(PLUGINDIR)
-
+	install -m 0644 $(srcdir)/vierg_hint.png $(DESTDIR)$(PLUGINDIR)

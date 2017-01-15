@@ -22,14 +22,14 @@
 #ifndef _COLORS_H
 #define _COLORS_H
 
-#define	YELLOW			4
-#define	GREEN				5
-#define	STEELBLUE		6
-#define	BLUE				7
-#define	GRAY				8
+#define	YELLOW		4
+#define	GREEN		5
+#define	STEELBLUE	6
+#define	BLUE		7
+#define	GRAY		8
 #define BLACKBLACK	9
 
-#define GLASS				10
+#define GLASS		10
 #define BACKGROUND	11
 
 #endif // _COLORS_H

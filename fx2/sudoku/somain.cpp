@@ -32,25 +32,18 @@ void ShowSudoku(CSudoku &rSudoku, bool bFixed)
 {
 	int bc, br, fr, fc;
 	tSymbol *pSymbol;
-	for(br=0; br<rSudoku.m_nBlockRows; br++)
-	{
-		for(fr=0; fr<rSudoku.m_nFieldRows; fr++)
-		{
-			for(bc=0; bc<rSudoku.m_nBlockColumns; bc++)
-			{
-				for(fc=0; fc<rSudoku.m_nFieldColumns; fc++)
-				{
+	for (br=0; br<rSudoku.m_nBlockRows; br++) {
+		for (fr=0; fr<rSudoku.m_nFieldRows; fr++) {
+			for (bc=0; bc<rSudoku.m_nBlockColumns; bc++) {
+				for (fc=0; fc<rSudoku.m_nFieldColumns; fc++) {
 					pSymbol = rSudoku.GetSymbol(bc, br, fc, fr);
-					if(bFixed)
-					{
+					if (bFixed) {
 						cout << pSymbol->cSolution;
-					}
-					else
-					{
-							if(pSymbol->cSymbol > 0)
-								cout << pSymbol->cSymbol;
-							else
-								cout << " ";
+					} else {
+						if (pSymbol->cSymbol > 0)
+							cout << pSymbol->cSymbol;
+						else
+							cout << " ";
 					}
 					cout << " ";
 				}
@@ -86,21 +79,21 @@ int main(int argc, char *argv[])
 #else
 extern "C"
 {
-	#include <draw.h>
-	#include <fx2math.h>
-	#include <rcinput.h>
-	
-	#include <pig.h>
-	#include <plugin.h>
+#include "draw.h"
+#include "fx2math.h"
+#include "rcinput.h"
+
+#include "pig.h"
+#include <plugin.h>
 }
 
 #include "board.h"
 #include "misc.h"
 
 extern unsigned short	actcode;
-extern unsigned short realcode;
-extern int doexit;
-extern int debug;
+extern unsigned short	realcode;
+extern int		doexit;
+extern int		debug;
 
 // ----------------------------------------------------------------------------
 // shutdown
@@ -108,14 +101,6 @@ extern int debug;
 void shutdown()
 {
 	Sleep(300000);	// 300ms pause
-/*
-	realcode = RC_0;
-	while(realcode != 0xEE)
-	{
-		RcGetActCode();
-	}
-*/
-
 	RcClose();
 	FBClose();
 }
@@ -125,23 +110,20 @@ void shutdown()
 // ----------------------------------------------------------------------------
 int main_exec(int fdfb, int fdrc, int fdlcd, char *cfgfile)
 {
-//	srand(time(NULL));
-
-	if(FBInitialize(720, 576, 8, fdfb) < 0)
+	if (FBInitialize(720, 576, 8, fdfb) < 0)
 		return -1;
 
-	if(RcInitialize(fdrc) < 0)
+	if (RcInitialize(fdrc) < 0)
 		return -1;
 
 	CBoard Board;
 	Board.LoadSettings(SETTINGSFILE);
-	if(Board.LoadGame(GAMEFILE) <= 0)
+	if (Board.LoadGame(GAMEFILE) <= 0)
 		Board.NewGame();
 	Board.InitBoard();
 
 	doexit = 0;
-	while(!doexit)
-	{
+	while (!doexit) {
 		actcode = 0xEE;
 		RcGetActCode();
 
@@ -150,7 +132,7 @@ int main_exec(int fdfb, int fdrc, int fdlcd, char *cfgfile)
 		FBFlushGrafic();
 #endif
 
-		while(realcode != 0xEE)
+		while (realcode != 0xEE)
 			RcGetActCode();
 	}
 

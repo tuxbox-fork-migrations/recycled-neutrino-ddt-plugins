@@ -1,4 +1,4 @@
-#include "shellexec.h"
+#include "current.h"
 #include "gfx.h"
 
 #ifdef MARTII
@@ -37,7 +37,6 @@ char circle[] =
 
 //typedef struct { unsigned char width_lo; unsigned char width_hi; unsigned char height_lo; unsigned char height_hi; 	unsigned char transp; } IconHeader;
 
-#ifdef MARTII
 #if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 void FillRect(int _sx, int _sy, int _dx, int _dy, uint32_t color)
 {
@@ -64,39 +63,28 @@ void FillRect(int _sx, int _sy, int _dx, int _dy, uint32_t color)
 
 	if (ioctl(fb, STMFBIO_BLT, &bltData ) < 0)
 		perror("RenderBox ioctl STMFBIO_BLT");
-#if 0
-	if(ioctl(fb, STMFBIO_SYNC_BLITTER) < 0)
-		perror("blit ioctl STMFBIO_SYNC_BLITTER 2");
-#else
+
 	sync_blitter = 1;
-#endif
 }
-# endif
 #endif
 
 void RenderBox(int sx, int sy, int ex, int ey, int rad, int col)
 {
 	int F,R=rad,ssx=startx+sx,ssy=starty+sy,dxx=ex-sx,dyy=ey-sy,rx,ry,wx,wy,count;
 
-#ifdef MARTII
 	uint32_t *pos = lbb + ssx + stride * ssy;
 	uint32_t *pos0, *pos1, *pos2, *pos3, *i;
 	uint32_t pix = bgra[col];
-#else
-	unsigned char *pos=(lbb+(ssx<<2)+fix_screeninfo.line_length*ssy);
-	unsigned char *pos0, *pos1, *pos2, *pos3, *i;
-	unsigned char pix[4]={bl[col],gn[col],rd[col],tr[col]};
-#endif
 
 	if (dxx<0)
 	{
-		printf("[shellexec] RenderBox called with dx < 0 (%d)\n", dxx);
+		printf("[%s] RenderBox called with dx < 0 (%d)\n", __plugin__, dxx);
 		dxx=0;
 	}
 
 	if(R)
 	{
-#if defined(MARTII) && defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
+#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 		if(sync_blitter) {
 			sync_blitter = 0;
 			if (ioctl(fb, STMFBIO_SYNC_BLITTER) < 0)
@@ -135,17 +123,10 @@ void RenderBox(int sx, int sy, int ex, int ey, int rad, int col)
 		rx=R-ssx;
 		ry=R-ssy;
 
-#ifdef MARTII
 		pos0=pos+(dyy-ry)*stride;
 		pos1=pos+ry*stride;
 		pos2=pos+rx*stride;
 		pos3=pos+(dyy-rx)*stride;
-#else
-		pos0=pos+((dyy-ry)*fix_screeninfo.line_length);
-		pos1=pos+(ry*fix_screeninfo.line_length);
-		pos2=pos+(rx*fix_screeninfo.line_length);
-		pos3=pos+((dyy-rx)*fix_screeninfo.line_length);
-#endif
 		while (ssx <= ssy)
 		{
 			rx=R-ssx;
@@ -153,7 +134,6 @@ void RenderBox(int sx, int sy, int ex, int ey, int rad, int col)
 			wx=rx<<1;
 			wy=ry<<1;
 
-#ifdef MARTII
 			for(i=pos0+rx; i<pos0+rx+dxx-wx;i++)
 				*i = pix;
 			for(i=pos1+rx; i<pos1+rx+dxx-wx;i++)
@@ -162,25 +142,10 @@ void RenderBox(int sx, int sy, int ex, int ey, int rad, int col)
 				*i = pix;
 			for(i=pos3+ry; i<pos3+ry+dxx-wy;i++)
 				*i = pix;
-#else
-			for(i=pos0+(rx<<2); i<pos0+((rx+dxx-wx)<<2);i+=4)
-				memcpy(i, pix, 4);
-			for(i=pos1+(rx<<2); i<pos1+((rx+dxx-wx)<<2);i+=4)
-				memcpy(i, pix, 4);
-			for(i=pos2+(ry<<2); i<pos2+((ry+dxx-wy)<<2);i+=4)
-				memcpy(i, pix, 4);
-			for(i=pos3+(ry<<2); i<pos3+((ry+dxx-wy)<<2);i+=4)
-				memcpy(i, pix, 4);
-#endif
 
 			ssx++;
-#ifdef MARTII
 			pos2-=stride;
 			pos3+=stride;
-#else
-			pos2-=fix_screeninfo.line_length;
-			pos3+=fix_screeninfo.line_length;
-#endif
 			if (F<0)
 			{
 				F+=(ssx<<1)-1;
@@ -189,20 +154,11 @@ void RenderBox(int sx, int sy, int ex, int ey, int rad, int col)
 			{
 				F+=((ssx-ssy)<<1);
 				ssy--;
-#ifdef MARTII
 				pos0-=stride;
 				pos1+=stride;
-#else
-				pos0-=fix_screeninfo.line_length;
-				pos1+=fix_screeninfo.line_length;
-#endif
 			}
 		}
-#ifdef MARTII
 		pos+=R*stride;
-#else
-		pos+=R*fix_screeninfo.line_length;
-#endif
 	}
 
 #if defined(MARTII) && defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)

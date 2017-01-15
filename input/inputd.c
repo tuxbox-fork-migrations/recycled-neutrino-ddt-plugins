@@ -1,6 +1,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <time.h>
+
 #include "input.h"
 #include "text.h"
 #include "io.h"
@@ -20,12 +21,8 @@
 #define ndelay	3
 
 char rstr[512],tstr[512], *format, *estr;
-#ifdef MARTII
 unsigned int kpos=0;
 int epos=-1,cpos=0,cnt,first=1,hex=0;
-#else
-int epos=-1,cpos=0,kpos=0,cnt,first=1,hex=0;
-#endif
 char kcod[10][13]={"0 _.:,;$@()#","1-+*/", "2abcä", "3def", "4ghi", "5jkl", "6mnoö", "7pqrsß", "8tuvü", "9wxyz"};
 char hcod[10][13]={"0","1", "2abc", "3def", "4", "5", "6", "7", "8", "9"};
 unsigned rc;
@@ -291,10 +288,10 @@ char kalp[12][5]={"+-*/","abcä","def","ghi","jkl","mnoö","pqrs","tuvü","wxyz",""
 	{
 		cols=1;
 	}
+
 	format=form;
 	estr=strdup(form);
 	cnt=strlen(form);
-	
 	i=GetStringLen(title, BIG)+10;
 	j=((cnt>cols)?cols:cnt)*exsz;
 	if(j>i)
@@ -325,7 +322,7 @@ char kalp[12][5]={"+-*/","abcä","def","ghi","jkl","mnoö","pqrs","tuvü","wxyz",""
 
 	*estr=0;
 	*rstr=0;
-		
+
 	j=0;
 	for(i=0; i<strlen(format); i++)
 	{
@@ -377,7 +374,7 @@ char kalp[12][5]={"+-*/","abcä","def","ghi","jkl","mnoö","pqrs","tuvü","wxyz",""
 		RenderCircle(bxs+3*bxsz-GetStringLen("löschen",SMALL)-15,wys+wyw-ybrd-8,YELLOW);
 		RenderString("löschen",bxs,wys+wyw-ybrd+5,3*bxsz,RIGHT,SMALL,CMCIT);
 	}
-	
+
 	while(run)
 	{
 		for(i=0; i<cnt; i++)
@@ -398,8 +395,6 @@ char kalp[12][5]={"+-*/","abcä","def","ghi","jkl","mnoö","pqrs","tuvü","wxyz",""
 		memcpy(lfb, lbb, fix_screeninfo.line_length*var_screeninfo.yres);
 #endif
 		
-//		sleep(1);
-
 		time(&t1);
 		i=-1;
 		while(i==-1)
@@ -652,12 +647,10 @@ char kalp[12][5]={"+-*/","abcä","def","ghi","jkl","mnoö","pqrs","tuvü","wxyz",""
 		}
 		rstr[j]=0;
 		free(estr);
-	}	
-#ifdef MARTII
-	return rstr;
-#else
+	}
+#ifndef MARTII
 	ReTransform_Msg(rstr);
-	return tstr;
 #endif
+	return rstr;
 }
 

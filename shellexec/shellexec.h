@@ -1,12 +1,10 @@
 #ifndef __shellexec_H__
-
 #define __shellexec_H__
-
 
 #ifdef MARTII
 #include <config.h>
-#define _FILE_OFFSET_BITS 64
 #endif
+#define _FILE_OFFSET_BITS 64
 #include <errno.h>
 #include <fcntl.h>
 #include <signal.h>
@@ -20,14 +18,12 @@
 #include <sys/mman.h>
 #include <sys/socket.h>
 #include <sys/un.h>
-#ifdef MARTII
 #include <stdint.h>
 #if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 #include <linux/stmfb.h>
 #define DEFAULT_XRES 1280
 #define DEFAULT_YRES 720
 extern int sync_blitter;
-#endif
 #endif
 
 #include <ft2build.h>
@@ -140,24 +136,41 @@ FT_UInt			prev_glyphindex;
 FT_Bool			use_kerning;
 
 //devs
-
 int fb, debounce, rblock;
 
 //framebuffer stuff
+enum {
+	FILL,
+	GRID
+};
 
-enum {FILL, GRID};
-
-enum {CMCST, CMCS, CMCT, CMC, CMCIT, CMCI, CMHT, CMH, WHITE, BLUE0, GTRANSP, CMS, ORANGE, GREEN, YELLOW, RED, COL_MENUCONTENT_PLUS_0, COL_MENUCONTENT_PLUS_1, COL_MENUCONTENT_PLUS_2, COL_MENUCONTENT_PLUS_3};
+enum {
+	CMCST,
+	CMCS,
+	CMCT,
+	CMC,
+	CMCIT,
+	CMCI,
+	CMHT,
+	CMH,
+	WHITE,
+	BLUE0,
+	GTRANSP,
+	CMS,
+	ORANGE,
+	GREEN,
+	YELLOW,
+	RED,
+	COL_MENUCONTENT_PLUS_0,
+	COL_MENUCONTENT_PLUS_1,
+	COL_MENUCONTENT_PLUS_2,
+	COL_MENUCONTENT_PLUS_3
+};
 #define TRANSP 0
 
-#ifdef MARTII
 extern uint32_t bgra[];
 extern int stride;
 extern uint32_t *lfb, *lbb;
-#else
-extern unsigned char rd[], gn[], bl[], tr[];
-extern unsigned char *lfb, *lbb;
-#endif
 
 extern int FSIZE_BIG;
 extern int FSIZE_MED;

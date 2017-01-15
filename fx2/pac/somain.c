@@ -8,13 +8,13 @@
 #include <signal.h>
 #include <sys/time.h>
 
-#include <rcinput.h>
-#include <draw.h>
-#include <pig.h>
-#include <colors.h>
-#include <maze.h>
+#include "rcinput.h"
+#include "draw.h"
+#include "pig.h"
+#include "colors.h"
+#include "maze.h"
+#include "fx2math.h"
 #include <plugin.h>
-#include <fx2math.h>
 
 extern	int	doexit;
 extern	int	debug;
@@ -52,8 +52,7 @@ int pacman_exec( int fdfb, int fdrc, int fdlcd, char *cfgfile )
 
 	InitLevel( 0 );
 
-	while( doexit != 3 )
-	{
+	while ( doexit != 3 ) {
 		MazeInitialize();
 		DrawMaze( );	/* 0 = all */
 		DrawFill();
@@ -62,8 +61,7 @@ int pacman_exec( int fdfb, int fdrc, int fdlcd, char *cfgfile )
 		MazePig();
 
 		doexit=0;
-		while( !doexit )
-		{
+		while ( !doexit ) {
 			tv.tv_sec = 0;
 #ifdef HAVE_DREAMBOX_HARDWARE
 			tv.tv_usec = 8000;
@@ -71,7 +69,7 @@ int pacman_exec( int fdfb, int fdrc, int fdlcd, char *cfgfile )
 			tv.tv_usec = 1000;
 #endif
 			x = select( 0, 0, 0, 0, &tv );		/* 10ms pause */
-	
+
 			MovePac( );
 			MoveGhosts( );
 			DrawGhosts( );
@@ -83,8 +81,7 @@ int pacman_exec( int fdfb, int fdrc, int fdlcd, char *cfgfile )
 			CheckGhosts( );
 		}
 
-		if ( doexit != 3 )
-		{
+		if ( doexit != 3 ) {
 			actcode=0xee;
 			if ( score )
 				DrawScore();
@@ -95,26 +92,22 @@ int pacman_exec( int fdfb, int fdrc, int fdlcd, char *cfgfile )
 #endif
 			doexit=0;
 			jumplevel=-1;
-			while(( actcode != RC_OK ) && !doexit )
-			{
+			while (( actcode != RC_OK ) && !doexit ) {
 				tv.tv_sec = 0;
-				tv.tv_usec = 100000;
+				tv.tv_usec = 200000;
 				x = select( 0, 0, 0, 0, &tv );		/* 100ms pause */
 				RcGetActCode( );
-				if ( actcode == RC_HELP )
-				{
-					while( realcode != 0xee )
+				if ( actcode == RC_HELP ) {
+					while ( realcode != 0xee )
 						RcGetActCode( );
 					actcode=0xee;
-					while(( actcode == 0xee ) && !doexit )
-					{
+					while (( actcode == 0xee ) && !doexit ) {
 						tv.tv_sec = 0;
-						tv.tv_usec = 100000;
+						tv.tv_usec = 200000;
 						x = select( 0, 0, 0, 0, &tv );		/* 100ms pause */
 						RcGetActCode( );
 					}
-					if ( actcode <= RC_9 )
-					{
+					if ( actcode <= RC_9 ) {
 						jumplevel=actcode;
 						actcode=RC_OK;
 					}
@@ -129,11 +122,10 @@ int pacman_exec( int fdfb, int fdrc, int fdlcd, char *cfgfile )
 
 	Fx2StopPig();
 
-/* fx2 */
-/* buffer leeren, damit neutrino nicht rumspinnt */
+	/* fx2 */
+	/* buffer leeren, damit neutrino nicht rumspinnt */
 	realcode = RC_0;
-	while( realcode != 0xee )
-	{
+	while ( realcode != 0xee ) {
 		tv.tv_sec = 0;
 		tv.tv_usec = 300000;
 		x = select( 0, 0, 0, 0, &tv );		/* 300ms pause */

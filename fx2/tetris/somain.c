@@ -18,13 +18,13 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include <board.h>
-#include <colors.h>
-#include <draw.h>
-#include <fx2math.h>
-#include <pig.h>
+#include "board.h"
+#include "colors.h"
+#include "draw.h"
+#include "fx2math.h"
+#include "pig.h"
+#include "rcinput.h"
 #include <plugin.h>
-#include <rcinput.h>
 
 #ifdef HAVE_CURL
 #include <curl/curl.h>
@@ -36,20 +36,20 @@
 
 #include <config.h>
 
-extern	int				debug;
-extern	int				doexit;
+extern	int		debug;
+extern	int		doexit;
 extern	unsigned short	actcode;
 extern	unsigned short	realcode;
-extern	long			score;
+extern	long		score;
 
 
 #ifdef HAVE_CURL
-static	char			*proxy_addr=0;
-static	char			*proxy_user=0;
+static	char		*proxy_addr=0;
+static	char		*proxy_user=0;
 #endif
-static	char			*hscore=0;
-static	char			isalloc=0;
-static	int				localuser=-1;
+static	char		*hscore=0;
+static	char		isalloc=0;
+static	int		localuser=-1;
 
 #ifndef TRUE
 #define TRUE (!0)
@@ -58,8 +58,7 @@ static	int				localuser=-1;
 #define FALSE (0)
 #endif
 
-typedef struct _HScore
-{
+typedef struct _HScore {
 	char	name[12];
 	long	points;
 } HScore;
@@ -67,7 +66,7 @@ typedef struct _HScore
 static	HScore	hsc[8];
 #ifdef HAVE_CURL
 static	HScore	ihsc[8];
-static	int		use_ihsc=0;
+static	int	use_ihsc=0;
 #endif
 
 unsigned long BuildCheck( char *user, long score )
@@ -75,8 +74,7 @@ unsigned long BuildCheck( char *user, long score )
 	unsigned long ret = 22;
 	unsigned long temp = 55;
 
-	while ( * user )
-	{
+	while ( * user ) {
 		ret = ret << 1 ^ 90 ^ ( * user++ + temp );
 		temp += 2;
 	}
@@ -106,16 +104,14 @@ static	void	LoadHScore( void )
 	if ( !curl )
 		return;
 	fp = fopen( "/var/tmp/trash", "w");
-	if ( !fp )
-	{
+	if ( !fp ) {
 		curl_easy_cleanup(curl);
 		return;
 	}
 	curl_easy_setopt( curl, CURLOPT_URL, url );
 	curl_easy_setopt( curl, CURLOPT_FILE, fp );
 	curl_easy_setopt( curl, CURLOPT_NOPROGRESS, TRUE );
-	if ( proxy_addr )
-	{
+	if ( proxy_addr ) {
 		curl_easy_setopt( curl, CURLOPT_PROXY, proxy_addr );
 		if ( proxy_user )
 			curl_easy_setopt( curl, CURLOPT_PROXYUSERPWD, proxy_user );
@@ -132,8 +128,7 @@ static	void	LoadHScore( void )
 	if ( !fp )
 		return;
 
-	for( i=0; i<8; i++ )
-	{
+	for ( i=0; i<8; i++ ) {
 		if ( !fgets(url,512,fp) )
 			break;
 		p=strchr(url,'\n');
@@ -164,7 +159,7 @@ static	void	LocalSave( void )
 
 	localuser=-1;
 
-	for( i=0; i < 8; i++ )
+	for ( i=0; i < 8; i++ )
 		if ( score > hsc[i].points )
 			break;
 	if ( i==8 )
@@ -199,8 +194,8 @@ static	void	SaveGame( void )
 	char		url[ 512 ];
 	char		*user=0;
 	char		luser[ 32 ];
-	int			x;
-	int			n;
+	int		x;
+	int		n;
 	char		*p;
 	struct timeval	tv;
 	unsigned long	chk=0;
@@ -217,8 +212,7 @@ static	void	SaveGame( void )
 	if ( !use_ihsc )
 		return;
 
-	for( x=0; x < 8; x++ )
-	{
+	for ( x=0; x < 8; x++ ) {
 		if ( score > ihsc[x].points )
 			break;
 	}
@@ -230,12 +224,11 @@ static	void	SaveGame( void )
 	FBFlushGrafic();
 #endif
 
-	while( realcode != 0xee )
+	while ( realcode != 0xee )
 		RcGetActCode();
 
 	actcode=0xee;
-	while( !doexit )
-	{
+	while ( !doexit ) {
 		tv.tv_sec = 0;
 		tv.tv_usec = 100000;
 		select( 0,0,0,0, &tv );
@@ -248,13 +241,10 @@ static	void	SaveGame( void )
 	if ( doexit )
 		return;
 
-	if ( localuser != -1 )
-	{
+	if ( localuser != -1 ) {
 		strcpy(luser,hsc[localuser].name);
 		user=luser;
-	}
-	else
-	{
+	} else {
 		Fx2PigPause();
 
 		FBFillRect( 500,32,3*52,4*52+4,BLACK );
@@ -270,11 +260,10 @@ static	void	SaveGame( void )
 
 	n=FBDrawString( 210,360,48,"sending",BLACK,WHITE);
 
-/* clean name */
+	/* clean name */
 	x = strlen(user);
 	p=user;
-	for( p=user; *p; x--, p++ )
-	{
+	for ( p=user; *p; x--, p++ ) {
 		if (( *p == ' ' ) || ( *p == '&' ) || ( *p == '/' ))
 			memcpy(p,p+1,x);
 	}
@@ -288,16 +277,14 @@ static	void	SaveGame( void )
 	if ( !curl )
 		return;
 	fp = fopen( "/var/tmp/trash", "w");
-	if ( !fp )
-	{
+	if ( !fp ) {
 		curl_easy_cleanup(curl);
 		return;
 	}
 	curl_easy_setopt( curl, CURLOPT_URL, url );
 	curl_easy_setopt( curl, CURLOPT_FILE, fp );
 	curl_easy_setopt( curl, CURLOPT_NOPROGRESS, TRUE );
-	if ( proxy_addr )
-	{
+	if ( proxy_addr ) {
 		curl_easy_setopt( curl, CURLOPT_PROXY, proxy_addr );
 		if ( proxy_user )
 			curl_easy_setopt( curl, CURLOPT_PROXYUSERPWD, proxy_user );
@@ -334,8 +321,7 @@ static	void	ShowHScore( HScore *g )
 	else
 #endif
 		FBDrawString( 220, 32, 64, "HighScore", RED, BLACK );
-	for( i=0; i < 8; i++ )
-	{
+	for ( i=0; i < 8; i++ ) {
 		FBDrawString( 100, 100+i*48, 48, g[i].name, WHITE, 0 );
 		sprintf(pp,"%ld",g[i].points);
 		x = FBDrawString( 400, 100+i*48, 48, pp, BLACK, BLACK );
@@ -344,20 +330,19 @@ static	void	ShowHScore( HScore *g )
 #if defined(USEX) || defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 	FBFlushGrafic();
 #endif
-	while( realcode != 0xee )
+	while ( realcode != 0xee )
 		RcGetActCode();
 }
 
 #ifdef HAVE_CURL
 static	void	ShowIHScore( void )
 {
-	int				i = 50;
+	int		i = 50;
 	struct timeval	tv;
 
 	ShowHScore( ihsc );
 
-	while( !doexit && ( realcode == 0xee ) && ( i>0 ))
-	{
+	while ( !doexit && ( realcode == 0xee ) && ( i>0 )) {
 		tv.tv_sec=0;
 		tv.tv_usec=200000;
 		select( 0,0,0,0,&tv);
@@ -378,7 +363,7 @@ static	void	setup_colors(void)
 	FBSetColor( RED1, 198, 131, 131 );
 	FBSetColor( RED2, 216, 34, 49 );
 
-/* magenta */
+	/* magenta */
 	FBSetColor( 30, 216, 175, 216);
 	FBSetColor( 31, 205, 160, 207);
 	FBSetColor( 32, 183, 131, 188);
@@ -389,7 +374,7 @@ static	void	setup_colors(void)
 	FBSetColor( 37, 180, 117, 184);
 	FBSetColor( 38, 120, 1, 127);
 	FBSetColor( 39, 89, 1, 98);
-/* blue */
+	/* blue */
 	FBSetColor( 40, 165, 172, 226);
 	FBSetColor( 41, 148, 156, 219);
 	FBSetColor( 42, 119, 130, 200);
@@ -400,7 +385,7 @@ static	void	setup_colors(void)
 	FBSetColor( 47, 109, 119, 192);
 	FBSetColor( 48, 46, 50, 81);
 	FBSetColor( 49, 34, 38, 63);
-/* cyan */
+	/* cyan */
 	FBSetColor( 50, 157, 218, 234);
 	FBSetColor( 51, 140, 208, 227);
 	FBSetColor( 52, 108, 186, 211);
@@ -411,7 +396,7 @@ static	void	setup_colors(void)
 	FBSetColor( 57, 98, 177, 203);
 	FBSetColor( 58, 7, 98, 120);
 	FBSetColor( 59, 1, 78, 98);
-/* green */
+	/* green */
 	FBSetColor( 60, 173, 218, 177);
 	FBSetColor( 61, 158, 209, 165);
 	FBSetColor( 62, 130, 189, 140);
@@ -422,7 +407,7 @@ static	void	setup_colors(void)
 	FBSetColor( 67, 121, 180, 129);
 	FBSetColor( 68, 50, 77, 55);
 	FBSetColor( 69, 38, 59, 41);
-/* red */
+	/* red */
 	FBSetColor( 70, 239, 157, 152);
 	FBSetColor( 71, 231, 141, 136);
 	FBSetColor( 72, 210, 112, 109);
@@ -433,7 +418,7 @@ static	void	setup_colors(void)
 	FBSetColor( 77, 202, 101, 99);
 	FBSetColor( 78, 95, 33, 32);
 	FBSetColor( 79, 78, 20, 19);
-/* yellow */
+	/* yellow */
 	FBSetColor( 80, 238, 239, 152);
 	FBSetColor( 81, 230, 231, 136);
 	FBSetColor( 82, 207, 214, 105);
@@ -444,7 +429,7 @@ static	void	setup_colors(void)
 	FBSetColor( 87, 199, 206, 95);
 	FBSetColor( 88, 88, 93, 34);
 	FBSetColor( 89, 69, 75, 22);
-/* orange */
+	/* orange */
 	FBSetColor( 90, 243, 199, 148);
 	FBSetColor( 91, 237, 185, 130);
 	FBSetColor( 92, 220, 159, 99);
@@ -462,12 +447,12 @@ static	void	setup_colors(void)
 int tetris_exec( int fdfb, int fdrc, int fdlcd, char *cfgfile )
 {
 	struct timeval	tv;
-	int				x;
-	int				i;
-	int				fd;
-	FILE			*fp;
-	char			*line;
-	char			*p;
+	int		x;
+	int		i;
+	int		fd;
+	FILE		*fp;
+	char		*line;
+	char		*p;
 
 	if ( FBInitialize( 720, 576, 8, fdfb ) < 0 )
 		return -1;
@@ -477,10 +462,9 @@ int tetris_exec( int fdfb, int fdrc, int fdlcd, char *cfgfile )
 	if ( RcInitialize( fdrc ) < 0 )
 		return -1;
 
-/* load setup */
+	/* load setup */
 	fp = fopen( CONFIGDIR "/games.cfg", "r" );
-	if ( fp )
-	{
+	if ( fp ) {
 		line=malloc(128);
 		isalloc=1;
 #ifdef HAVE_CURL
@@ -488,8 +472,7 @@ int tetris_exec( int fdfb, int fdrc, int fdlcd, char *cfgfile )
 		proxy_user=0;
 #endif
 		hscore=0;
-		while( fgets( line, 128, fp ) )
-		{
+		while ( fgets( line, 128, fp ) ) {
 			if ( *line == '#' )
 				continue;
 			if ( *line == ';' )
@@ -516,24 +499,19 @@ int tetris_exec( int fdfb, int fdrc, int fdlcd, char *cfgfile )
 	}
 
 	fd = open( GAMESDIR "/tetris.hscore", O_RDONLY );
-	if ( fd == -1 )
-	{
+	if ( fd == -1 ) {
 		mkdir( GAMESDIR, 567 );
-		for( i=0; i < 8; i++ )
-		{
+		for( i=0; i < 8; i++ ) {
 			strcpy(hsc[i].name,"nobody");
 			hsc[i].points=30;
 		}
-	}
-	else
-	{
+	} else {
 		read( fd, hsc, sizeof(hsc) );
 		close(fd);
 	}
 
 #ifdef HAVE_CURL
-	if ( hscore )
-	{
+	if ( hscore ) {
 		LoadHScore();
 	}
 #endif
@@ -542,8 +520,7 @@ int tetris_exec( int fdfb, int fdrc, int fdlcd, char *cfgfile )
 	Fx2ShowPig( 480, 400, 176, 144 );
 #endif
 
-	while( doexit != 3 )
-	{
+	while ( doexit != 3 ) {
 		BoardInitialize();
 		DrawBoard( );	/* 0 = all */
 		NextItem();
@@ -551,8 +528,8 @@ int tetris_exec( int fdfb, int fdrc, int fdlcd, char *cfgfile )
 		Fx2ShowPig(480, 400, 176, 144 );
 #endif
 		doexit=0;
-		while( !doexit )
-		{
+
+		while ( !doexit ) {
 			tv.tv_sec = 0;
 			tv.tv_usec = 10000;
 			x = select( 0, 0, 0, 0, &tv );		/* 10ms pause */
@@ -566,8 +543,7 @@ int tetris_exec( int fdfb, int fdrc, int fdlcd, char *cfgfile )
 			if ( doexit )
 				break;
 			MoveSide();
-			if ( !FallDown() )
-			{
+			if ( !FallDown() ) {
 				RemoveCompl();
 				if ( !NextItem() )
 					doexit=1;
@@ -579,8 +555,7 @@ int tetris_exec( int fdfb, int fdrc, int fdlcd, char *cfgfile )
 			RcGetActCode( );
 		}
 
-		if ( doexit != 3 )
-		{
+		if ( doexit != 3 ) {
 			actcode=0xee;
 			DrawGameOver();
 #if defined(USEX) || defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
@@ -600,15 +575,13 @@ int tetris_exec( int fdfb, int fdrc, int fdlcd, char *cfgfile )
 #endif
 			i=0;
 			actcode=0xee;
-			while(( actcode != RC_OK ) && !doexit )
-			{
+			while (( actcode != RC_OK ) && !doexit ) {
 				tv.tv_sec = 0;
 				tv.tv_usec = 100000;
 				x = select( 0, 0, 0, 0, &tv );		/* 100ms pause */
 				RcGetActCode( );
 				i++;
-				if ( i == 50 )
-				{
+				if ( i == 50 ) {
 					FBDrawString( 190, 480, 48, "press OK for new game",GRAY,0);
 #if defined(USEX) || defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 					FBFlushGrafic();
@@ -622,11 +595,10 @@ int tetris_exec( int fdfb, int fdrc, int fdlcd, char *cfgfile )
 	Fx2StopPig();
 
 #if defined(HAVE_DBOX_HARDWARE) || defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
-/* fx2 */
-/* buffer leeren, damit neutrino nicht rumspinnt */
+	/* fx2 */
+	/* buffer leeren, damit neutrino nicht rumspinnt */
 	realcode = RC_0;
-	while( realcode != 0xee )
-	{
+	while ( realcode != 0xee ) {
 		tv.tv_sec = 0;
 		tv.tv_usec = 300000;
 		x = select( 0, 0, 0, 0, &tv );		/* 300ms pause */
@@ -637,16 +609,14 @@ int tetris_exec( int fdfb, int fdrc, int fdlcd, char *cfgfile )
 	RcClose();
 	FBClose();
 
-/* save hscore */
+	/* save hscore */
 	fd = open( GAMESDIR "/tetris.hscore", O_CREAT|O_WRONLY, 438 );
-	if ( fd != -1 )
-	{
+	if ( fd != -1 ) {
 		write( fd, hsc, sizeof(hsc) );
 		close(fd);
 	}
 
-	if ( isalloc )
-	{
+	if ( isalloc ) {
 #ifdef HAVE_CURL
 		if ( proxy_addr )
 			free ( proxy_addr );
@@ -670,8 +640,7 @@ int plugin_exec( PluginParam *par )
 	int		fd_rc=-1;
 
 #ifndef MARTII
-	for( ; par; par=par->next )
-	{
+	for( ; par; par=par->next ) {
 		if ( !strcmp(par->id,P_ID_FBUFFER) )
 			fd_fb=_atoi(par->val);
 		else if ( !strcmp(par->id,P_ID_RCINPUT) )

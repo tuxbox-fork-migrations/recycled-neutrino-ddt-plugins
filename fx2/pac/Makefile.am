@@ -13,4 +13,4 @@ install-exec-local:
 	install -d $(DESTDIR)$(CONFIGDIR)
 	$(LIBTOOL) --mode=install install --strip-program=$(STRIP) -s -m 0755 pacman $(DESTDIR)$(PLUGINDIR)/pacman.so
 	install -m 0644 $(srcdir)/pacman.cfg $(DESTDIR)$(PLUGINDIR)
-
+	install -m 0644 $(srcdir)/pacman_hint.png $(DESTDIR)$(PLUGINDIR)

@@ -23,8 +23,10 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/wait.h>
-#include <plugin.h>
-#define SCRIPT "shellexec"
+
+#include "current.h"
+
+#define SCRIPT __plugin__
 
 void main()
 {
@@ -50,4 +52,4 @@ void main()
         fprintf(stderr, "[%s.so] parent, waitpid() returned..\n", SCRIPT);
         if (WIFEXITED(status))
                 fprintf(stderr, "[%s.so] child returned with status %d\n", SCRIPT, WEXITSTATUS(status));
-} 
+}

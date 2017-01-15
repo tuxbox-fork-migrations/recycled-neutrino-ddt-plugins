@@ -8,13 +8,13 @@
 #include <signal.h>
 #include <sys/time.h>
 
-#include <rcinput.h>
-#include <draw.h>
-#include <board.h>
-#include <colors.h>
-#include <pig.h>
+#include "rcinput.h"
+#include "draw.h"
+#include "board.h"
+#include "colors.h"
+#include "pig.h"
 #include <plugin.h>
-#include <fx2math.h>
+#include "fx2math.h"
 
 extern	int	doexit;
 extern	int	debug;
@@ -101,7 +101,7 @@ static	void	setup_colors( void )
 int vierg_exec( int fdfb, int fdrc, int fdlcd, char *cfgfile )
 {
 	struct timeval	tv;
-	int				x;
+	int		x;
 
 	if ( FBInitialize( 720, 576, 8, fdfb ) < 0 )
 		return -1;
@@ -116,19 +116,17 @@ int vierg_exec( int fdfb, int fdrc, int fdlcd, char *cfgfile )
 	FBFlushGrafic();
 #endif
 
-	while( doexit != 3 )
-	{
+	while ( doexit != 3 ) {
 		BoardInitialize();
 		DrawBoard( 0 );
 		Fx2ShowPig( 420, 150, 240, 188 );
 
 		doexit=0;
-		while( !doexit )
-		{
+		while ( !doexit ) {
 			tv.tv_sec = 0;
 			tv.tv_usec = 10000;
 			x = select( 0, 0, 0, 0, &tv );		/* 100ms pause */
-	
+
 			RcGetActCode( );
 			MoveMouse();
 #if defined(USEX) || defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
@@ -136,12 +134,10 @@ int vierg_exec( int fdfb, int fdrc, int fdlcd, char *cfgfile )
 #endif
 		}
 
-		if ( doexit != 3 )
-		{
+		if ( doexit != 3 ) {
 			actcode=0xee;
 			doexit=0;
-			while(( actcode != RC_OK ) && !doexit )
-			{
+			while (( actcode != RC_OK ) && !doexit ) {
 				tv.tv_sec = 0;
 				tv.tv_usec = 100000;
 				x = select( 0, 0, 0, 0, &tv );		/* 100ms pause */
@@ -152,11 +148,10 @@ int vierg_exec( int fdfb, int fdrc, int fdlcd, char *cfgfile )
 
 	Fx2StopPig();
 
-/* fx2 */
-/* buffer leeren, damit neutrino nicht rumspinnt */
+	/* fx2 */
+	/* buffer leeren, damit neutrino nicht rumspinnt */
 	realcode = RC_0;
-	while( realcode != 0xee )
-	{
+	while ( realcode != 0xee ) {
 		tv.tv_sec = 0;
 		tv.tv_usec = 300000;
 		x = select( 0, 0, 0, 0, &tv );		/* 300ms pause */

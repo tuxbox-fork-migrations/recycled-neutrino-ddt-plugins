@@ -13,4 +13,4 @@ install-exec-local:
 	install -d $(DESTDIR)$(CONFIGDIR)
 	$(LIBTOOL) --mode=install install --strip-program=$(STRIP) -s -m 0755 sol $(DESTDIR)$(PLUGINDIR)/sol.so
 	install -m 0644 $(srcdir)/sol.cfg $(DESTDIR)$(PLUGINDIR)
-
+	install -m 0644 $(srcdir)/sol_hint.png $(DESTDIR)$(PLUGINDIR)

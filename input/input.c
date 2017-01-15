@@ -2,6 +2,9 @@
 #include <stdio.h>
 #include <time.h>
 #include <signal.h>
+
+#include "current.h"
+
 #include "input.h"
 #include "text.h"
 #include "io.h"
@@ -12,10 +15,10 @@
 #define BUFSIZE 	1024
 #define I_VERSION	1.08
 
-//#define FONT "/usr/share/fonts/md_khmurabi_10.ttf"
-#define FONT2 FONTDIR "/pakenham.ttf"
-// if font is not in usual place, we look here:
+
 #define FONT FONTDIR "/neutrino.ttf"
+// if font is not in usual place, we look here:
+#define FONT2 FONTDIR "/pakenham.ttf"
 
 //					   CMCST,   CMCS,  CMCT,    CMC,    CMCIT,  CMCI,   CMHT,   CMH
 //					   WHITE,   BLUE0, TRANSP,  CMS,    ORANGE, GREEN,  YELLOW, RED
@@ -28,19 +31,25 @@ unsigned char rd[] = {	0x00, 	0x00, 	0xFF, 	0x00, 	0xFF, 	0x00, 	0xFF, 	0x00,
 					    0xFF, 	0x00, 	0x00, 	0x00, 	0xFF, 	0x00, 	0xFF, 	0xFF};
 unsigned char tr[] = {	0xFF, 	0xFF, 	0xFF,  	0xA0,  	0xFF,  	0xA0,  	0xFF,  	0xFF,
 						0xFF, 	0xFF, 	0x00,  	0xFF,  	0xFF,  	0xFF,  	0xFF,  	0xFF};
-#ifdef MARTII
 uint32_t bgra[20];
-#endif
 
 void TrimString(char *strg);
+void closedown(void);
 
 // OSD stuff
-static char menucoltxt[][25]={"Content_Selected_Text","Content_Selected","Content_Text","Content","Content_inactive_Text","Content_inactive","Head_Text","Head"};
-static char spres[][5]={"","_crt","_lcd"};
+static char menucoltxt[][25]={
+	"Content_Selected_Text",
+	"Content_Selected",
+	"Content_Text",
+	"Content",
+	"Content_inactive_Text",
+	"Content_inactive",
+	"Head_Text",
+	"Head"
+};
+static char spres[][5]={"", "_crt", "_lcd"};
 
-char *buffer=NULL;
-
-//static void ShowInfo(void);
+char *line_buffer=NULL;
 
 // Misc
 char NOMEM[]="input <Out of memory>\n";
@@ -56,7 +65,8 @@ unsigned char *trstr;
 unsigned char rc,sc[8]={'a','o','u','A','O','U','z','d'}, tc[8]={0xE4,0xF6,0xFC,0xC4,0xD6,0xDC,0xDF,0xB0};
 #endif
 int radius=10;
-#ifdef MARTII
+
+
 #if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 int sync_blitter = 0;
 
@@ -93,13 +103,9 @@ void blit(void) {
 		perror("STMFBIO_BLT");
 	sync_blitter = 1;
 }
-#else
-void blit(void) {
-	memcpy(lfb, lbb, fix_screeninfo.line_length*var_screeninfo.yres);
-}
 #endif
 int stride;
-#endif
+
 
 #ifdef MARTII
 static void quit_signal(int sig __attribute__((unused)))
@@ -119,7 +125,7 @@ static void quit_signal(int sig)
 int Read_Neutrino_Cfg(char *entry)
 {
 FILE *nfh;
-char tstr [512], *cfptr=NULL;
+char tstr [512]={0}, *cfptr=NULL;
 int rv=-1;
 
 	if((nfh=fopen(NCF_FILE,"r"))!=NULL)
@@ -257,18 +263,10 @@ void ShowUsage(void)
 
 int main (int argc, char **argv)
 {
-#ifdef MARTII
-int tv,cols=25,debounce=25,tmo=0,ix, spr;
-#else
-int tv,cols=25,debounce=25,tmo=0,index, spr;
-#endif
+int tv,cols=25,tmo=0,ix, spr;
 char ttl[]="Eingabe";
 int dloop=1,keys=0,frame=1,mask=0,bhelp=0;
-char *title=NULL, *format=NULL, *defstr=NULL, *aptr, *rptr; 
-#ifndef MARTII
-unsigned int alpha;
-#endif
-//FILE *fh;
+char *title=NULL, *format=NULL, *defstr=NULL, *aptr, *rptr;
 
 		if(argc==1)
 		{
@@ -384,20 +382,12 @@ unsigned int alpha;
 			switch (dloop)
 			{
 				case 1:
-#ifdef MARTII
-					fprintf(stderr, "input <param error: %s>\n",aptr);
-#else
-					printf("input <param error: %s>\n",aptr);
-#endif
+					fprintf(stderr, "%s <param error: %s>\n",__plugin__,aptr);
 					return 0;
 					break;
 				
 				case 2:
-#ifdef MARTII
-					fprintf(stderr, "input <unknown command: %s>\n\n",aptr);
-#else
-					printf("input <unknown command: %s>\n\n",aptr);
-#endif
+					fprintf(stderr, "%s <unknown command: %s>\n\n",__plugin__ ,aptr);
 					ShowUsage();
 					return 0;
 					break;
@@ -405,11 +395,7 @@ unsigned int alpha;
 		}
 		if(!format)
 		{
-#ifdef MARTII
-			fprintf(stderr, "input <missing format string>\n");
-#else
-			printf("input <missing format string>\n");
-#endif
+			fprintf(stderr, "%s <missing format string>\n", __plugin__);
 			return 0;
     	}
 		if(!title)
@@ -417,34 +403,29 @@ unsigned int alpha;
 			title=ttl;
 		}
 
-		if((buffer=calloc(BUFSIZE+1, sizeof(char)))==NULL)
+		if((line_buffer=calloc(BUFSIZE+1, sizeof(char)))==NULL)
 		{
-#ifdef MARTII
 			fprintf(stderr, NOMEM);
-#else
-			printf(NOMEM);
-#endif
 			return 0;
 		}
 
 		spr=Read_Neutrino_Cfg("screen_preset")+1;
-		sprintf(buffer,"screen_StartX%s",spres[spr]);
-		if((sx=Read_Neutrino_Cfg(buffer))<0)
+		sprintf(line_buffer,"screen_StartX%s",spres[spr]);
+		if((sx=Read_Neutrino_Cfg(line_buffer))<0)
 			sx=100;
 
-		sprintf(buffer,"screen_EndX%s",spres[spr]);
-		if((ex=Read_Neutrino_Cfg(buffer))<0)
+		sprintf(line_buffer,"screen_EndX%s",spres[spr]);
+		if((ex=Read_Neutrino_Cfg(line_buffer))<0)
 			ex=1180;
 
-		sprintf(buffer,"screen_StartY%s",spres[spr]);
-		if((sy=Read_Neutrino_Cfg(buffer))<0)
+		sprintf(line_buffer,"screen_StartY%s",spres[spr]);
+		if((sy=Read_Neutrino_Cfg(line_buffer))<0)
 			sy=100;
 
-		sprintf(buffer,"screen_EndY%s",spres[spr]);
-		if((ey=Read_Neutrino_Cfg(buffer))<0)
+		sprintf(line_buffer,"screen_EndY%s",spres[spr]);
+		if((ey=Read_Neutrino_Cfg(line_buffer))<0)
 			ey=620;
 
-#ifdef MARTII
 		for(ix=CMCST; ix<=CMH; ix++)
 		{
 			sprintf(rstr,"menu_%s_alpha",menucoltxt[ix]);
@@ -465,31 +446,11 @@ unsigned int alpha;
 		}
 		for (ix = 0; ix <= RED; ix++)
 			bgra[ix] = (tr[ix] << 24) | (rd[ix] << 16) | (gn[ix] << 8) | bl[ix];
-#else
-		for(index=CMCST; index<=CMH; index++)
-		{
-			sprintf(rstr,"menu_%s_alpha",menucoltxt[index]);
-			if((tv=Read_Neutrino_Cfg(rstr))>=0)
-				tr[index]=255-(float)tv*2.55;
-
-			sprintf(rstr,"menu_%s_blue",menucoltxt[index]);
-			if((tv=Read_Neutrino_Cfg(rstr))>=0)
-				bl[index]=(float)tv*2.55;
-
-			sprintf(rstr,"menu_%s_green",menucoltxt[index]);
-			if((tv=Read_Neutrino_Cfg(rstr))>=0)
-				gn[index]=(float)tv*2.55;
-
-			sprintf(rstr,"menu_%s_red",menucoltxt[index]);
-			if((tv=Read_Neutrino_Cfg(rstr))>=0)
-				rd[index]=(float)tv*2.55;
-		}
-#endif
 
 		if(Read_Neutrino_Cfg("rounded_corners")>0)
 			radius=10;
 		else
-			radius=0;
+			radius = 0;
 
 		fb = open(FB_DEVICE, O_RDWR);
 #ifdef MARTII
@@ -498,7 +459,7 @@ unsigned int alpha;
 #endif
 		if(fb == -1)
 		{
-			perror("input <open framebuffer device>");
+			perror(__plugin__ " <open framebuffer device>");
 			exit(1);
 		}
 
@@ -506,11 +467,7 @@ unsigned int alpha;
 
 		if((trstr=malloc(BUFSIZE))==NULL)
 		{
-#ifdef MARTII
 			fprintf(stderr, NOMEM);
-#else
-			printf(NOMEM);
-#endif
 			return -1;
 		}
 
@@ -518,27 +475,22 @@ unsigned int alpha;
 
 		if(ioctl(fb, FBIOGET_FSCREENINFO, &fix_screeninfo) == -1)
 		{
-			perror("input <FBIOGET_FSCREENINFO>\n");
+			perror(__plugin__ " <FBIOGET_FSCREENINFO>\n");
 			return -1;
 		}
 		if(ioctl(fb, FBIOGET_VSCREENINFO, &var_screeninfo) == -1)
 		{
-			perror("input <FBIOGET_VSCREENINFO>\n");
+			perror(__plugin__ " <FBIOGET_VSCREENINFO>\n");
 			return -1;
 		}
-#ifdef MARTII
+
 #if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 		var_screeninfo.xres = DEFAULT_XRES;
 		var_screeninfo.yres = DEFAULT_YRES;
 #endif
-#endif
-#ifdef MARTII
 		if(!(lfb = (uint32_t*)mmap(0, fix_screeninfo.smem_len, PROT_READ | PROT_WRITE, MAP_SHARED, fb, 0)))
-#else
-		if(!(lfb = (unsigned char*)mmap(0, fix_screeninfo.smem_len, PROT_READ | PROT_WRITE, MAP_SHARED, fb, 0)))
-#endif
 		{
-			perror("input <mapping of Framebuffer>\n");
+			perror(__plugin__ " <mapping of Framebuffer>\n");
 			return -1;
 		}
 
@@ -546,22 +498,14 @@ unsigned int alpha;
 
 		if((error = FT_Init_FreeType(&library)))
 		{
-#ifdef MARTII
-			fprintf(stderr, "input <FT_Init_FreeType failed with Errorcode 0x%.2X>", error);
-#else
-			printf("input <FT_Init_FreeType failed with Errorcode 0x%.2X>", error);
-#endif
+			fprintf(stderr, "%s <FT_Init_FreeType failed with Errorcode 0x%.2X>",__plugin__ , error);
 			munmap(lfb, fix_screeninfo.smem_len);
 			return -1;
 		}
 
 		if((error = FTC_Manager_New(library, 1, 2, 0, &MyFaceRequester, NULL, &manager)))
 		{
-#ifdef MARTII
-			fprintf(stderr, "input <FTC_Manager_New failed with Errorcode 0x%.2X>\n", error);
-#else
-			printf("input <FTC_Manager_New failed with Errorcode 0x%.2X>\n", error);
-#endif
+			fprintf(stderr, "%s <FTC_Manager_New failed with Errorcode 0x%.2X>\n",__plugin__ , error);
 			FT_Done_FreeType(library);
 			munmap(lfb, fix_screeninfo.smem_len);
 			return -1;
@@ -569,26 +513,19 @@ unsigned int alpha;
 
 		if((error = FTC_SBitCache_New(manager, &cache)))
 		{
-#ifdef MARTII
-			fprintf(stderr, "input <FTC_SBitCache_New failed with Errorcode 0x%.2X>\n", error);
-#else
-			printf("input <FTC_SBitCache_New failed with Errorcode 0x%.2X>\n", error);
-#endif
+			fprintf(stderr, "%s <FTC_SBitCache_New failed with Errorcode 0x%.2X>\n",__plugin__ , error);
 			FTC_Manager_Done(manager);
 			FT_Done_FreeType(library);
 			munmap(lfb, fix_screeninfo.smem_len);
 			return -1;
 		}
 
+		Read_Neutrino_Cfg("font_file=");
 		if((error = FTC_Manager_LookupFace(manager, FONT, &face)))
 		{
 			if((error = FTC_Manager_LookupFace(manager, FONT2, &face)))
 			{
-#ifdef MARTII
-				fprintf(stderr, "input <FTC_Manager_LookupFace failed with Errorcode 0x%.2X>\n", error);
-#else
-				printf("input <FTC_Manager_LookupFace failed with Errorcode 0x%.2X>\n", error);
-#endif
+				fprintf(stderr, "%s <FTC_Manager_LookupFace failed with Errorcode 0x%.2X>\n",__plugin__ , error);
 				FTC_Manager_Done(manager);
 				FT_Done_FreeType(library);
 				munmap(lfb, fix_screeninfo.smem_len);
@@ -602,11 +539,7 @@ unsigned int alpha;
 
 		use_kerning = FT_HAS_KERNING(face);
 
-#ifdef MARTII
 		desc.flags = FT_LOAD_RENDER | FT_LOAD_FORCE_AUTOHINT;
-#else
-		desc.flags = FT_LOAD_MONOCHROME;
-#endif
 
 	//init backbuffer
 
@@ -617,58 +550,62 @@ unsigned int alpha;
 #else
 		if(!(lbb = malloc(fix_screeninfo.line_length*var_screeninfo.yres)))
 		{
-			perror("input <allocating of Backbuffer>\n");
+			perror(__plugin__ " <allocating of Backbuffer>\n");
 			FTC_Manager_Done(manager);
 			FT_Done_FreeType(library);
 			munmap(lfb, fix_screeninfo.smem_len);
 			return -1;
 		}
 #endif
+
 		if(!(obb = malloc(fix_screeninfo.line_length*var_screeninfo.yres)))
 		{
-			perror("input <allocating of Backbuffer>\n");
+			perror(__plugin__ " <allocating of Backbuffer>\n");
 			FTC_Manager_Done(manager);
 			FT_Done_FreeType(library);
 			free(lbb);
 			munmap(lfb, fix_screeninfo.smem_len);
 			return 0;
 		}
-
 #ifdef MARTII
 		memcpy(obb, lbb, var_screeninfo.xres*var_screeninfo.yres*sizeof(uint32_t));
 #else
-		memcpy(lbb, lfb, fix_screeninfo.line_length*var_screeninfo.yres);
-		memcpy(obb, lfb, fix_screeninfo.line_length*var_screeninfo.yres);
+		memcpy(lbb, lfb, var_screeninfo.xres*var_screeninfo.yres*sizeof(uint32_t));
+		memcpy(obb, lfb, var_screeninfo.xres*var_screeninfo.yres*sizeof(uint32_t));
 #endif
 
 		startx = sx /*+ (((ex-sx) - 620)/2)*/;
 		starty = sy /* + (((ey-sy) - 505)/2)*/;
 
-
-
 	signal(SIGINT, quit_signal);
-	signal(SIGTERM, quit_signal);
 	signal(SIGQUIT, quit_signal);
+	signal(SIGTERM, quit_signal);
 
 	//main loop
 	put_instance(instance=get_instance()+1);
-	printf("%s\n",inputd(format, title, defstr, keys, frame, mask, bhelp, cols, tmo, debounce));
+	printf("%s", inputd(format, title, defstr, keys, frame, mask, bhelp, cols, tmo));
+	closedown();
+	return 1;
+}
+
+/******************************************************************************
+ * input close
+ ******************************************************************************/
+void closedown(void)
+{
 	put_instance(get_instance()-1);
 	
-	//cleanup
-
 	// clear Display
-//	memset(lbb, 0, var_screeninfo.xres*var_screeninfo.yres);
-//	memcpy(lfb, lbb, var_screeninfo.xres*var_screeninfo.yres);
-	
+
 #ifdef MARTII
 	memcpy(lbb, obb, var_screeninfo.xres*var_screeninfo.yres*sizeof(uint32_t));
 	blit();
 #else
-	memcpy(lfb, obb, fix_screeninfo.line_length*var_screeninfo.yres);
+	memcpy(lfb, obb, var_screeninfo.xres*var_screeninfo.yres*sizeof(uint32_t));
 #endif
+	munmap(lfb, fix_screeninfo.smem_len);
 
-	free(buffer);
+	free(line_buffer);
 
 	FTC_Manager_Done(manager);
 	FT_Done_FreeType(library);
@@ -677,12 +614,7 @@ unsigned int alpha;
 	free(lbb);
 #endif
 	free(obb);
-	munmap(lfb, fix_screeninfo.smem_len);
 
 	close(fb);
 	CloseRC();
-
-
-	return 1;
 }
-

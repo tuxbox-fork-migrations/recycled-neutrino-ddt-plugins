@@ -15,11 +15,10 @@
 #include <sys/dir.h>
 #include <sys/stat.h>
 #include <linux/input.h>
-#ifdef MARTII
 #include <poll.h>
 #include <stdint.h>
-#endif
-#include "shellexec.h"
+
+#include "current.h"
 #include "io.h"
 
 extern int instance;
@@ -29,16 +28,12 @@ static int rc;
 
 int InitRC(void)
 {
-#ifdef MARTII
 	rc = open(RC_DEVICE, O_RDONLY | O_CLOEXEC);
 	if (rc < 0)
 		rc = open(RC_DEVICE_FALLBACK, O_RDONLY | O_CLOEXEC);
-#else
-	rc = open(RC_DEVICE, O_RDONLY);
-#endif
 	if(rc == -1)
 	{
-		perror("shellexec <open remote control>");
+		perror(__plugin__ " <open remote control>");
 		exit(1);
 	}
 	fcntl(rc, F_SETFL, O_NONBLOCK | O_SYNC);
@@ -87,34 +82,34 @@ int RCTranslate(int code)
 		case KEY_OK:		rccode = RC_OK;
 			break;
 
-		case KEY_0:			rccode = RC_0;
+		case KEY_0:		rccode = RC_0;
 			break;
 
-		case KEY_1:			rccode = RC_1;
+		case KEY_1:		rccode = RC_1;
 			break;
 
-		case KEY_2:			rccode = RC_2;
+		case KEY_2:		rccode = RC_2;
 			break;
 
-		case KEY_3:			rccode = RC_3;
+		case KEY_3:		rccode = RC_3;
 			break;
 
-		case KEY_4:			rccode = RC_4;
+		case KEY_4:		rccode = RC_4;
 			break;
 
-		case KEY_5:			rccode = RC_5;
+		case KEY_5:		rccode = RC_5;
 			break;
 
-		case KEY_6:			rccode = RC_6;
+		case KEY_6:		rccode = RC_6;
 			break;
 
-		case KEY_7:			rccode = RC_7;
+		case KEY_7:		rccode = RC_7;
 			break;
 
-		case KEY_8:			rccode = RC_8;
+		case KEY_8:		rccode = RC_8;
 			break;
 
-		case KEY_9:			rccode = RC_9;
+		case KEY_9:		rccode = RC_9;
 			break;
 
 		case KEY_RED:		rccode = RC_RED;
@@ -151,14 +146,13 @@ int RCTranslate(int code)
 		case KEY_POWER:		rccode = RC_STANDBY;
 			break;
 
-		default:			rccode = -1;
+		default:		rccode = -1;
 	}
 
 	return rccode;
 
 }
 
-#ifdef MARTII
 void ClearRC(void)
 {
 	struct pollfd pfd;
@@ -217,20 +211,3 @@ int GetRCCode(int timeout_in_ms)
 	}
 	return rv;
 }
-#else
-int GetRCCode(void)
-{
-	int rv;
-
-	if(!RCKeyPressed() || (get_instance()>instance))
-	{
-		return -1;
-	}
-	rv=rccode;
-	while(RCKeyPressed());
-
-	return RCTranslate(rv);
-}
-#endif
-
-

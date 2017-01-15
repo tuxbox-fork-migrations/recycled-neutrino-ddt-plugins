@@ -9,13 +9,13 @@
 #include <signal.h>
 #include <sys/time.h>
 
-#include <rcinput.h>
-#include <draw.h>
-#include <pig.h>
-#include <colors.h>
-#include <snake.h>
+#include "rcinput.h"
+#include "draw.h"
+#include "pig.h"
+#include "colors.h"
+#include "snake.h"
+#include "fx2math.h"
 #include <plugin.h>
-#include <fx2math.h>
 
 extern	int	doexit;
 extern	int	debug;
@@ -38,7 +38,7 @@ static	void	setup_colors( void )
 int snake_exec( int fdfb, int fdrc, int fdlcd, char *cfgfile )
 {
 	struct timeval	tv;
-	int				x;
+	int		x;
 
 	if ( FBInitialize( 720, 576, 8, fdfb ) < 0 )
 		return -1;
@@ -50,17 +50,15 @@ int snake_exec( int fdfb, int fdrc, int fdlcd, char *cfgfile )
 
 	Fx2ShowPig( 540, 449, 135, 96 );
 
-	while( doexit != 3 )
-	{
+	while ( doexit != 3 ) {
 		DrawMaze( );	/* 0 = all */
 
 		doexit=0;
-		while( !doexit )
-		{
+		while ( !doexit ) {
 			tv.tv_sec = 0;
 			tv.tv_usec = 100000;
 			x = select( 0, 0, 0, 0, &tv );		/* 10ms pause */
-	
+
 			RcGetActCode( );
 			MoveSnake();
 #if defined(USEX) || defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
@@ -70,8 +68,7 @@ int snake_exec( int fdfb, int fdrc, int fdlcd, char *cfgfile )
 
 		FreeSnake();
 
-		if ( doexit != 3 )
-		{
+		if ( doexit != 3 ) {
 			actcode=0xee;
 			DrawFinalScore();
 			DrawGameOver();
@@ -80,8 +77,7 @@ int snake_exec( int fdfb, int fdrc, int fdlcd, char *cfgfile )
 #endif
 
 			doexit=0;
-			while(( actcode != RC_OK ) && !doexit )
-			{
+			while (( actcode != RC_OK ) && !doexit ) {
 				tv.tv_sec = 0;
 				tv.tv_usec = 200000;
 				x = select( 0, 0, 0, 0, &tv );		/* 100ms pause */
@@ -92,11 +88,10 @@ int snake_exec( int fdfb, int fdrc, int fdlcd, char *cfgfile )
 
 	Fx2StopPig();
 
-/* fx2 */
-/* buffer leeren, damit neutrino nicht rumspinnt */
+	/* fx2 */
+	/* buffer leeren, damit neutrino nicht rumspinnt */
 	realcode = RC_0;
-	while( realcode != 0xee )
-	{
+	while ( realcode != 0xee ) {
 		tv.tv_sec = 0;
 		tv.tv_usec = 300000;
 		x = select( 0, 0, 0, 0, &tv );		/* 300ms pause */

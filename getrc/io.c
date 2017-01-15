@@ -18,24 +18,18 @@
 
 #include "io.h"
 
-#define RC_DEVICE	"/dev/input/nevis_ir"
-#ifdef MARTII
-#define RC_DEVICE_FALLBACK	"/dev/input/event1"
-#endif
-
 struct input_event ev;
 static unsigned short rccode=-1;
 static int rc;
 
 int InitRC(void)
 {
-	rc = open(RC_DEVICE, O_RDONLY);
+	rc = open(RC_DEVICE, O_RDONLY | O_CLOEXEC);
 #ifdef MARTII
 	if (rc < 0)
-		rc = open(RC_DEVICE_FALLBACK, O_RDONLY);
+		rc = open(RC_DEVICE_FALLBACK, O_RDONLY | O_CLOEXEC);
 #endif
-	if(rc == -1) 
-	{
+	if(rc == -1) {
 		perror("getrc <open remote control>");
 		exit(1);
 	}
@@ -166,4 +160,3 @@ int tmo=timeout;
 	}
 	return Translate(rccode);
 }
-

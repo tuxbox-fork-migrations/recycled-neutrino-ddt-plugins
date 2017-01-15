@@ -1,18 +1,18 @@
 AM_CPPFLAGS = -I$(srcdir)/../lib -I$(top_srcdir)/include
 
-noinst_PROGRAMS = soko
+noinst_PROGRAMS = sokoban
 
-soko_SOURCES = board.c somain.c
+sokoban_SOURCES = board.c somain.c
 
-soko_LDFLAGS = -rpath $(PLUGINDIR) -R$(TARGET_PLUGINDIR)
+sokoban_LDFLAGS = -rpath $(PLUGINDIR) -R$(TARGET_PLUGINDIR)
 
-soko_LDADD = -lfx2
+sokoban_LDADD = -lfx2
 
 install-exec-local:
 	install -d $(DESTDIR)$(PLUGINDIR)
 	install -d $(DESTDIR)$(CONFIGDIR)
-	$(LIBTOOL) --mode=install install --strip-program=$(STRIP) -s -m 0755 soko $(DESTDIR)$(PLUGINDIR)/soko.so
-	install -m 0644 $(srcdir)/soko.cfg $(DESTDIR)$(PLUGINDIR)
+	$(LIBTOOL) --mode=install install --strip-program=$(STRIP) -s -m 0755 sokoban $(DESTDIR)$(PLUGINDIR)/sokoban.so
+	install -m 0644 $(srcdir)/sokoban.cfg $(DESTDIR)$(PLUGINDIR)
 	install -d $(DESTDIR)$(DATADIR)/sokoban
 	install -m 0644 $(srcdir)/*.xsb $(DESTDIR)$(DATADIR)/sokoban
-
+	install -m 0644 $(srcdir)/sokoban_hint.png $(DESTDIR)$(PLUGINDIR)

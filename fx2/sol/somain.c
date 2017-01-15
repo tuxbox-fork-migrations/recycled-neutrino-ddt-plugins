@@ -8,13 +8,13 @@
 #include <signal.h>
 #include <sys/time.h>
 
-#include <rcinput.h>
-#include <draw.h>
-#include <solboard.h>
-#include <colors.h>
-#include <pig.h>
+#include "rcinput.h"
+#include "draw.h"
+#include "solboard.h"
+#include "colors.h"
+#include "pig.h"
+#include "fx2math.h"
 #include <plugin.h>
-#include <fx2math.h>
 
 #define SOLBOARD_DEBUG
 
@@ -62,63 +62,58 @@ int sol_exec( int fdfb, int fdrc, int fdlcd, char *cfgfile )
 	// 228, 187
 	Fx2ShowPig( 420, 300, 228, 187 );
 
-	while( doexit != 3 )
-	{
+	while ( doexit != 3 ) {
 #ifdef SOLBOARD_DEBUG
-	  printf("somain: board init\n");
+		printf("somain: board init\n");
 #endif
 		BoardInitialize();
 		DrawBoard();
 
 		doexit=0;
-		while( !doexit )
-		{
-		  tv.tv_sec = 0;
-		  tv.tv_usec = 10000;
-		  x = select( 0, 0, 0, 0, &tv );		/* 100ms pause */
-		  
-		  RcGetActCode( );
-		  MoveMouse();
+		while ( !doexit ) {
+			tv.tv_sec = 0;
+			tv.tv_usec = 10000;
+			x = select( 0, 0, 0, 0, &tv );		/* 100ms pause */
+
+			RcGetActCode( );
+			MoveMouse();
 #if defined(USEX) || defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
-		  FBFlushGrafic();
+			FBFlushGrafic();
 #endif
 		}
-		
-		if ( doexit != 3 )
-		  {
+
+		if ( doexit != 3 ) {
 #ifdef SOLBOARD_DEBUG
-		    printf("somain: actcode=0xee\n");
+			printf("somain: actcode=0xee\n");
 #endif
-		    
-		    actcode=0xee;
-		    if ( doexit ==2 ) {
+
+			actcode=0xee;
+			if ( doexit ==2 ) {
 #ifdef SOLBOARD_DEBUG
-		      printf("somain: before DrawScore\n");
+				printf("somain: before DrawScore\n");
 #endif
-		      DrawScore();
-		    }
-		    else {
+				DrawScore();
+			} else {
 #ifdef SOLBOARD_DEBUG
-		      printf("somain: //DrawGameOver()\n");
+				printf("somain: //DrawGameOver()\n");
 #endif
-		      
+
 				//DrawGameOver();
-		    }
+			}
 #if defined(USEX) || defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 #ifdef SOLBOARD_DEBUG
-		    printf("somain: FBFlushGrafic()\n");
+			printf("somain: FBFlushGrafic()\n");
 #endif
-		    
-		    FBFlushGrafic();
+
+			FBFlushGrafic();
 #endif
-		    doexit=0;
-		    while(( actcode != RC_GREEN ) && !doexit )
-		      {
+			doexit=0;
+			while (( actcode != RC_GREEN ) && !doexit ) {
 #ifdef SOLBOARD_DEBUG
-			printf("somain: RC_loop\n");
+				printf("somain: RC_loop\n");
 #endif
-			
-			tv.tv_sec = 0;
+
+				tv.tv_sec = 0;
 				tv.tv_usec = 100000;
 				x = select( 0, 0, 0, 0, &tv );		/* 100ms pause */
 				RcGetActCode( );
@@ -128,11 +123,10 @@ int sol_exec( int fdfb, int fdrc, int fdlcd, char *cfgfile )
 
 	Fx2StopPig();
 
-/* fx2 */
-/* buffer leeren, damit neutrino nicht rumspinnt */
+	/* fx2 */
+	/* buffer leeren, damit neutrino nicht rumspinnt */
 	realcode = RC_0;
-	while( realcode != 0xee )
-	{
+	while ( realcode != 0xee ) {
 		tv.tv_sec = 0;
 		tv.tv_usec = 300000;
 		x = select( 0, 0, 0, 0, &tv );		/* 300ms pause */

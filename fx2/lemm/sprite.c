@@ -8,9 +8,9 @@
 #include <string.h>
 #include <sys/time.h>
 
-#include <rcinput.h>
-#include <colors.h>
-#include <sprite.h>
+#include "rcinput.h"
+#include "colors.h"
+#include "sprite.h"
 
 extern	int		doexit;
 
@@ -18,12 +18,12 @@ extern	unsigned short	realcode;
 extern	unsigned short	actcode;
 
 extern	unsigned char	*GetPic( int idx,int *maxani,int *width, int *height );
-extern	unsigned char *GetMirrorPic( char picid );
-extern	void	dblCopyImage( int x1, int y1, int dx,int dy,unsigned char *src);
+extern	unsigned char	*GetMirrorPic( char picid );
+extern	void		dblCopyImage( int x1, int y1, int dx,int dy,unsigned char *src);
 
 static	Sprite	*root=0;
 static	Sprite	*last=0;
-extern	int		main_x;
+extern	int	main_x;
 
 void	DrawSprite( Sprite *s )
 {
@@ -33,15 +33,15 @@ void	DrawSprite( Sprite *s )
 int SpriteCollide( Sprite *s, int x, int y )
 {
 	return ((x <  s->x+s->width) &&
-			(x >= s->x) &&
-			(y <  s->y+s->height) &&
-			(y >= s->y ));
+		(x >= s->x) &&
+		(y <  s->y+s->height) &&
+		(y >= s->y ));
 }
 
 Sprite *CreateSprite( int picid, int ani, int x, int y )
 {
 	Sprite *s;
-	int		ma;
+	int	ma;
 
 	s=malloc(sizeof(Sprite));
 	memset(s,0,sizeof(Sprite));
@@ -79,7 +79,7 @@ void	DrawSprites( void )
 {
 	Sprite	*s;
 
-	for( s=root; s; s=s->next )
+	for ( s=root; s; s=s->next )
 		DrawSprite(s);
 }
 
@@ -119,7 +119,7 @@ void	SpritesGetBackground( void )
 {
 	Sprite	*s;
 
-	for( s=root; s; s=s->next )
+	for ( s=root; s; s=s->next )
 		SpriteGetBackground(s);
 }
 
@@ -128,8 +128,7 @@ void	FreeSprites( void )
 	Sprite	*s;
 	Sprite	*n;
 
-	for( s=root; s; s=n )
-	{
+	for ( s=root; s; s=n ) {
 		n=s->next;
 		free(s);
 	}
@@ -139,7 +138,7 @@ void	FreeSprites( void )
 
 void	SpriteChangePic( Sprite *s, int picid )
 {
-	int		ma;
+	int	ma;
 
 	s->picid = (char)picid;
 	s->ori_data= GetPic( picid, &ma, &s->width, &s->height );

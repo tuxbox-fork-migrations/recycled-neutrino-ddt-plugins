@@ -1,21 +1,16 @@
 #include "text.h"
 #include "gfx.h"
 #include "io.h"
-#ifdef MARTII
-#include "msgbox.h"
-#endif
 
 int FSIZE_BIG=28;
 int FSIZE_MED=24;
 int FSIZE_SMALL=20;
 int TABULATOR=72;
 
-#ifndef MARTII
-static unsigned sc[8]={'a','o','u','A','O','U','z','d'}, tc[8]={'ä','ö','ü','Ä','Ö','Ü','ß','°'}, su[7]={0xA4,0xB6,0xBC,0x84,0x96,0x9C,0x9F};
-#endif
+static char *sc = "aouAOUzd",
+	*su= "\xA4\xB6\xBC\x84\x96\x9C\x9F",
+	*tc="\xE4\xF6\xFC\xC4\xD6\xDC\xDF\xB0";
 
-#ifdef MARTII
-static char *sc = "aouAOUzd", *su= "\xA4\xB6\xBC\x84\x96\x9C\x9F", *tc="\xE4\xF6\xFC\xC4\xD6\xDC\xDF\xB0";
 // from neutrino/src/driver/fontrenderer.cpp
 int UTF8ToUnicode(char **textp, const int utf8_encoded) // returns -1 on error
 {
@@ -91,8 +86,9 @@ void TranslateString(char *src, size_t size)
 	char *tptr_start = alloca(src_len * 4 + 1);
 	char *tptr = tptr_start;
 
-	if (isValidUTF8(src))
+	if (isValidUTF8(src)) {
 		strncpy(tptr_start, fptr, src_len + 1);
+	}
 	else {
 		while (*fptr) {
 			int i;
@@ -112,46 +108,42 @@ void TranslateString(char *src, size_t size)
 	fptr = tptr_start;
 	tptr = src;
 	char *tptr_end = src + size - 4;
-	while (*fptr && tptr < tptr_end) {
+
+	while (*fptr && tptr <= tptr_end) {
 		if (*fptr == '~') {
 			fptr++;
 			int i;
 			for (i = 0; sc[i] && (sc[i] != *fptr); i++);
-			if (sc[i]) {
-				*tptr++ = 0xC3;
-				*tptr++ = su[i];
-				fptr++;
-			} else if (*fptr == 'd') {
-				*tptr++ = 0xC2;
-				*tptr++ = 0xb0;
-				fptr++;
-			} else
-				*tptr++ = '~';
-		} else
+				if (*fptr == 'd') {
+					*tptr++ = 0xC2;
+					*tptr++ = 0xb0;
+					fptr++;
+				} else if (sc[i]) {
+					*tptr++ = 0xC3;
+					*tptr++ = su[i];
+					fptr++;
+				} else {
+					*tptr++ = '~';
+				}
+		} else {
 			CopyUTF8Char(&tptr, &fptr);
+		}
 	}
 	*tptr = 0;
 }
-#endif
+
 /******************************************************************************
  * MyFaceRequester
  ******************************************************************************/
 
-#ifdef MARTII
 FT_Error MyFaceRequester(FTC_FaceID face_id, FT_Library lib, FT_Pointer request_data __attribute__((unused)), FT_Face *aface)
-#else
-FT_Error MyFaceRequester(FTC_FaceID face_id, FT_Library library, FT_Pointer request_data, FT_Face *aface)
-#endif
 {
 	FT_Error result;
 
-#ifdef MARTII
 	result = FT_New_Face(lib, face_id, 0, aface);
-#else
-	result = FT_New_Face(library, face_id, 0, aface);
-#endif
 
-	if(result) printf("msgbox <Font \"%s\" failed>\n", (char*)face_id);
+	if (result)
+		printf("%s <Font \"%s\" failed>\n", __plugin__, (char*)face_id);
 
 	return result;
 }
@@ -160,7 +152,6 @@ FT_Error MyFaceRequester(FTC_FaceID face_id, FT_Library library, FT_Pointer requ
  * RenderChar
  ******************************************************************************/
 
-#ifdef MARTII
 struct colors_struct
 {
 	uint32_t fgcolor, bgcolor;
@@ -245,155 +236,81 @@ int RenderChar(FT_ULong currentchar, int _sx, int _sy, int _ex, int color)
 
 	//load char
 
-		if(!(glyphindex = FT_Get_Char_Index(face, currentchar)))
-		{
-			printf("TuxCom <FT_Get_Char_Index for Char \"%c\" failed\n", (int)currentchar);
-			return 0;
-		}
+	if(!(glyphindex = FT_Get_Char_Index(face, currentchar)))
+	{
+		printf("%s <FT_Get_Char_Index for Char \"%c\" failed\n", __plugin__, (int)currentchar);
+		return 0;
+	}
 
-		if((err = FTC_SBitCache_Lookup(cache, &desc, glyphindex, &sbit, NULL)))
-		{
-			printf("TuxCom <FTC_SBitCache_Lookup for Char \"%c\" failed with Errorcode 0x%.2X>\n", (int)currentchar, error);
-			return 0;
-		}
+	if((err = FTC_SBitCache_Lookup(cache, &desc, glyphindex, &sbit, NULL)))
+	{
+		printf("%s <FTC_SBitCache_Lookup for Char \"%c\" failed with Errorcode 0x%.2X>\n", __plugin__, (int)currentchar, error);
+		return 0;
+	}
 
-		if(use_kerning)
-		{
-			FT_Get_Kerning(face, prev_glyphindex, glyphindex, ft_kerning_default, &kerning);
+	if(use_kerning)
+	{
+		FT_Get_Kerning(face, prev_glyphindex, glyphindex, ft_kerning_default, &kerning);
 
-			prev_glyphindex = glyphindex;
-			kerning.x >>= 6;
-		} else
-			kerning.x = 0;
-
-		//render char
-
-		if(color != -1) /* don't render char, return charwidth only */
-		{
-#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
-			if(sync_blitter) {
-				sync_blitter = 0;
-				if (ioctl(fb, STMFBIO_SYNC_BLITTER) < 0)
-					perror("RenderString ioctl STMFBIO_SYNC_BLITTER");
-			}
-#endif
-			uint32_t bgcolor = *(lbb + (sy + _sy) * stride + (sx + _sx));
-			//unsigned char pix[4]={bl[color],gn[color],rd[color],tr[color]};
-			uint32_t fgcolor = bgra[color];
-			uint32_t *colors = lookup_colors(fgcolor, bgcolor);
-			uint32_t *p = lbb + (sx + _sx + sbit->left + kerning.x) + stride * (sy + _sy - sbit->top);
-			uint32_t *r = p + (_ex - _sx);	/* end of usable box */
-			for(row = 0; row < sbit->height; row++)
-			{
-				uint32_t *q = p;
-				uint8_t *s = sbit->buffer + row * sbit->pitch;
-				for(pitch = 0; pitch < sbit->width; pitch++)
-				{
-					if (*s)
-							*q = colors[*s];
-					q++, s++;
-					if (q > r)	/* we are past _ex */
-						break;
-				}
-				p += stride;
-				r += stride;
-			}
-			if (_sx + sbit->xadvance >= _ex)
-				return -1; /* limit to maxwidth */
-		}
-
-	//return charwidth
-
-		return sbit->xadvance + kerning.x;
-}
-#else
-int RenderChar(FT_ULong currentchar, int sx, int sy, int ex, int color)
-{
-//	unsigned char pix[4]={oldcmap.red[col],oldcmap.green[col],oldcmap.blue[col],oldcmap.transp[col]};
-//	unsigned char pix[4]={0x80,0x80,0x80,0x80};
-	unsigned char pix[4]={bl[color],gn[color],rd[color],tr[color]};
-	int row, pitch, bit, x = 0, y = 0;
-	FT_UInt glyphindex;
-	FT_Vector kerning;
-	FT_Error error;
-
-	currentchar=currentchar & 0xFF;
-
-	//load char
-
-		if(!(glyphindex = FT_Get_Char_Index(face, (int)currentchar)))
-		{
-//			printf("msgbox <FT_Get_Char_Index for Char \"%c\" failed\n", (int)currentchar);
-			return 0;
-		}
-
-
-		if((error = FTC_SBitCache_Lookup(cache, &desc, glyphindex, &sbit, NULL)))
-		{
-//			printf("msgbox <FTC_SBitCache_Lookup for Char \"%c\" failed with Errorcode 0x%.2X>\n", (int)currentchar, error);
-			return 0;
-		}
-
-// no kerning used
-/*
-		if(use_kerning)
-		{
-			FT_Get_Kerning(face, prev_glyphindex, glyphindex, ft_kerning_default, &kerning);
-
-			prev_glyphindex = glyphindex;
-			kerning.x >>= 6;
-		}
-		else
-*/
-			kerning.x = 0;
+		prev_glyphindex = glyphindex;
+		kerning.x >>= 6;
+	} else
+		kerning.x = 0;
 
 	//render char
 
-		if(color != -1) /* don't render char, return charwidth only */
-		{
-			if(sx + sbit->xadvance >= ex) return -1; /* limit to maxwidth */
-
-			for(row = 0; row < sbit->height; row++)
-			{
-				for(pitch = 0; pitch < sbit->pitch; pitch++)
-				{
-					for(bit = 7; bit >= 0; bit--)
-					{
-						if(pitch*8 + 7-bit >= sbit->width) break; /* render needed bits only */
-
-						if((sbit->buffer[row * sbit->pitch + pitch]) & 1<<bit) memcpy(lbb + (startx + sx + sbit->left + kerning.x + x)*4 + fix_screeninfo.line_length*(starty + sy - sbit->top + y),pix,4);
-
-						x++;
-					}
-				}
-
-				x = 0;
-				y++;
-			}
-
+	if(color != -1) /* don't render char, return charwidth only */
+	{
+#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
+		if (sync_blitter) {
+			sync_blitter = 0;
+			if (ioctl(fb, STMFBIO_SYNC_BLITTER) < 0)
+				perror("RenderString ioctl STMFBIO_SYNC_BLITTER");
 		}
+#endif
+		if (_sx + sbit->xadvance >= _ex)
+			return -1; /* limit to maxwidth */
+		uint32_t bgcolor = *(lbb + (sy + _sy) * stride + (sx + _sx));
+		uint32_t fgcolor = bgra[color];
+		uint32_t *colors = lookup_colors(fgcolor, bgcolor);
+		uint32_t *p = lbb + (sx + _sx + sbit->left + kerning.x) + stride * (sy + _sy - sbit->top);
+		uint32_t *r = p + (_ex - _sx);	/* end of usable box */
+		for(row = 0; row < sbit->height; row++)
+		{
+			uint32_t *q = p;
+			uint8_t *s = sbit->buffer + row * sbit->pitch;
+			for(pitch = 0; pitch < sbit->width; pitch++)
+			{
+				if (*s)
+						*q = colors[*s];
+				q++, s++;
+				if (q > r)	/* we are past _ex */
+					break;
+			}
+			p += stride;
+			r += stride;
+		}
+	}
 
 	//return charwidth
 
-		return sbit->xadvance + kerning.x;
+	return sbit->xadvance + kerning.x;
 }
-#endif
 
 /******************************************************************************
  * GetStringLen
  ******************************************************************************/
 
-#ifdef MARTII
 int GetStringLen(int _sx, char *string, size_t size)
 {
 	int i, stringlen = 0;
-	
+
 	//reset kerning
-	
+
 	prev_glyphindex = 0;
-	
+
 	//calc len
-	
+
 	if(size)
 		desc.width = desc.height = size;
 
@@ -413,70 +330,9 @@ int GetStringLen(int _sx, char *string, size_t size)
 			break;
 		}
 	}
-	
-	return stringlen;
-}
-#else
-int GetStringLen(int sx, unsigned char *string, int size)
-{
-int i, found;
-int stringlen = 0;
-
-	//reset kerning
-
-		prev_glyphindex = 0;
-
-	//calc len
-
-		if(size)
-		{
-			desc.width = desc.height = size;
-		}
-		
-		while(*string != '\0')
-		{
-			if(*string != '~')
-			{
-				stringlen += RenderChar(*string, -1, -1, -1, -1);
-			}
-			else
-			{
-				string++;
-				if(*string=='t')
-				{
-					stringlen=desc.width+TABULATOR*((int)(stringlen/TABULATOR)+1);
-				}
-				else
-				{
-					if(*string=='T')
-					{
-						if(sscanf(string+1,"%4d",&i)==1)
-						{
-							string+=4;
-							stringlen=i-sx;
-						}
-					}
-					else
-					{
-						found=0;
-						for(i=0; i<sizeof(sc) && !found; i++)
-						{
-							if(*string==sc[i])
-							{
-								stringlen += RenderChar(tc[i], -1, -1, -1, -1);
-								found=1;
-							}
-						}
-					}
-				}
-			}
-			string++;
-		}
 
 	return stringlen;
 }
-#endif
-
 
 void CatchTabs(char *text)
 {
@@ -502,118 +358,83 @@ void CatchTabs(char *text)
 
 extern int psx;
 
-int RenderString(char *string, int sx, int sy, int maxwidth, int layout, int size, int color)
+int RenderString(char *string, int _sx, int _sy, int maxwidth, int layout, int size, int color)
 {
-#ifdef MARTII
-	int stringlen, ex, charwidth,i;
+	int stringlen, _ex, charwidth, i;
 	char rstr[BUFSIZE], *rptr=rstr;
-#else
-	int stringlen, ex, charwidth,i,found;
-	char rstr[BUFSIZE], *rptr=rstr, rc;
-#endif
 	int varcolor=color;
 
 	//set size
-	
-		strcpy(rstr,string);
 
-		desc.width = desc.height = size;
-		TABULATOR=3*size;
+	strcpy(rstr,string);
+
+	desc.width = desc.height = size;
+	TABULATOR=3*size;
 	//set alignment
 
-		stringlen = GetStringLen(sx, rstr, size);
+	stringlen = GetStringLen(_sx, rstr, size);
 
-		if(layout != LEFT)
+	if(layout != LEFT)
+	{
+		switch(layout)
 		{
-			switch(layout)
-			{
-				case CENTER:	if(stringlen < maxwidth) sx += (maxwidth - stringlen)/2;
-						break;
+			case CENTER:	if(stringlen < maxwidth) _sx += (maxwidth - stringlen)/2;
+					break;
 
-				case RIGHT:	if(stringlen < maxwidth) sx += maxwidth - stringlen;
-			}
+			case RIGHT:	if(stringlen < maxwidth) _sx += maxwidth - stringlen;
 		}
+	}
 
 	//reset kerning
 
-		prev_glyphindex = 0;
+	prev_glyphindex = 0;
 
 	//render string
 
-		ex = sx + maxwidth;
+	_ex = _sx + maxwidth;
 
 #if defined(MARTII) && defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
-		if(sync_blitter) {
-			sync_blitter = 0;
-			if (ioctl(fb, STMFBIO_SYNC_BLITTER) < 0)
-				perror("RenderString ioctl STMFBIO_SYNC_BLITTER");
-		}
+	if(sync_blitter) {
+		sync_blitter = 0;
+		if (ioctl(fb, STMFBIO_SYNC_BLITTER) < 0)
+			perror("RenderString ioctl STMFBIO_SYNC_BLITTER");
+	}
 #endif
-		while(*rptr != '\0')
+	while(*rptr != '\0')
+	{
+		if(*rptr=='~')
 		{
-			if(*rptr=='~')
+			++rptr;
+			switch(*rptr)
 			{
-				++rptr;
-#ifndef MARTII
-				rc=*rptr;
-				found=0;
-				for(i=0; i<sizeof(sc) && !found; i++)
-				{
-					if(rc==sc[i])
+				case 'R': varcolor=RED; break;
+				case 'G': varcolor=GREEN; break;
+				case 'Y': varcolor=YELLOW; break;
+				case 'B': varcolor=BLUE1; break;
+				case 'S': varcolor=color; break;
+				case 't':
+					_sx=TABULATOR*((int)(_sx/TABULATOR)+1);
+					break;
+				case 'T':
+					if(sscanf(rptr+1,"%4d",&i)==1)
 					{
-						rc=tc[i];
-						found=1;
+						rptr+=4;
+#ifdef MARTII
+						_sx = psx + 10 + i;
+#else
+						_sx=i;
+#endif
 					}
-				}
-				if(found)
-				{
-					if((charwidth = RenderChar(rc, sx, sy, ex, varcolor)) == -1) return sx; /* string > maxwidth */
-					sx += charwidth;
-				}
-				else
-				{
-#endif
-					switch(*rptr)
-					{
-						case 'R': varcolor=RED; break;
-						case 'G': varcolor=GREEN; break;
-						case 'Y': varcolor=YELLOW; break;
-						case 'B': varcolor=BLUE1; break;
-						case 'S': varcolor=color; break;
-						case 't':				
-							sx=TABULATOR*((int)(sx/TABULATOR)+1);
-							break;
-						case 'T':
-							if(sscanf(rptr+1,"%4d",&i)==1)
-							{
-								rptr+=4;
-#ifdef MARTII
-								sx = psx + 10 + i;
-#else
-								sx=i;
-#endif
-							}
-						break;
-					}
-#ifdef MARTII
-					rptr++;
-#else
-				}
-#endif
+				break;
 			}
-			else
-			{
-#ifdef MARTII
-				if((charwidth = RenderChar(UTF8ToUnicode(&rptr, 1), sx, sy, ex, varcolor)) == -1) return sx; /* string > maxwidth */
-#else
-				if((charwidth = RenderChar(*rptr, sx, sy, ex, varcolor)) == -1) return sx; /* string > maxwidth */
-#endif
-				sx += charwidth;
-			}
-#ifndef MARTII
 			rptr++;
-#endif
 		}
+		else
+		{
+			if((charwidth = RenderChar(UTF8ToUnicode(&rptr, 1), _sx, _sy, _ex, varcolor)) == -1) return _sx; /* string > maxwidth */
+			_sx += charwidth;
+		}
+	}
 	return stringlen;
 }
 

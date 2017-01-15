@@ -13,4 +13,4 @@ install-exec-local:
 	install -d $(DESTDIR)$(CONFIGDIR)
 	$(LIBTOOL) --mode=install install --strip-program=$(STRIP) -s -m 0755 snake $(DESTDIR)$(PLUGINDIR)/snake.so
 	install -m 0644 $(srcdir)/snake.cfg $(DESTDIR)$(PLUGINDIR)
-
+	install -m 0644 $(srcdir)/snake_hint.png $(DESTDIR)$(PLUGINDIR)

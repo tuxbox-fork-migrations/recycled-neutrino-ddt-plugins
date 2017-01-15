@@ -2,11 +2,13 @@
 #include <stdio.h>
 #include <time.h>
 #include <signal.h>
-#include "msgbox.h"
+
+#include "current.h"
 #include "text.h"
 #include "io.h"
 #include "gfx.h"
-#include "txtform.h" 
+#include "txtform.h"
+
 
 #define M_VERSION 1.12
 
@@ -31,14 +33,22 @@ unsigned char rd[] = {	0x00, 	0x00, 	0xFF, 	0x00, 	0xFF, 	0x00, 	0xFF, 	0x00,
 						0xFF, 	0x00, 	0x00, 	0x00, 	0xFF, 	0x00, 	0xFF, 	0xFF};
 unsigned char tr[] = {	0xFF, 	0xFF, 	0xFF,  	0xA0,  	0xFF,  	0xA0,  	0xFF,  	0xFF,
 						0xFF, 	0xFF, 	0x00,  	0xFF,  	0xFF,  	0xFF,  	0xFF,  	0xFF};
-#ifdef MARTII
+
 uint32_t bgra[20];
-#endif
 
 void TrimString(char *strg);
 
 // OSD stuff
-static char menucoltxt[][25]={"Content_Selected_Text","Content_Selected","Content_Text","Content","Content_inactive_Text","Content_inactive","Head_Text","Head"};
+static char menucoltxt[][25]={
+	"Content_Selected_Text",
+	"Content_Selected",
+	"Content_Text",
+	"Content",
+	"Content_inactive_Text",
+	"Content_inactive",
+	"Head_Text",
+	"Head"
+};
 static char spres[][5]={"","_crt","_lcd"};
 
 char *line_buffer=NULL, *title=NULL;
@@ -49,19 +59,13 @@ int rbutt[16],hide=0,radius=10;
 // Misc
 char NOMEM[]="msgbox <Out of memory>\n";
 char TMP_FILE[64]="/tmp/msgbox.tmp";
-#ifdef MARTII
 uint32_t *lfb = NULL, *lbb = NULL, *obb = NULL, *hbb = NULL, *ibb = NULL;
-#else
-unsigned char *lfb = 0, *lbb = 0, *obb = 0, *hbb = 0, *ibb = 0;
-#endif
 unsigned char nstr[BUFSIZE]="";
 unsigned char *trstr;
-#ifndef MARTII
-unsigned rc,sc[8]={'a','o','u','A','O','U','z','d'}, tc[8]={0xE4,0xF6,0xFC,0xC4,0xD6,0xDC,0xDF,0xB0};
-#endif
 char INST_FILE[]="/tmp/rc.locked";
 int instance=0;
-#ifdef MARTII
+int stride;
+
 #if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 int sync_blitter = 0;
 
@@ -98,18 +102,12 @@ void blit(void) {
 		perror("STMFBIO_BLT");
 	sync_blitter = 1;
 }
-#else
-void blit(void) {
-	memcpy(lfb, lbb, fix_screeninfo.line_length*var_screeninfo.yres);
-}
-#endif
-int stride;
 #endif
 
 int get_instance(void)
 {
-FILE *fh;
-int rval=0;
+	FILE *fh;
+	int rval=0;
 
 	if((fh=fopen(INST_FILE,"r"))!=NULL)
 	{
@@ -121,7 +119,7 @@ int rval=0;
 
 void put_instance(int pval)
 {
-FILE *fh;
+	FILE *fh;
 
 	if(pval)
 	{
@@ -137,22 +135,22 @@ FILE *fh;
 	}
 }
 
-#ifdef MARTII
+#if HAVE_SPARK_HARDWARE || HAVE_DUCKBOX_HARDWARE
 static void quit_signal(int sig __attribute__((unused)))
 #else
 static void quit_signal(int sig)
 #endif
 {
+	printf("%s Version %.2f killed\n", __plugin__, M_VERSION);
 	put_instance(get_instance()-1);
-	printf("msgbox Version %.2f killed\n",M_VERSION);
 	exit(1);
 }
 
 int Read_Neutrino_Cfg(char *entry)
 {
-FILE *nfh;
-char tstr [512], *cfptr=NULL;
-int rv=-1;
+	FILE *nfh;
+	char tstr [512], *cfptr=NULL;
+	int rv=-1;
 
 	if((nfh=fopen(NCF_FILE,"r"))!=NULL)
 	{
@@ -183,7 +181,7 @@ int rv=-1;
 					}
 				}
 			}
-//			printf("%s\n%s=%s -> %d\n",tstr,entry,cfptr,rv);
+			//printf("%s\n%s=%s -> %d\n",tstr,entry,cfptr,rv);
 		}
 		fclose(nfh);
 	}
@@ -192,7 +190,7 @@ int rv=-1;
 
 void TrimString(char *strg)
 {
-char *pt1=strg, *pt2=strg;
+	char *pt1=strg, *pt2=strg;
 
 	while(*pt2 && *pt2<=' ')
 	{
@@ -217,8 +215,8 @@ char *pt1=strg, *pt2=strg;
 
 int GetSelection(char *sptr)
 {
-int rv=0,btn=0,run=1;
-char *pt1=strdup(sptr),*pt2,*pt3;
+	int rv=0,btn=0,run=1;
+	char *pt1=strdup(sptr),*pt2=NULL,*pt3=NULL;
 
 	pt2=pt1;
 	while(*pt2 && run && btn<MAX_BUTTONS)
@@ -236,15 +234,11 @@ char *pt1=strdup(sptr),*pt2,*pt3;
 		if(strlen(pt2))
 		{	
 			rbutt[btn]=tbuttons;
-#ifdef MARTII
 			size_t l = strlen(pt2);
 			char *t = (char *)alloca(l * 4 + 1);
 			memcpy(t, pt2, l + 1);
 			TranslateString(t, l * 4);
 			butmsg[btn]=strdup(t);
-#else
-			butmsg[btn]=strdup(pt2);
-#endif
 			CatchTabs(butmsg[btn++]);
 		}
 		if(run)
@@ -265,7 +259,7 @@ char *pt1=strdup(sptr),*pt2,*pt3;
 }
 
 static int yo=80,dy;
-#ifdef MARTII
+#if HAVE_SPARK_HARDWARE || HAVE_DUCKBOX_HARDWARE
 int psx;
 static int psy, pxw, pyw, myo=0, buttx=80, butty=30, buttdx=20, buttdy=10, buttsize=0, buttxstart=0, buttystart=0;
 #else
@@ -274,27 +268,25 @@ static int psx, psy, pxw, pyw, myo=0, buttx=80, butty=30, buttdx=20, buttdy=10, 
 
 int show_txt(int buttonly)
 {
-FILE *tfh;
-int i,bx,by,x1,y1,rv=-1,run=1,line=0,action=1,cut,itmp,btns=buttons,lbtns=(buttons>bpline)?bpline:buttons,blines=1+((btns-1)/lbtns);
+	FILE *tfh;
+	int i,bx,by,x1,y1,rv=-1,run=1,line=0,action=1,cut,itmp,btns=buttons,lbtns=(buttons>bpline)?bpline:buttons,blines=1+((btns-1)/lbtns);
 
 	if(hide)
 	{
-#ifdef MARTII
+#if HAVE_SPARK_HARDWARE || HAVE_DUCKBOX_HARDWARE
 		memcpy(lbb, hbb, var_screeninfo.xres*var_screeninfo.yres*sizeof(uint32_t));
 		blit();
 #else
-		memcpy(lfb, hbb, fix_screeninfo.line_length*var_screeninfo.yres);
+		memcpy(lfb, hbb, var_screeninfo.xres*var_screeninfo.yres*sizeof(uint32_t));
 #endif
 		return 0;
 	}
+
 	yo=40+((header)?FSIZE_MED*5/4:0);
+
 	if(!buttonly)
 	{
-#ifdef MARTII
 		memcpy(lbb, ibb, var_screeninfo.xres*var_screeninfo.yres*sizeof(uint32_t));
-#else
-		memcpy(lbb, ibb, fix_screeninfo.line_length*var_screeninfo.yres);
-#endif
 	}
 	if((tfh=fopen(TMP_FILE,"r"))!=NULL)
 	{
@@ -355,7 +347,7 @@ int i,bx,by,x1,y1,rv=-1,run=1,line=0,action=1,cut,itmp,btns=buttons,lbtns=(butto
 				buttystart=psy+y1*dy;
 			}
 		}
-		
+
 		while(run)
 		{
 			//frame layout
@@ -384,10 +376,10 @@ int i,bx,by,x1,y1,rv=-1,run=1,line=0,action=1,cut,itmp,btns=buttons,lbtns=(butto
 							RenderString(butmsg[i], buttxstart+bx*(buttsize+buttdx/2), buttystart+by*(butty+buttdy/2)+butty-7, buttsize, CENTER, 26, (i==(selection-1))?CMCST:CMCIT);
 						}
 					}
-#ifdef MARTII
+#if HAVE_SPARK_HARDWARE || HAVE_DUCKBOX_HARDWARE
 					blit();
 #else
-					memcpy(lfb, lbb, fix_screeninfo.line_length*var_screeninfo.yres);
+					memcpy(lfb, lbb, var_screeninfo.xres*var_screeninfo.yres*sizeof(uint32_t));
 #endif
 				}
 			}
@@ -399,8 +391,8 @@ int i,bx,by,x1,y1,rv=-1,run=1,line=0,action=1,cut,itmp,btns=buttons,lbtns=(butto
 
 int Transform_Msg(char *msg)
 {
-int rv=0;
-FILE *xfh;
+	int rv=0;
+	FILE *xfh;
 
 	if(*msg=='/')
 	{
@@ -416,13 +408,12 @@ FILE *xfh;
 	}
 	else
 	{
-#ifdef MARTII
 		size_t l = strlen(msg);
 		char *t = (char *)alloca(l * 4 + 1);
 		memcpy(t, msg, l + 1);
 		TranslateString(t, l * 4);
 		msg = t;
-#endif
+
 		if((xfh=fopen(TMP_FILE,"w"))!=NULL)
 		{
 			while(*msg)
@@ -453,7 +444,7 @@ FILE *xfh;
 
 void ShowUsage(void)
 {
-	printf("msgbox Version %.2f\n",M_VERSION);
+	printf("MsgBox Version %.2f\n",M_VERSION);
 	printf("\nSyntax:\n");
 	printf("    msgbox msg=\"text to show\" [Options]\n");
 	printf("    msgbox msg=filename [Options]\n");
@@ -480,13 +471,8 @@ void ShowUsage(void)
 
 int main (int argc, char **argv)
 {
-#ifdef MARTII
 int ix,tv,found=0, spr;
 int dloop=1, rcc=-1;
-#else
-int index,index2,tv,found=0, spr;
-int dloop=1, rcc=-1, cupd=0;
-#endif
 char rstr[BUFSIZE], *rptr, *aptr;
 time_t tm1,tm2;
 #ifndef MARTII
@@ -506,7 +492,7 @@ FILE *fh;
 			aptr=argv[tv];
 			if(!strcmp(aptr,"-v") || !strcmp(aptr,"--version"))
 			{
-				printf("msgbox Version %.2f\n",M_VERSION);
+				printf("%s Version %.2f\n", __plugin__, M_VERSION);
 				return 0;
 			}
 			if((rptr=strchr(aptr,'='))!=NULL)
@@ -523,16 +509,13 @@ FILE *fh;
 				{
 					if(strstr(aptr,"title=")!=NULL)
 					{
-#ifdef MARTII
 						size_t l = strlen(rptr);
 						char *t = (char *)alloca(l * 4 + 1);
 						memcpy(t, rptr, l + 1);
 						TranslateString(t, l * 4);
 						title = strdup(t);
-#else
-						title=strdup(rptr);
-#endif
 						CatchTabs(title);
+
 						if(strcmp(title,"none")==0)
 						{
 							header=0;
@@ -660,12 +643,12 @@ FILE *fh;
 			switch (dloop)
 			{
 				case 1:
-					printf("msgbox <param error: %s>\n",aptr);
+					printf("%s <param error: %s>\n", __plugin__, aptr);
 					return 0;
 					break;
 				
 				case 2:
-					printf("msgbox <unknown command: %s>\n\n",aptr);
+					printf("%s <unknown command: %s>\n\n", __plugin__, aptr);
 					ShowUsage();
 					return 0;
 					break;
@@ -680,7 +663,7 @@ FILE *fh;
 		/*
 		if(!echo)
 		{
-			printf("\nmsgbox  Message-Box Version %.2f\n",M_VERSION);
+			printf("\nMsgBox Version %.2f\n", M_VERSION);
 		}
 		*/
 		if(!buttons)
@@ -707,7 +690,7 @@ FILE *fh;
 			}
 			if(!found)
 			{
-				printf("msgbox <param error: default=%d>\n",selection);
+				printf("%s <param error: default=%d>\n", __plugin__, selection);
 				return 0;
 			}
 		}
@@ -748,8 +731,6 @@ FILE *fh;
 		if((ey=Read_Neutrino_Cfg(line_buffer))<0)
 			ey=620;
 
-
-#ifdef MARTII
 		for(ix=CMCST; ix<=CMH; ix++)
 		{
 			sprintf(rstr,"menu_%s_alpha",menucoltxt[ix]);
@@ -768,28 +749,9 @@ FILE *fh;
 			if((tv=Read_Neutrino_Cfg(rstr))>=0)
 				rd[ix]=(float)tv*2.55;
 		}
+
 		for (ix = 0; ix <= RED; ix++)
 			bgra[ix] = (tr[ix] << 24) | (rd[ix] << 16) | (gn[ix] << 8) | bl[ix];
-#else
-		for(index=CMCST; index<=CMH; index++)
-		{
-			sprintf(rstr,"menu_%s_alpha",menucoltxt[index]);
-			if((tv=Read_Neutrino_Cfg(rstr))>=0)
-				tr[index]=255-(float)tv*2.55;
-
-			sprintf(rstr,"menu_%s_blue",menucoltxt[index]);
-			if((tv=Read_Neutrino_Cfg(rstr))>=0)
-				bl[index]=(float)tv*2.55;
-
-			sprintf(rstr,"menu_%s_green",menucoltxt[index]);
-			if((tv=Read_Neutrino_Cfg(rstr))>=0)
-				gn[index]=(float)tv*2.55;
-
-			sprintf(rstr,"menu_%s_red",menucoltxt[index]);
-			if((tv=Read_Neutrino_Cfg(rstr))>=0)
-				rd[index]=(float)tv*2.55;
-		}
-#endif
 
 		if(Read_Neutrino_Cfg("rounded_corners")>0)
 			radius=10;
@@ -797,13 +759,13 @@ FILE *fh;
 			radius=0;
 
 		fb = open(FB_DEVICE, O_RDWR);
-#ifdef MARTII
+#if HAVE_SPARK_HARDWARE || HAVE_DUCKBOX_HARDWARE
 		if (fb < 0)
 			fb = open(FB_DEVICE_FALLBACK, O_RDWR);
 #endif
 		if(fb == -1)
 		{
-			perror("msgbox <open framebuffer device>");
+			perror(__plugin__ " <open framebuffer device>");
 			exit(1);
 		}
 
@@ -819,27 +781,22 @@ FILE *fh;
 
 		if(ioctl(fb, FBIOGET_FSCREENINFO, &fix_screeninfo) == -1)
 		{
-			perror("msgbox <FBIOGET_FSCREENINFO>\n");
+			perror(__plugin__ " <FBIOGET_FSCREENINFO>\n");
 			return -1;
 		}
 		if(ioctl(fb, FBIOGET_VSCREENINFO, &var_screeninfo) == -1)
 		{
-			perror("msgbox <FBIOGET_VSCREENINFO>\n");
+			perror(__plugin__ " <FBIOGET_VSCREENINFO>\n");
 			return -1;
 		}
-#ifdef MARTII
+
 #if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 		var_screeninfo.xres = DEFAULT_XRES;
 		var_screeninfo.yres = DEFAULT_YRES;
 #endif
-#endif
-#ifdef MARTII
 		if(!(lfb = (uint32_t*)mmap(0, fix_screeninfo.smem_len, PROT_READ | PROT_WRITE, MAP_SHARED, fb, 0)))
-#else
-		if(!(lfb = (unsigned char*)mmap(0, fix_screeninfo.smem_len, PROT_READ | PROT_WRITE, MAP_SHARED, fb, 0)))
-#endif
 		{
-			perror("msgbox <mapping of Framebuffer>\n");
+			perror(__plugin__ " <mapping of Framebuffer>\n");
 			return -1;
 		}
 		
@@ -847,14 +804,14 @@ FILE *fh;
 
 		if((error = FT_Init_FreeType(&library)))
 		{
-			printf("msgbox <FT_Init_FreeType failed with Errorcode 0x%.2X>", error);
+			printf("%s <FT_Init_FreeType failed with Errorcode 0x%.2X>", __plugin__, error);
 			munmap(lfb, fix_screeninfo.smem_len);
 			return -1;
 		}
 
 		if((error = FTC_Manager_New(library, 1, 2, 0, &MyFaceRequester, NULL, &manager)))
 		{
-			printf("msgbox <FTC_Manager_New failed with Errorcode 0x%.2X>\n", error);
+			printf("%s <FTC_Manager_New failed with Errorcode 0x%.2X>\n", __plugin__, error);
 			FT_Done_FreeType(library);
 			munmap(lfb, fix_screeninfo.smem_len);
 			return -1;
@@ -862,18 +819,19 @@ FILE *fh;
 
 		if((error = FTC_SBitCache_New(manager, &cache)))
 		{
-			printf("msgbox <FTC_SBitCache_New failed with Errorcode 0x%.2X>\n", error);
+			printf("%s <FTC_SBitCache_New failed with Errorcode 0x%.2X>\n", __plugin__, error);
 			FTC_Manager_Done(manager);
 			FT_Done_FreeType(library);
 			munmap(lfb, fix_screeninfo.smem_len);
 			return -1;
 		}
 
+		Read_Neutrino_Cfg("font_file=");
 		if((error = FTC_Manager_LookupFace(manager, FONT, &face)))
 		{
 			if((error = FTC_Manager_LookupFace(manager, FONT2, &face)))
 			{
-				printf("msgbox <FTC_Manager_LookupFace failed with Errorcode 0x%.2X>\n", error);
+				printf("%s <FTC_Manager_LookupFace failed with Errorcode 0x%.2X>\n", __plugin__, error);
 				FTC_Manager_Done(manager);
 				FT_Done_FreeType(library);
 				munmap(lfb, fix_screeninfo.smem_len);
@@ -887,22 +845,18 @@ FILE *fh;
 		
 		use_kerning = FT_HAS_KERNING(face);
 
-#ifdef MARTII
 		desc.flags = FT_LOAD_RENDER | FT_LOAD_FORCE_AUTOHINT;
-#else
-		desc.flags = FT_LOAD_MONOCHROME;
-#endif
 
 	//init backbuffer
 
-#ifdef MARTII
+#if HAVE_SPARK_HARDWARE || HAVE_DUCKBOX_HARDWARE
 		lbb = lfb + 1920 * 1080;
 		fix_screeninfo.line_length = DEFAULT_XRES * sizeof(uint32_t);
 		stride = DEFAULT_XRES;
 #else
-		if(!(lbb = malloc(fix_screeninfo.line_length*var_screeninfo.yres)))
+		if(!(lbb = malloc(var_screeninfo.xres*var_screeninfo.yres*sizeof(uint32_t))))
 		{
-			perror("msgbox <allocating of Backbuffer>\n");
+			perror(__plugin__ " <allocating of Backbuffer>\n");
 			FTC_Manager_Done(manager);
 			FT_Done_FreeType(library);
 			munmap(lfb, fix_screeninfo.smem_len);
@@ -912,17 +866,16 @@ FILE *fh;
 
 		if(!(obb = malloc(fix_screeninfo.line_length*var_screeninfo.yres)))
 		{
-			perror("msgbox <allocating of Backbuffer>\n");
+			perror(__plugin__ " <allocating of Backbuffer>\n");
 			FTC_Manager_Done(manager);
 			FT_Done_FreeType(library);
 			free(lbb);
 			munmap(lfb, fix_screeninfo.smem_len);
 			return -1;
 		}
-
 		if(!(hbb = malloc(fix_screeninfo.line_length*var_screeninfo.yres)))
 		{
-			perror("msgbox <allocating of Backbuffer>\n");
+			perror(__plugin__ " <allocating of Backbuffer>\n");
 			FTC_Manager_Done(manager);
 			FT_Done_FreeType(library);
 			free(lbb);
@@ -930,10 +883,9 @@ FILE *fh;
 			munmap(lfb, fix_screeninfo.smem_len);
 			return -1;
 		}
-
 		if(!(ibb = malloc(fix_screeninfo.line_length*var_screeninfo.yres)))
 		{
-			perror("msgbox <allocating of Backbuffer>\n");
+			perror(__plugin__ " <allocating of Backbuffer>\n");
 			FTC_Manager_Done(manager);
 			FT_Done_FreeType(library);
 			free(lbb);
@@ -945,51 +897,27 @@ FILE *fh;
 
 		if(refresh & 1)
 		{
-#ifdef MARTII
 			memcpy(ibb, lbb, var_screeninfo.xres*var_screeninfo.yres*sizeof(uint32_t));
-#else
-			memcpy(ibb, lfb, fix_screeninfo.line_length*var_screeninfo.yres);
-#endif
 		}
 		else
 		{
-#ifdef MARTII
 			memset(ibb, TRANSP, var_screeninfo.xres*var_screeninfo.yres*sizeof(uint32_t));
-#else
-			memset(ibb, TRANSP, fix_screeninfo.line_length*var_screeninfo.yres);
-#endif
 		}
 		if(mute==2)
 		{
-#ifdef MARTII
 			memcpy(hbb, lbb, var_screeninfo.xres*var_screeninfo.yres*sizeof(uint32_t));
-#else
-			memcpy(hbb, lfb, fix_screeninfo.line_length*var_screeninfo.yres);
-#endif
 		}
 		else
 		{
-#ifdef MARTII
 			memset(hbb, TRANSP, var_screeninfo.xres*var_screeninfo.yres*sizeof(uint32_t));
-#else
-			memset(hbb, TRANSP, fix_screeninfo.line_length*var_screeninfo.yres);
-#endif
 		}
 		if(refresh & 2)
 		{
-#ifdef MARTII
 			memcpy(obb, lbb, var_screeninfo.xres*var_screeninfo.yres*sizeof(uint32_t));
-#else
-			memcpy(obb, lfb, fix_screeninfo.line_length*var_screeninfo.yres);
-#endif
 		}
 		else
 		{
-#ifdef MARTII
 			memset(obb, TRANSP, var_screeninfo.xres*var_screeninfo.yres*sizeof(uint32_t));
-#else
-			memset(obb, TRANSP, fix_screeninfo.line_length*var_screeninfo.yres);
-#endif
 		}
 
 		startx = sx;
@@ -1011,21 +939,16 @@ FILE *fh;
 	//main loop
 	while((rcc!=KEY_EXIT) && (rcc!=KEY_HOME) && (rcc!=KEY_OK) && ((timeout==-1)||((tm2-tm1)<timeout)))
 	{
-#ifdef MARTII
 		rcc=GetRCCode(1000);
-#else
-		rcc=GetRCCode();
-#endif
 		if(rcc!=-1)
 		{
 			time(&tm1);
 		}
 		else
 		{
-#ifdef MARTII
 			if(cyclic)
 				show_txt(0);
-#else
+#if 0
 			if(++cupd>100)
 			{
 				if(cyclic)
@@ -1041,10 +964,11 @@ FILE *fh;
 		{
 			hide^=1;
 			show_txt(0);
-#ifdef MARTII
+#if HAVE_SPARK_HARDWARE || HAVE_DUCKBOX_HARDWARE
 			ClearRC();
 #else
 			usleep(500000L);
+
 			while(GetRCCode()!=-1);
 			if(hide)
 			{
@@ -1110,12 +1034,11 @@ FILE *fh;
 	
 	
 	//cleanup
-
-#ifdef MARTII
+#if HAVE_SPARK_HARDWARE || HAVE_DUCKBOX_HARDWARE
 	memcpy(lbb, obb, var_screeninfo.xres*var_screeninfo.yres*sizeof(uint32_t));
 	blit();
 #else
-	memcpy(lfb, obb, fix_screeninfo.line_length*var_screeninfo.yres);
+	memcpy(lfb, obb, var_screeninfo.xres*var_screeninfo.yres*sizeof(uint32_t));
 #endif
 	munmap(lfb, fix_screeninfo.smem_len);
 	close(fb);
@@ -1155,4 +1078,3 @@ FILE *fh;
 	}
 	return 0;
 }
-

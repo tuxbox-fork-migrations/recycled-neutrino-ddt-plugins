@@ -6,15 +6,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <draw.h>
+#include "draw.h"
 #include <sys/time.h>
-#include <rcinput.h>
-#include <colors.h>
+#include "rcinput.h"
+#include "colors.h"
 #include <fcntl.h>
 #include <zlib.h>
 #include <malloc.h>
 
-#include <pics.h>
+#include "pics.h"
 #define	COMPSZ	8033
 
 extern	int		doexit;
@@ -22,54 +22,53 @@ extern	int		doexit;
 extern	unsigned short	realcode;
 extern	unsigned short	actcode;
 
-typedef struct _Pic
-{
+typedef struct _Pic {
 	unsigned char	*pic_data;
 	unsigned char	*pic_flip;
-	int				ani;		// how many animation levels in pic
-	int				width;
-	int				height;
+	int		ani;		// how many animation levels in pic
+	int		width;
+	int		height;
 } Pic;
 
 #define	NUMPICS		36
 
 static	Pic	pics[] = {
-{ 0,	0,	2,	14,	14 },		// 0 cursor
-{ 0,	0,	9,	41,	22 },		// 1 tor
-{ 0,	0,	6,	6,	5 },		// 2 flamme
-{ 0,	0,	7,	6,	10 },		// 3 lemming1
-{ 0,	0,	11,	10,	10 },		// 4 lemming2
-{ 0,	0,	12,	12,	12 },		// 5 lemming3
-{ 0,	0,	5,	5,	11 },		// 6 lemming4
-{ 0,	0,	2,	41,	25 },		// 7 haus
-{ 0,	0,	1,	16,	16 },		// 8 explosion
-{ 0,	0,	3,	32,	14 },		// 9 feuer
-{ 0,	0,	1,	32,	32 },
-{ 0,	0,	1,	41,	3 },
-{ 0,	0,	1,	9,	18 },
-{ 0,	0,	1,	26,	8 },
-{ 0,	0,	1,	11,	26 },
-{ 0,	0,	1,	66,	159 },
-{ 0,	0,	1,	287,110 },
-{ 0,	0,	1,	181,82 },
-{ 0,	0,	1,	47,	160 },
-{ 0,	0,	1,	16,	24 },
-{ 0,	0,	1,	32,	24 },
-{ 0,	0,	1,	33,	11 },
-{ 0,	0,	1,	13,	17 },
-{ 0,	0,	1,	13,	17 },
-{ 0,	0,	1,	54,	13 },
-{ 0,	0,	1,	34,	1 },
-{ 0,	0,	1,	17,	1 },
-{ 0,	0,	1,	25,	6 },
-{ 0,	0,	1,	32,	32 },
-{ 0,	0,	5,	9,	13 },	// 29 menu-icons (no ani)
-{ 0,	0,	1,	14, 14 }, 	// 30 level6 short mask
-{ 0,	0,  17, 9,  13 },	// 31 lemming - builder
-{ 0,	0,  8, 	8,  11 },	// 32 lemming - builder - ende
-{ 0,	0,	22,	17,	17 },	// 33 lemming - hacke
-{ 0,	0,	1,	6,	14 },	// 34 maske hacke
-{ 0,	0,	8,	9,	15 }	// 35 lemming - rutscher
+	{ 0,	0,	2,	14,	14 },	// 0 cursor
+	{ 0,	0,	9,	41,	22 },	// 1 tor
+	{ 0,	0,	6,	6,	5 },	// 2 flamme
+	{ 0,	0,	7,	6,	10 },	// 3 lemming1
+	{ 0,	0,	11,	10,	10 },	// 4 lemming2
+	{ 0,	0,	12,	12,	12 },	// 5 lemming3
+	{ 0,	0,	5,	5,	11 },	// 6 lemming4
+	{ 0,	0,	2,	41,	25 },	// 7 haus
+	{ 0,	0,	1,	16,	16 },	// 8 explosion
+	{ 0,	0,	3,	32,	14 },	// 9 feuer
+	{ 0,	0,	1,	32,	32 },
+	{ 0,	0,	1,	41,	3 },
+	{ 0,	0,	1,	9,	18 },
+	{ 0,	0,	1,	26,	8 },
+	{ 0,	0,	1,	11,	26 },
+	{ 0,	0,	1,	66,	159 },
+	{ 0,	0,	1,	287,	110 },
+	{ 0,	0,	1,	181,	82 },
+	{ 0,	0,	1,	47,	160 },
+	{ 0,	0,	1,	16,	24 },
+	{ 0,	0,	1,	32,	24 },
+	{ 0,	0,	1,	33,	11 },
+	{ 0,	0,	1,	13,	17 },
+	{ 0,	0,	1,	13,	17 },
+	{ 0,	0,	1,	54,	13 },
+	{ 0,	0,	1,	34,	1 },
+	{ 0,	0,	1,	17,	1 },
+	{ 0,	0,	1,	25,	6 },
+	{ 0,	0,	1,	32,	32 },
+	{ 0,	0,	5,	9,	13 },	// 29 menu-icons (no ani)
+	{ 0,	0,	1,	14, 	14 },	// 30 level6 short mask
+	{ 0,	0,	17,	9,	13 },	// 31 lemming - builder
+	{ 0,	0,	8, 	8,	11 },	// 32 lemming - builder - ende
+	{ 0,	0,	22,	17,	17 },	// 33 lemming - hacke
+	{ 0,	0,	1,	6,	14 },	// 34 maske hacke
+	{ 0,	0,	8,	9,	15 }	// 35 lemming - rutscher
 };
 
 static	int		piccolors[] = {
@@ -181,7 +180,8 @@ static	int		piccolors[] = {
 	0x457559,
 	0x457C61,
 	0x3E6E52,
-	0xDD8822 };
+	0xDD8822
+};
 
 #if 0
 #include <tools.c.mayk>
@@ -192,20 +192,18 @@ int	LoadPics( void )
 {
 	unsigned long	i;
 	unsigned char	*data;
-	int				sz;
+	int		sz;
 
 	data = malloc(UNZSIZE+100);
 	i=UNZSIZE+100;
-	if ( uncompress(data,&i,pic_img_gz,COMPSZ) != Z_OK )
-	{
+	if ( uncompress(data,&i,pic_img_gz,COMPSZ) != Z_OK ) {
 		free(data);
 		return -1;
 	}
 
 	pics[0].pic_data=data;
 	sz=pics[0].width*pics[0].height*pics[0].ani;
-	for( i=1; i<NUMPICS; i++ )
-	{
+	for ( i=1; i<NUMPICS; i++ ) {
 		data+=sz;
 		pics[i].pic_data=data;
 		sz=pics[i].width*pics[i].height*pics[i].ani;
@@ -222,7 +220,7 @@ int	LoadPics( void )
 
 unsigned char	*GetAniPic( int idx, int ani, int *width, int *height )
 {
-	int		sz;
+	int	sz;
 
 	*width = pics[idx].width;
 	*height = pics[idx].height;
@@ -245,9 +243,9 @@ unsigned char	*GetPic( int idx, int *maxani, int *width, int *height )
 
 void	RemovePics( void )
 {
-	int		i;
+	int	i;
 
-	for( i=0; i<NUMPICS; i++ )
+	for ( i=0; i<NUMPICS; i++ )
 		if ( pics[i].pic_flip )
 			free( pics[i].pic_flip );
 	if ( pics[0].pic_data )
@@ -256,12 +254,11 @@ void	RemovePics( void )
 
 void	PicSetupColors( void )
 {
-	int		i;
-	int		num = sizeof(piccolors)/sizeof(int);
-	int		r, g, b;
+	int	i;
+	int	num = sizeof(piccolors)/sizeof(int);
+	int	r, g, b;
 
-	for( i=0; i<num; i++ )
-	{
+	for ( i=0; i<num; i++ ) {
 		r=(piccolors[i] >> 16) & 0xff;
 		g=(piccolors[i] >> 8) & 0xff;
 		b=piccolors[i] & 0xff;
@@ -271,11 +268,11 @@ void	PicSetupColors( void )
 
 unsigned char *GetMirrorPic( int picid )
 {
-	int				sz;
-	int				y;
-	int				x;
-	int				width;
-	int				height;
+	int		sz;
+	int		y;
+	int		x;
+	int		width;
+	int		height;
 	unsigned char	*data1;
 	unsigned char	*data;
 
@@ -288,8 +285,8 @@ unsigned char *GetMirrorPic( int picid )
 	pics[picid].pic_flip = malloc(sz*pics[picid].ani);
 	data=pics[picid].pic_flip;
 	data1=pics[picid].pic_data;
-	for( y=0; y < height * pics[picid].ani; y++ )
-		for( x=0; x < width; x++ )
+	for ( y=0; y < height * pics[picid].ani; y++ )
+		for ( x=0; x < width; x++ )
 			data[ y*width+x ] = data1[ y*width+width-x-1 ];
 
 	return data;

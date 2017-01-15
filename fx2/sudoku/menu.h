@@ -25,60 +25,50 @@
 #include <string>
 #include <list>
 
-#ifdef MARTII
-struct tMenuItem
-#else
-typedef struct tMenuItem
-#endif
-{
+struct tMenuItem {
 	tMenuItem();
 
-	std::string					sText;
-	int									nLeft;
-	int									nTop;
-	int									nWidth;
-	int									nHeight;
+	std::string	sText;
+	int		nLeft;
+	int		nTop;
+	int		nWidth;
+	int		nHeight;
 
 //	tMenuItem &operator = (const tMenuItem &rMenuItem);
 };
 
-typedef std::list<tMenuItem>						tMenuItemsList;
+typedef std::list<tMenuItem>		tMenuItemsList;
 typedef std::list<tMenuItem>::iterator	tMenuItemIterator;
 
-#ifdef MARTII
-struct tMenu
-#else
-typedef struct tMenu
-#endif
-{
+struct tMenu {
 	tMenu();
 
 	// menu position
-	int									nLeft;
-	int									nTop;
-	int									nWidth;
+	int		nLeft;
+	int		nTop;
+	int		nWidth;
 
 	// menu colors
-	int									nColorMenuBorder;
-	int									nColorMenuBackground;
-	int									nColorItemText;
-	int									nColorItemTextHighlighted;
-	int									nColorItemBgHighlighted;
+	int		nColorMenuBorder;
+	int		nColorMenuBackground;
+	int		nColorItemText;
+	int		nColorItemTextHighlighted;
+	int		nColorItemBgHighlighted;
 
-	int									nColorCaptionBorder;
-	int									nColorCaptionBackground;
-	int									nColorCaptionText;
+	int		nColorCaptionBorder;
+	int		nColorCaptionBackground;
+	int		nColorCaptionText;
 
 	// menu caption
-	std::string					sCaption;
-	int									nCaptionHeight;
+	std::string	sCaption;
+	int		nCaptionHeight;
 
 	// menu items
-	int									nItemHeight;
-	int									nItemsCount;
-	int									nSelectedItem;
+	int		nItemHeight;
+	int		nItemsCount;
+	int		nSelectedItem;
 
-	tMenuItemsList			MenuItemsList;
+	tMenuItemsList	MenuItemsList;
 };
 
 extern tMenuItemIterator MenuGetItem(tMenu *pMenu, int nIndex);

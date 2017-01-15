@@ -20,4 +20,4 @@ install-exec-local:
 	$(LIBTOOL) --mode=install install --strip-program=$(STRIP) -s -m 0755 tetris $(DESTDIR)$(PLUGINDIR)/tetris.so
 	install -m 0644 $(srcdir)/tetris.cfg $(DESTDIR)$(PLUGINDIR)
 	install -m 0644 $(srcdir)/games.cfg $(DESTDIR)$(PLUGINDIR)
-
+	install -m 0644 $(srcdir)/tetris_hint.png $(DESTDIR)$(PLUGINDIR)

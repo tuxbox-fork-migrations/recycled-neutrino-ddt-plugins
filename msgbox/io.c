@@ -3,7 +3,6 @@
 #include <errno.h>
 #include <locale.h>
 #include <fcntl.h>
-#include <stdio.h>
 #include <ctype.h>
 #include <time.h>
 #include <stdlib.h>
@@ -15,16 +14,11 @@
 #include <sys/dir.h>
 #include <sys/stat.h>
 #include <linux/input.h>
-#ifdef MARTII
 #include <poll.h>
 #include <stdint.h>
-#endif
 
+#include "current.h"
 #include "io.h"
-
-#ifndef MARTII
-#define RC_DEVICE	"/dev/input/nevis_ir"
-#endif
 
 extern int instance;
 struct input_event ev;
@@ -33,14 +27,13 @@ static int rc;
 
 int InitRC(void)
 {
-	rc = open(RC_DEVICE, O_RDONLY);
+	rc = open(RC_DEVICE, O_RDONLY | O_CLOEXEC);
 #ifdef MARTII
 	if (rc < 0)
-		rc = open(RC_DEVICE_FALLBACK, O_RDONLY);
+		rc = open(RC_DEVICE_FALLBACK, O_RDONLY | O_CLOEXEC);
 #endif
-	if(rc == -1)
-	{
-		perror("msgbox <open remote control>");
+	if(rc == -1) {
+		perror(__plugin__ " <open remote control>");
 		exit(1);
 	}
 	fcntl(rc, F_SETFL, O_NONBLOCK | O_SYNC);
@@ -69,8 +62,6 @@ int RCKeyPressed(void)
 	return 0;
 }
 
-
-#ifdef MARTII
 void ClearRC(void)
 {
 	struct pollfd pfd;
@@ -86,6 +77,11 @@ void ClearRC(void)
 int GetRCCode(int timeout_in_ms)
 {
 	int rv = -1;
+
+	if (get_instance()>instance)
+	{
+		return rv;
+	}
 
 	if (timeout_in_ms) {
 		struct pollfd pfd;
@@ -128,20 +124,3 @@ int GetRCCode(int timeout_in_ms)
 	}
 	return rv;
 }
-#else
-int GetRCCode(void)
-{
-	int rv;
-	
-	if(!RCKeyPressed() || (get_instance()>instance))
-	{
-		return -1;
-	}
-	rv=rccode;
-	while(RCKeyPressed());
-	
-	return rv;
-}
-#endif
-
-

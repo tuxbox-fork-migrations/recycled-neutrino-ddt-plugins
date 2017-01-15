@@ -10,27 +10,20 @@ int	_atoi( const char *str )
 
 	val=0;
 	sp=(char*)str;
-	if ((*sp == '0' ) && (*(sp+1) == 'x' ))
-	{
+	if ((*sp == '0' ) && (*(sp+1) == 'x' )) {
 		base=16;
 		sp+=2;
-	}
-	else if ( *sp == '0' )
-	{
+	} else if ( *sp == '0' ) {
 		base = 8;
 		sp++;
-	}
-	else
-	{
+	} else {
 		base = 10;
-		if ( *sp == '-' )
-		{
+		if ( *sp == '-' ) {
 			ineg=1;
 			sp++;
 		}
 	}
-	for (; (*sp != 0); sp++)
-	{
+	for (; (*sp != 0); sp++) {
 		c = (*sp > '9') ? (tolower(*sp) - 'a' + 10) : (*sp - '0');
 		if ((c < 0) || (c >= base))
 			break;

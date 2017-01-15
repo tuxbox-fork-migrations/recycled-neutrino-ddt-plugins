@@ -9,17 +9,18 @@
 //#define SOLBOARD_BOARD_DEBUG
 
 #include <stdio.h>
+#include <string.h>
 
-#include <draw.h>
+#include "draw.h"
 #include <sys/time.h>
-#include <rcinput.h>
-#include <colors.h>
-#include <pics.h>
+#include "rcinput.h"
+#include "colors.h"
+#include "pics.h"
 
-//#define	STATUS_X		80
-//#define STATUS_Y		50
-#define LOGO_X			540
-#define LOGO_Y			80
+//#define STATUS_X	80
+//#define STATUS_Y	50
+#define LOGO_X		540
+#define LOGO_Y		80
 
 extern	double	sqrt( double in );
 
@@ -27,16 +28,16 @@ extern	int		doexit;
 
 extern	unsigned short	actcode;
 
-static	long	        score = 0;   // initial score
-static	int		mouse_x = 7; // initial x coordinate
-static	int		mouse_y = 7; // initial y coordinate
-static int              tuxes = 44;  // initial tux count
+static	long	score = 0;   // initial score
+static	int	mouse_x = 7; // initial x coordinate
+static	int	mouse_y = 7; // initial y coordinate
+static int	tuxes = 44;  // initial tux count
 
-static int selected_x = 0;           // x coord of current selection
-static int selected_y = 0;           // y coord of current selection
-static int selection = 0;            // if a cell is selected or not
+static int	selected_x = 0;	 // x coord of current selection
+static int	selected_y = 0;	 // y coord of current selection
+static int	selection = 0;	 // if a cell is selected or not
 
-static	struct timeval starttv;      // starting time of game
+static	struct timeval starttv;  // starting time of game
 
 /**
  * Draws the score on the screen
@@ -57,11 +58,11 @@ void	DrawScore( void )
 	score = 35000 - score;
 	score = score - tuxes *1000;
 	if (score < 0) {
-	  score = 0;
+		score = 0;
 	}
 	if (tuxes == 1) {
-	  score = 44444;
-	  FBDrawString( 190, 130, 64, "You did it!", WHITE, 0 );
+		score = 44444;
+		FBDrawString( 190, 130, 64, "You did it!", WHITE, 0 );
 	}
 	sprintf(tscore,"%ld",score);
 	FBDrawString( 190, 210, 64, "Score", WHITE, 0 );
@@ -101,8 +102,7 @@ static	int	DrawField( int x, int y )
 {
 	unsigned char	*p = maze + MAZEW * y + x;
 
-	switch ( *p )
-	{
+	switch ( *p ) {
 	case 'N' :
 		break;
 	case 'n' :
@@ -116,7 +116,7 @@ static	int	DrawField( int x, int y )
 	case 's':
 		FBCopyImage( x*32, y*32, 32, 32, dselectedtux );
 		break;
-	  
+
 	}
 	return 0;
 }
@@ -130,7 +130,7 @@ static	int	DrawField( int x, int y )
  * ' '  : field which is not on the board
  * n,b,B: empty field
  * x    : cell with a tux
- * s    : selected cell with a tux 
+ * s    : selected cell with a tux
  */
 void	DrawBoard(void)
 {
@@ -138,12 +138,9 @@ void	DrawBoard(void)
 	int				y;
 	unsigned char	*p = maze;
 
-	for( y = 0; y < MAZEH; y++ )
-	{
-		for( x = 0; x < MAZEW; x++, p++ )
-		{
-			switch ( *p )
-			{
+	for ( y = 0; y < MAZEH; y++ ) {
+		for ( x = 0; x < MAZEW; x++, p++ ) {
+			switch ( *p ) {
 			case '#' :
 				FBFillRect( x*32, y*32, 32, 32, STEELBLUE );
 				break;
@@ -154,17 +151,17 @@ void	DrawBoard(void)
 				FBCopyImage( x*32, y*32, 32, 32, dout );
 				break;
 			case 'b' :
-			        FBCopyImage( x*32, y*32, 32, 32, dout );
-			        break;
+				FBCopyImage( x*32, y*32, 32, 32, dout );
+				break;
 			case 'B' :
-			        FBCopyImage( x*32, y*32, 32, 32, dout );
+				FBCopyImage( x*32, y*32, 32, 32, dout );
 				break;
 			case 'x' :
-			        FBCopyImage ( x*32, y*32, 32, 32, dtux );
-			        break;
+				FBCopyImage ( x*32, y*32, 32, 32, dtux );
+				break;
 			case 's' :
-			        FBCopyImage( x*32, y*32, 32, 32, dselectedtux );
-			        break;
+				FBCopyImage( x*32, y*32, 32, 32, dselectedtux );
+				break;
 			}
 		}
 	}
@@ -174,56 +171,52 @@ void	DrawBoard(void)
 
 	FBDrawString( LOGO_X-90, LOGO_Y, 32, "powered by", WHITE, 0 );
 	FBDrawFx2Logo( LOGO_X, LOGO_Y );
-	FBDrawString( LOGO_X-90, LOGO_Y+70, 32, 
-		      "brought to you by", WHITE, 0 );
-	FBDrawString( LOGO_X-80, LOGO_Y+110, 32, 
-		      "ChakaZulu", WHITE, 0 );
+	FBDrawString( LOGO_X-90, LOGO_Y+70, 32, "brought to you by", WHITE, 0 );
+	FBDrawString( LOGO_X-80, LOGO_Y+110, 32, "ChakaZulu", WHITE, 0 );
 	gettimeofday(&starttv,0);
 
 	DrawMouse();
 }
 
 /**
- * Initializes the board with tuxes etc. 
+ * Initializes the board with tuxes etc.
  */
 void	BoardInitialize( void )
 {
-	int				x;
-	int				y;
+	int		x;
+	int		y;
 	unsigned char	*p = maze;
 
-	for( y = 0; y < MAZEH; y++ )
-	{
-		for( x = 0; x < MAZEW; x++, p++ )
-		{
+	for ( y = 0; y < MAZEH; y++ ) {
+		for ( x = 0; x < MAZEW; x++, p++ ) {
 #ifdef SOLBOARD_BOARD_DEBUG
-	// only the cells on the inner field can have
-		  // one of the following values
-		  if ((*p == 'x') || (*p == 's') || 
-		      (*p == 'n')) {
-		    // we are on the inner field enclosed by #s
-		    if ((x == 7) && ((y == 7)|| (y == 8))) {
-		      //  only put 2 tuxes on the field
-		      *p = 'x';
-		    } else {
-		      *p = 'n';
-		    }
-		  }
+			// only the cells on the inner field can have
+			// one of the following values
+			if ((*p == 'x') || (*p == 's') ||
+					(*p == 'n')) {
+				// we are on the inner field enclosed by #s
+				if ((x == 7) && ((y == 7)|| (y == 8))) {
+					//  only put 2 tuxes on the field
+					*p = 'x';
+				} else {
+					*p = 'n';
+				}
+			}
 		}
 	}
 #else
-		  // only the cells on the inner field can have
-		  // one of the following values
-		  if ((*p == 'x') || (*p == 's') || 
-		      (*p == 'n')) {
-		    // we are on the inner field enclosed by #s
-		    if ((x == 7) && (y == 7)) {
-		      // do not put a tux at the center
-		      *p = 'n';
-		    } else {
-		      *p = 'x';
-		    }
-		  }
+			// only the cells on the inner field can have
+			// one of the following values
+			if ((*p == 'x') || (*p == 's') ||
+					(*p == 'n')) {
+				// we are on the inner field enclosed by #s
+				if ((x == 7) && (y == 7)) {
+					// do not put a tux at the center
+					*p = 'n';
+				} else {
+					*p = 'x';
+				}
+			}
 		}
 	}
 #endif
@@ -241,8 +234,9 @@ void	BoardInitialize( void )
  * @param i the value to return the absolute value of
  * @return the absolute value of i
  */
-int abs(int i) {
-  return (i > 0 ? i : -i);
+int abs(int i)
+{
+	return (i > 0 ? i : -i);
 }
 
 /**
@@ -252,38 +246,39 @@ int abs(int i) {
  * @param y y coordinate of the field
  * @return 1 if the field is on the board, 0 otherwise
  */
-int isFieldOnBoard(int x, int y) {
-  //areas:
-  //  1
-  // 234
-  //  5
+int isFieldOnBoard(int x, int y)
+{
+	//areas:
+	//  1
+	// 234
+	//  5
 
-  // areas 1,3,5
-  if ( ((y > 2) && (y < 12)) && ((x > 5) && (x < 9)) ) {
+	// areas 1,3,5
+	if ( ((y > 2) && (y < 12)) && ((x > 5) && (x < 9)) ) {
 #ifdef SOLBOARD_DEBUG
-    printf("field %d,%d is on board\n",x,y);
+		printf("field %d,%d is on board\n",x,y);
 #endif
-    return 1;
-  }
-  // fields 2,3,4
-  if ( ((y > 5) && (y < 9)) && ((x > 2) && (x < 12)) ) {
+		return 1;
+	}
+	// fields 2,3,4
+	if ( ((y > 5) && (y < 9)) && ((x > 2) && (x < 12)) ) {
 #ifdef SOLBOARD_DEBUG
-    printf("field %d,%d is on board\n",x,y);
+		printf("field %d,%d is on board\n",x,y);
 #endif
-    return 1;
-  }
+		return 1;
+	}
 #ifdef SOLBOARD_DEBUG
-  printf("fieln %d,%d is *not* on board\n",x,y); 
+	printf("fieln %d,%d is *not* on board\n",x,y);
 #endif
-  return 0;
-  
+	return 0;
+
 }
 
 /**
  * Returns if it is allowed to jump with a tux on sel_x,sel_y to
  * x,y. As the rules say this is only possible if the movement is
  * either horizontal or vertical and if there is exactly one field
- * with a tux between sel_x,sel_y and x,y and if x,y is empty. 
+ * with a tux between sel_x,sel_y and x,y and if x,y is empty.
  *
  * @precondition a tux is on field sel_x, sel_y
  * @param x the x coordinate of the target field
@@ -293,37 +288,38 @@ int isFieldOnBoard(int x, int y) {
  * @param r a pointer to the field between x,y and sel_x, sel_y
  * @return 1 if the jump is valid, 0 otherwise
  */
-int isValidJumpPtr(int x, int y, int sel_x, int sel_y, unsigned char *r) {
+int isValidJumpPtr(int x, int y, int sel_x, int sel_y, unsigned char *r)
+{
 
-  unsigned char *p = maze + MAZEW*y + x;
+	unsigned char *p = maze + MAZEW*y + x;
 
-  if (isFieldOnBoard(x, y)) {
-    if ( ( ((x == sel_x) && (abs(y - sel_y) == 2)) ||
-	  ((y == sel_y) && (abs(x - sel_x) == 2)) ) &&
-	 (*r == 'x')  && (*p == 'n') ) {
+	if (isFieldOnBoard(x, y)) {
+		if ( ( ((x == sel_x) && (abs(y - sel_y) == 2)) ||
+				((y == sel_y) && (abs(x - sel_x) == 2)) ) &&
+				(*r == 'x')  && (*p == 'n') ) {
 #ifdef SOLBOARD_DEBUG
-          printf("jump from %d,%d to %d,%d is valid\n",sel_x,sel_y,x,y);
+			printf("jump from %d,%d to %d,%d is valid\n",sel_x,sel_y,x,y);
 #endif
-      return 1;
-    } else { 
+			return 1;
+		} else {
 #ifdef SOLBOARD_DEBUG
-      printf("jump from %d,%d to %d,%d *not* valid\n",sel_x,sel_y,x,y);
+			printf("jump from %d,%d to %d,%d *not* valid\n",sel_x,sel_y,x,y);
 #endif
-      return 0;
-    }
-  } else {
+			return 0;
+		}
+	} else {
 #ifdef SOLBOARD_DEBUG
-      printf("jump from %d,%d to %d,%d *not* valid\n",sel_x,sel_y,x,y);
+		printf("jump from %d,%d to %d,%d *not* valid\n",sel_x,sel_y,x,y);
 #endif
-    return 0;
-  }
+		return 0;
+	}
 }
 
 /**
  * Returns if it is allowed to jump with a tux on sel_x,sel_y to
  * x,y. As the rules say this is only possible if the movement is
  * either horizontal or vertical and if there is exactly one field
- * with a tux between sel_x,sel_y and x,y and if x,y is empty. 
+ * with a tux between sel_x,sel_y and x,y and if x,y is empty.
  *
  * @precondition a tux is on field sel_x, sel_y
  * @param x the x coordinate of the target field
@@ -334,10 +330,11 @@ int isValidJumpPtr(int x, int y, int sel_x, int sel_y, unsigned char *r) {
  * @param mid_y the y coordinate of the field between source and target
  * @return 1 if the jump is valid, 0 otherwise
  */
-int isValidJump(int x, int y, int sel_x, int sel_y, int mid_x, int mid_y) {
+int isValidJump(int x, int y, int sel_x, int sel_y, int mid_x, int mid_y)
+{
 
-  unsigned char *r = maze + MAZEW * mid_y + mid_x;
-  return isValidJumpPtr(x,y,sel_x,sel_y,r);
+	unsigned char *r = maze + MAZEW * mid_y + mid_x;
+	return isValidJumpPtr(x,y,sel_x,sel_y,r);
 }
 
 /**
@@ -345,43 +342,44 @@ int isValidJump(int x, int y, int sel_x, int sel_y, int mid_x, int mid_y) {
  *
  * @return 0 if there is at least one move to do, 1 otherwise
  */
-int isGameOver() {
-  int result = 1;
-  int x,y;
-  if (tuxes == 1) {
-    return 1;
-  } else {
-    unsigned char *p = maze;
-    // for each tux on the field check if a jump
-    // in north,east,south,west direction is possible    
+int isGameOver()
+{
+	int result = 1;
+	int x,y;
+	if (tuxes == 1) {
+		return 1;
+	} else {
+		unsigned char *p = maze;
+		// for each tux on the field check if a jump
+		// in north,east,south,west direction is possible
 #ifdef SOLBOARD_DEBUG
-    printf("begin gamover\n");
+		printf("begin gamover\n");
 #endif
-    for (y=0;y<MAZEH;y++) {
-      for (x=0;x<MAZEW;x++,p++) {
-	if ((*p == 'x') || (*p == 's')) { // a tux /a selected tux
+		for (y=0;y<MAZEH;y++) {
+			for (x=0;x<MAZEW;x++,p++) {
+				if ((*p == 'x') || (*p == 's')) { // a tux /a selected tux
 #ifdef SOLBOARD_DEBUG
-	  printf("checking %d,%d for possible move",x,y);
+					printf("checking %d,%d for possible move",x,y);
 #endif
-	  if (isValidJump(x,y-2,x,y,x,y-1) || // north
-	      isValidJump(x+2,y,x,y,x+1,y) || // east
-	      isValidJump(x,y+2,x,y,x,y+1) || // south
-	      isValidJump(x-2,y,x,y,x-1,y)) { // west
+					if (isValidJump(x,y-2,x,y,x,y-1) || // north
+							isValidJump(x+2,y,x,y,x+1,y) || // east
+							isValidJump(x,y+2,x,y,x,y+1) || // south
+							isValidJump(x-2,y,x,y,x-1,y)) { // west
 #ifdef SOLBOARD_DEBUG
-	    printf("end game over: move possible: %d,%d\n",x,y);
+						printf("end game over: move possible: %d,%d\n",x,y);
 #endif
-	    result = 0;
-	    goto break_outer; // leave both loops
-	  }
+						result = 0;
+						goto break_outer; // leave both loops
+					}
+				}
+			}
+		}
+#ifdef SOLBOARD_DEBUG
+		printf("no more moves possible\n");
+#endif
+break_outer:;
 	}
-      }
-    }
-#ifdef SOLBOARD_DEBUG
-    printf("no more moves possible\n");
-#endif
-  break_outer:;
-  }
-  return result;
+	return result;
 }
 
 /**
@@ -395,67 +393,66 @@ int isGameOver() {
  */
 static void SelectField( int x, int y )
 {
-  // the field to select
-  unsigned char	*p = maze + MAZEW * y + x;
+	// the field to select
+	unsigned char	*p = maze + MAZEW * y + x;
 
-  // the currently selected field
-  unsigned char   *s = maze + MAZEW * selected_y 
-    + selected_x;
+	// the currently selected field
+	unsigned char   *s = maze + MAZEW * selected_y
+			     + selected_x;
 
-  // the field with a tux which will be removed
-  unsigned char   *r;
-  
-  // the coordinates of the field above
-  int remove_y = (selected_y + y)/2;
-  int remove_x = (selected_x + x)/2;
+	// the field with a tux which will be removed
+	unsigned char   *r;
 
-	switch( *p )
-	{
+	// the coordinates of the field above
+	int remove_y = (selected_y + y)/2;
+	int remove_x = (selected_x + x)/2;
+
+	switch ( *p ) {
 	case 'p' :		// is pressed
 		break;
 	case 'n' :		// empty field
-	  if (selection == 1) {
-	    // unmark old selected field 
-	    // remove selected and in between tux
-	    // add tux at x,y
-	    r = maze + MAZEW * remove_y + remove_x;
-	    if (isValidJumpPtr(x,y,selected_x,selected_y, r)) {
-	      *p = 'x';
-	      *s = 'n';
-	      *r = 'n';
-	      DrawField(selected_x, selected_y); // now empty field
-	      DrawField(x,y); // now tux without selection
-	      DrawField(remove_x,remove_y); // now empty field
-	      selection = 0;
-	      tuxes--;
-	      if (isGameOver() == 1) {
-		doexit = 2;
-	      }
-	      DrawMouse();
-	    }
-	  }
-	  break;
+		if (selection == 1) {
+			// unmark old selected field
+			// remove selected and in between tux
+			// add tux at x,y
+			r = maze + MAZEW * remove_y + remove_x;
+			if (isValidJumpPtr(x,y,selected_x,selected_y, r)) {
+				*p = 'x';
+				*s = 'n';
+				*r = 'n';
+				DrawField(selected_x, selected_y); // now empty field
+				DrawField(x,y); // now tux without selection
+				DrawField(remove_x,remove_y); // now empty field
+				selection = 0;
+				tuxes--;
+				if (isGameOver() == 1) {
+					doexit = 2;
+				}
+				DrawMouse();
+			}
+		}
+		break;
 	case 'x' : // a tux without selection, select it
-	  if (selection == 1) {
-	    // unmark old selected field
-	    *s = 'x';
-	    DrawField(selected_x, selected_y);
-	  }
-	  *p = 's';
-	  selected_x = x;
-	  selected_y = y;
-	  selection = 1;
-	  DrawField(selected_x, selected_y);
-	  DrawMouse();
-	  break;
+		if (selection == 1) {
+			// unmark old selected field
+			*s = 'x';
+			DrawField(selected_x, selected_y);
+		}
+		*p = 's';
+		selected_x = x;
+		selected_y = y;
+		selection = 1;
+		DrawField(selected_x, selected_y);
+		DrawMouse();
+		break;
 	case 's' : // a selected tux, deselect it
-	  selection = 0;
-	  selected_x = 0;
-	  selected_y = 0;
-	  *p = 'x';
-	  DrawField(x,y);
-	  DrawMouse();
-	  break;
+		selection = 0;
+		selected_x = 0;
+		selected_y = 0;
+		*p = 'x';
+		DrawField(x,y);
+		DrawMouse();
+		break;
 	}
 }
 
@@ -465,63 +462,54 @@ static void SelectField( int x, int y )
  */
 void	MoveMouse( void )
 {
-static	int	locked = 0;
+	static	int	locked = 0;
 
-	if ( locked )
-	{
+	if ( locked ) {
 		locked--;
 		actcode=0xee;
 		return;
 	}
-	switch( actcode )
-	{
+	switch ( actcode ) {
 	case RC_RIGHT :
-	  if (isFieldOnBoard(mouse_x +1,mouse_y) == 1)
-	    {
-	      DrawField( mouse_x, mouse_y );
-	      mouse_x++;
-	      DrawMouse();
-	      locked=1;
-	    }
-	  break;
+		if (isFieldOnBoard(mouse_x +1,mouse_y) == 1) {
+			DrawField( mouse_x, mouse_y );
+			mouse_x++;
+			DrawMouse();
+			locked=1;
+		}
+		break;
 	case RC_LEFT :
-	  if (isFieldOnBoard(mouse_x-1,mouse_y) == 1)
-	    {
-	      DrawField( mouse_x, mouse_y );
-	      mouse_x--;
-	      DrawMouse();
-	      locked=1;
-	    }
-	  break;
+		if (isFieldOnBoard(mouse_x-1,mouse_y) == 1) {
+			DrawField( mouse_x, mouse_y );
+			mouse_x--;
+			DrawMouse();
+			locked=1;
+		}
+		break;
 	case RC_DOWN :
-	  if (isFieldOnBoard(mouse_x,mouse_y+1) == 1)
-	    {
-	      DrawField( mouse_x, mouse_y );
-	      mouse_y++;
-	      DrawMouse();
-	      locked=1;
-	    }
-	  break;
+		if (isFieldOnBoard(mouse_x,mouse_y+1) == 1) {
+			DrawField( mouse_x, mouse_y );
+			mouse_y++;
+			DrawMouse();
+			locked=1;
+		}
+		break;
 	case RC_UP :
-	  if (isFieldOnBoard(mouse_x,mouse_y-1) == 1)
-	    {
-	      DrawField( mouse_x, mouse_y );
-	      mouse_y--;
-	      DrawMouse();
-	      locked=1;
-	    }
-	  break;
+		if (isFieldOnBoard(mouse_x,mouse_y-1) == 1) {
+			DrawField( mouse_x, mouse_y );
+			mouse_y--;
+			DrawMouse();
+			locked=1;
+		}
+		break;
 	case RC_OK :
-	  SelectField( mouse_x, mouse_y );
-	  locked=1;
-	  break;
+		SelectField( mouse_x, mouse_y );
+		locked=1;
+		break;
 	case RC_RED : // main loop draws score and resets field
-	  doexit = 2;
-	  locked=1;
-	  break;
+		doexit = 2;
+		locked=1;
+		break;
 	}
 }
-
-
-
 

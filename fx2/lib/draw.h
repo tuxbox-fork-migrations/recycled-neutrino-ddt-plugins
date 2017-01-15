@@ -17,8 +17,7 @@ extern	void	FBDrawVLine( int x, int y, int dy, unsigned char col );
 extern	void	FBFillRect( int x, int y, int dx, int dy, unsigned char col );
 extern	void	FBDrawRect( int x, int y, int dx, int dy, unsigned char col );
 extern	void	FBCopyImage( int x, int y, int dx, int dy, unsigned char *src );
-extern	void	FB2CopyImage( int x, int y, int dx, int dy, unsigned char *src,
-					int dbl );
+extern	void	FB2CopyImage( int x, int y, int dx, int dy, unsigned char *src, int dbl );
 extern	void	FBOverlayImage(int x, int y, int dx, int dy, int relx, int rely,
 				unsigned char c1,
 				unsigned char *src,
@@ -26,21 +25,16 @@ extern	void	FBOverlayImage(int x, int y, int dx, int dy, int relx, int rely,
 				unsigned char *right,
 				unsigned char *bottom );
 extern	void	FBCopyImageCol( int x, int y, int dx, int dy, unsigned char col,
-					unsigned char *src );
+					 unsigned char *src );
 extern	void	FBBlink( int x, int y, int dx, int dy, int count );
 extern	void	FBMove( int x, int y, int x2, int y2, int dx, int dy );
 extern	void	FBPrintScreen( void );
 extern	void	FBPause( void );
-#ifdef MARTII
 extern	int	FBDrawString( int xpos, int ypos, int height, const char *msg,
-#else
-extern	int	FBDrawString( int xpos, int ypos, int height, char *msg,
-#endif
-				unsigned char col,		/* text color */
-				unsigned char backcol );/* background 0==transp */
+				 unsigned char col,		/* text color */
+				 unsigned char backcol );/* background 0==transp */
 extern	void	FBDrawFx2Logo( int x, int y );
-extern	char	*FBEnterWord( int xpos, int ypos, int height,int len,
-				unsigned char col);
+extern	char	*FBEnterWord( int xpos, int ypos, int height,int len, unsigned char col);
 extern	void	FBGetImage( int x1, int y1, int width, int height,
 				unsigned char *to );
 #if defined(USEX) || defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)

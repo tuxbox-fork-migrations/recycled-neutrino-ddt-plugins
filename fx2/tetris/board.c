@@ -2,25 +2,24 @@
 ** initial coding by fx2
 */
 
-
 #include <stdio.h>
 
-#include <draw.h>
+#include "draw.h"
 #include <sys/time.h>
-#include <rcinput.h>
-#include <colors.h>
-#include <pics.h>
+#include "rcinput.h"
+#include "colors.h"
+#include "pics.h"
 
 #if 0
-#define	STATUS_X		5
-#define STATUS_Y		5
-#define LOGO_X			650
-#define LOGO_Y			0
+#define	STATUS_X	5
+#define STATUS_Y	5
+#define LOGO_X		650
+#define LOGO_Y		0
 #else
-#define	STATUS_X		80
-#define STATUS_Y		50
-#define LOGO_X			500
-#define LOGO_Y			30
+#define	STATUS_X	80
+#define STATUS_Y	50
+#define LOGO_X		500
+#define LOGO_Y		30
 #endif
 
 extern	double	sqrt( double in );
@@ -30,14 +29,14 @@ extern	int		doexit;
 extern	unsigned short	realcode;
 extern	unsigned short	actcode;
 
-		long	score = 0;
-static	int		level = 1;
-static	int		puz_x = 5;
-static	int		puz_y = 0;
-static	int		actpuz = 0;
-static	int		nextpuz = 1;
+long		score = 0;
+static	int	level = 1;
+static	int	puz_x = 5;
+static	int	puz_y = 0;
+static	int	actpuz = 0;
+static	int	nextpuz = 1;
 
-static	int		myrand( int idx )
+static	int	myrand( int idx )
 {
 	struct timeval tv;
 	gettimeofday(&tv,0);
@@ -73,12 +72,9 @@ static	void	DrawNextPuz( void )
 	int				y;
 	unsigned char	*p = puz[nextpuz];
 
-	for( y=0; y<4; y++ )
-	{
-		for( x=0; x<4; x++, p++ )
-		{
-			switch( *p )
-			{
+	for ( y=0; y<4; y++ ) {
+		for ( x=0; x<4; x++, p++ ) {
+			switch ( *p ) {
 			case 'X' :
 				FBCopyImageCol( (x+16)*32,(y+5)*32,32,32,puzc[nextpuz],puzdata);
 				break;
@@ -96,12 +92,9 @@ void	DrawBoard( void )
 	int				y;
 	unsigned char	*p = maze;
 
-	for( y = 0; y < MAZEH; y++ )
-	{
-		for( x = 0; x < MAZEW; x++, p++ )
-		{
-			switch ( *p )
-			{
+	for ( y = 0; y < MAZEH; y++ ) {
+		for ( x = 0; x < MAZEW; x++, p++ ) {
+			switch ( *p ) {
 			case '#' :
 				FBCopyImage( x*32, y*32, 32, 32, wall );
 				break;
@@ -125,18 +118,16 @@ static	void	DrawPuz( void )
 	int				y;
 	unsigned char	*p;
 
-	for( y=0; y<5; y++ )
-	{
+	for ( y=0; y<5; y++ ) {
 		if ( puz_y+y>16 )
 			break;
 		p = maze + puz_x - 1 + (puz_y+y) * MAZEW;
-		for( x=-1; x<5; x++, p++ )
-		{
+		for ( x=-1; x<5; x++, p++ ) {
 			if ( puz_x+x > 12 )
 				break;
 			if ( *p == 'X' )
 				FBCopyImageCol( (x+puz_x)*32, (y+puz_y)*32, 32, 32,
-					puzc[actpuz], puzdata );
+						puzc[actpuz], puzdata );
 			if ( *p == ' ' )
 				FBFillRect( (x+puz_x)*32, (y+puz_y)*32, 32, 32, BLACK );
 		}
@@ -149,12 +140,9 @@ int	PutPuzIntoBoard( void )
 	int				y;
 	unsigned char	*p = puz[actpuz];
 
-	for( y=0; y<4; y++ )
-	{
-		for( x=0; x<4; x++, p++ )
-		{
-			if ( *p == 'X' )
-			{
+	for ( y=0; y<4; y++ ) {
+		for ( x=0; x<4; x++, p++ ) {
+			if ( *p == 'X' ) {
 				if ( maze[ (x+puz_x) + (y+puz_y)*MAZEW ] != ' ' )
 					return 0;
 				maze[ (x+puz_x) + (y+puz_y)*MAZEW ] = 'X';
@@ -172,8 +160,8 @@ int	NextItem( void )
 	int		x;
 	int		y;
 
-	for( y=0; y<MAZEH; y++ )
-		for( x=0; x<MAZEW; x++, p++ )
+	for ( y=0; y<MAZEH; y++ )
+		for ( x=0; x<MAZEW; x++, p++ )
 			if ( *p == 'X' )
 				*p = 'B';
 	puz_x = 6;
@@ -195,13 +183,10 @@ static	int	MovePuz( int dist )
 	int				y;
 	unsigned char	*p;
 
-	for( y=0; y<4; y++ )
-	{
+	for ( y=0; y<4; y++ ) {
 		p = maze + puz_x + (puz_y+y) * MAZEW;
-		for( x=0; x<4; x++, p++ )
-		{
-			if ( *p == 'X' )
-			{
+		for ( x=0; x<4; x++, p++ ) {
+			if ( *p == 'X' ) {
 				if ( *(p+dist) == 'X' )
 					continue;
 				if ( *(p+dist) != ' ' )
@@ -210,32 +195,23 @@ static	int	MovePuz( int dist )
 		}
 	}
 
-	if ( dist < 0 )
-	{
-		for( y=0; y < 4 ; y++ )
-		{
+	if ( dist < 0 ) {
+		for ( y=0; y < 4 ; y++ ) {
 			p = maze + puz_x + (puz_y+y) * MAZEW;
-	
-			for( x=0; x<4; x++, p++ )
-			{
-				if ( *p == 'X' )
-				{
+
+			for ( x=0; x<4; x++, p++ ) {
+				if ( *p == 'X' ) {
 					*(p+dist) = 'X';
 					*p=' ';
 				}
 			}
 		}
-	}
-	else
-	{
-		for( y=0; y < 4 ; y++ )
-		{
+	} else {
+		for ( y=0; y < 4 ; y++ ) {
 			p = maze + puz_x + 3 + (puz_y+y) * MAZEW;
-	
-			for( x=0; x<4; x++, p-- )
-			{
-				if ( *p == 'X' )
-				{
+
+			for ( x=0; x<4; x++, p-- ) {
+				if ( *p == 'X' ) {
 					*(p+dist) = 'X';
 					*p=' ';
 				}
@@ -255,13 +231,10 @@ static	int	MoveDown( void )
 	int				y;
 	unsigned char	*p;
 
-	for( y=0; y<4; y++ )
-	{
+	for ( y=0; y<4; y++ ) {
 		p = maze + puz_x + (puz_y+y) * MAZEW;
-		for( x=0; x<4; x++, p++ )
-		{
-			if ( *p == 'X' )
-			{
+		for ( x=0; x<4; x++, p++ ) {
+			if ( *p == 'X' ) {
 				if ( *(p+MAZEW) == 'X' )
 					continue;
 				if ( *(p+MAZEW) != ' ' )
@@ -270,14 +243,11 @@ static	int	MoveDown( void )
 		}
 	}
 
-	for( y=0; y < 4 ; y++ )
-	{
+	for ( y=0; y < 4 ; y++ ) {
 		p = maze + puz_x + (puz_y+3-y) * MAZEW;
 
-		for( x=0; x<4; x++, p++ )
-		{
-			if ( *p == 'X' )
-			{
+		for ( x=0; x<4; x++, p++ ) {
+			if ( *p == 'X' ) {
 				*(p+MAZEW) = 'X';
 				*p=' ';
 			}
@@ -297,30 +267,27 @@ static	void	RotateRight( void )
 	int				y;
 	unsigned char	*s, *t;
 
-/* get */
-	for( y=0, t=bu; y < 4; y++ )
-		for( x=0, s=maze+(puz_y+y)*MAZEW+puz_x; x < 4; x++, s++, t++ )
+	/* get */
+	for ( y=0, t=bu; y < 4; y++ )
+		for ( x=0, s=maze+(puz_y+y)*MAZEW+puz_x; x < 4; x++, s++, t++ )
 			*t = *s == 'X' ? 'X' : ' ';
-/* rotate */
-	for( y=0, s=bu, t=bu2+3; y < 4; y++, t=bu2+3-y )
-		for( x=0; x < 4; x++, s++, t+=4 )
+	/* rotate */
+	for ( y=0, s=bu, t=bu2+3; y < 4; y++, t=bu2+3-y )
+		for ( x=0; x < 4; x++, s++, t+=4 )
 			*t = *s;
 
-/* test */
-	for( y=0,s=bu2; y < 4; y++ )
-		for( x=0, t=maze+(puz_y+y)*MAZEW+puz_x; x < 4; x++, s++, t++ )
+	/* test */
+	for ( y=0,s=bu2; y < 4; y++ )
+		for ( x=0, t=maze+(puz_y+y)*MAZEW+puz_x; x < 4; x++, s++, t++ )
 			if (( *s != ' ' ) && (( *t != ' ' ) && ( *t != 'X' )))
-					return;
+				return;
 
-/* insert */
-	for( y=0,s=bu2; y < 4; y++ )
-	{
-		for( x=0, t=maze+(puz_y+y)*MAZEW+puz_x+x; x < 4; x++, s++, t++ )
-		{
+	/* insert */
+	for ( y=0,s=bu2; y < 4; y++ ) {
+		for ( x=0, t=maze+(puz_y+y)*MAZEW+puz_x+x; x < 4; x++, s++, t++ ) {
 			if ( *s != ' ' )
 				*t = *s;
-			else
-			{
+			else {
 				if ( *t == 'X' )
 					*t = ' ';
 			}
@@ -337,31 +304,28 @@ static	void	RotateLeft( void )
 	int				y;
 	unsigned char	*s, *t;
 
-/* get */
-	for( y=0, t=bu; y < 4; y++ )
-		for( x=0, s=maze+(puz_y+y)*MAZEW+puz_x; x < 4; x++, s++, t++ )
+	/* get */
+	for ( y=0, t=bu; y < 4; y++ )
+		for ( x=0, s=maze+(puz_y+y)*MAZEW+puz_x; x < 4; x++, s++, t++ )
 			*t = *s == 'X' ? 'X' : ' ';
 
-/* rotate */
-	for( y=0, s=bu, t=bu2+12; y < 4; y++, t=bu2+12+y )
-		for( x=0; x < 4; x++, s++, t-=4 )
+	/* rotate */
+	for ( y=0, s=bu, t=bu2+12; y < 4; y++, t=bu2+12+y )
+		for ( x=0; x < 4; x++, s++, t-=4 )
 			*t = *s;
 
-/* test */
-	for( y=0,s=bu2; y < 4; y++ )
-		for( x=0, t=maze+(puz_y+y)*MAZEW+puz_x; x < 4; x++, s++, t++ )
+	/* test */
+	for ( y=0,s=bu2; y < 4; y++ )
+		for ( x=0, t=maze+(puz_y+y)*MAZEW+puz_x; x < 4; x++, s++, t++ )
 			if (( *s != ' ' ) && (( *t != ' ' ) && ( *t != 'X' )))
-					return;
+				return;
 
-/* insert */
-	for( y=0,s=bu2; y < 4; y++ )
-	{
-		for( x=0, t=maze+(puz_y+y)*MAZEW+puz_x+x; x < 4; x++, s++, t++ )
-		{
+	/* insert */
+	for ( y=0,s=bu2; y < 4; y++ ) {
+		for ( x=0, t=maze+(puz_y+y)*MAZEW+puz_x+x; x < 4; x++, s++, t++ ) {
 			if ( *s != ' ' )
 				*t = *s;
-			else
-			{
+			else {
 				if ( *t == 'X' )
 					*t = ' ';
 			}
@@ -372,8 +336,8 @@ static	void	RotateLeft( void )
 
 void	MoveSide( void )
 {
-static int blocker = 0;
-static	short last = 0;
+	static int blocker = 0;
+	static	short last = 0;
 
 	if ( realcode == 0xee )
 		blocker=0;
@@ -383,8 +347,7 @@ static	short last = 0;
 
 	last=actcode;
 
-	switch( actcode )
-	{
+	switch ( actcode ) {
 	case RC_LEFT :
 		MovePuz(-1);
 		break;
@@ -409,7 +372,7 @@ static	short last = 0;
 
 int	FallDown( void )
 {
-static int blocker = 0;
+	static int blocker = 0;
 
 	blocker++;
 	if ( blocker < 30 )
@@ -430,8 +393,8 @@ static	void	DelLines( int li1, int li2 )
 
 	FBBlink( 3*32, ny*32, 10*32, lines*32, 2 );
 
-	for( y=ny-1; y>0; y-- )
-		for( x=3, s=maze+y*MAZEW+x, t=s+(lines*MAZEW); x<13; x++, s++, t++ )
+	for ( y=ny-1; y>0; y-- )
+		for ( x=3, s=maze+y*MAZEW+x, t=s+(lines*MAZEW); x<13; x++, s++, t++ )
 			*t = *s;
 
 	FBMove( 3*32, 2*32, 3*32, (2+lines)*32, 10*32, (ny-2)*32 );
@@ -446,17 +409,13 @@ void	RemoveCompl( void )
 	int				li2=0;
 	int				lines = 0;
 
-	for( y=15; y>1; y-- )
-	{
-		for( x=3, s = maze + y*MAZEW + x; x < 13; x++, s++ )
-		{
+	for ( y=15; y>1; y-- ) {
+		for ( x=3, s = maze + y*MAZEW + x; x < 13; x++, s++ ) {
 			if ( *s == ' ' )
 				break;
 		}
-		if ( x != 13 )
-		{
-			if ( li1 )
-			{
+		if ( x != 13 ) {
+			if ( li1 ) {
 				DelLines( li1, li2 );
 				y=li1+1;
 			}
@@ -473,8 +432,7 @@ void	RemoveCompl( void )
 	if ( li1 )
 		DelLines( li1, li2 );
 
-	if ( lines )
-	{
+	if ( lines ) {
 		/* points for lines */
 		score += ((level+1)*lines);
 
@@ -488,10 +446,8 @@ void	BoardInitialize( void )
 	int				y;
 	unsigned char	*p = maze;
 
-	for( y = 0; y < MAZEH; y++ )
-	{
-		for( x = 0; x < MAZEW; x++, p++ )
-		{
+	for ( y = 0; y < MAZEH; y++ ) {
+		for ( x = 0; x < MAZEW; x++, p++ ) {
 			if ( *p != '#' )
 				*p = ' ';
 		}

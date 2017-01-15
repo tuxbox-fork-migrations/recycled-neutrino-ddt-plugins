@@ -24,16 +24,15 @@
 
 #include <string.h>
 
-#define GAMEFILE_VERSION								1
+#define GAMEFILE_VERSION	1
 
-#define CHECK_OK												0
-#define CHECK_INCOMPLETE								1
-#define CHECK_ERRONEOUS									2
+#define CHECK_OK		0
+#define CHECK_INCOMPLETE	1
+#define CHECK_ERRONEOUS		2
 
-#define MAX_SOLVE_CALLS									10000
+#define MAX_SOLVE_CALLS		10000
 
-typedef struct
-{
+typedef struct {
 	char	cSymbol;
 	char	cSolution;
 	bool	bFixed;
@@ -45,65 +44,63 @@ public:
 	CSudoku();
 	virtual ~CSudoku();
 
-public:
-	void								Init();
-	void								Shutdown(bool bKeepSymbols = false);
-	void								SetSymbols(const char *pszSymbols);
-	tSymbol							*GetSymbol(int nBlockCol, int nBlockRow, int nFieldCol, int nFieldRow);
-	tSymbol							*GetSymbol(int nIndex);
-	bool								IsSymbolFixed(int nBlockCol, int nBlockRow, int nFieldCol, int nFieldRow);
-	int									CheckBlock(int nBlockCol, int nBlockRow, char cSymbol);
-	int									CheckCol(int nBlockRow, int nFieldRow, char cSymbol);
-	int									CheckRow(int nBlockCol, int nFieldCol, char cSymbol);
-	int									CheckBlockAll(int nBlockCol, int nBlockRow);
-	int									CheckColAll(int nBlockRow, int nFieldRow);
-	int									CheckRowAll(int nBlockCol, int nFieldCol);
-	int									CheckBoard(void);
+	void	Init();
+	void	Shutdown(bool bKeepSymbols = false);
+	void	SetSymbols(const char *pszSymbols);
+	tSymbol	*GetSymbol(int nBlockCol, int nBlockRow, int nFieldCol, int nFieldRow);
+	tSymbol	*GetSymbol(int nIndex);
+	bool	IsSymbolFixed(int nBlockCol, int nBlockRow, int nFieldCol, int nFieldRow);
+	int	CheckBlock(int nBlockCol, int nBlockRow, char cSymbol);
+	int	CheckCol(int nBlockRow, int nFieldRow, char cSymbol);
+	int	CheckRow(int nBlockCol, int nFieldCol, char cSymbol);
+	int	CheckBlockAll(int nBlockCol, int nBlockRow);
+	int	CheckColAll(int nBlockRow, int nFieldRow);
+	int	CheckRowAll(int nBlockCol, int nFieldCol);
+	int	CheckBoard(void);
 
-	int									GetSolutionsCount();
-	int									Solve(bool bCountSolutions = false);
-	void								Create(int nLevel);
+	int	GetSolutionsCount();
+	int	Solve(bool bCountSolutions = false);
+	void	Create(int nLevel);
 
-	int									LoadGame(const char *pszFile);
-	int									SaveGame(const char *pszFile);
+	int	LoadGame(const char *pszFile);
+	int	SaveGame(const char *pszFile);
 
 private:
-	int									Create();
-	int									Solve(int nIndex, bool bCountSolutions = false);
+	int	Create();
+	int	Solve(int nIndex, bool bCountSolutions = false);
 
 protected:	// overridables
-	virtual void				CallbackCreate(unsigned long nValue) {};
+	virtual void	CallbackCreate(unsigned long nValue) {};
 
 private:
-	tSymbol							*m_Board;
-	tSymbol							*m_TempBoard;
-	char								*m_pszSymbols;
+	tSymbol	*m_Board;
+	tSymbol	*m_TempBoard;
+	char	*m_pszSymbols;
 
-	int									m_nSolutionsCount;
+	int	m_nSolutionsCount;
 
 public:	// board settings
-	int									m_nBlockColumns;
-	int									m_nBlockRows;
-	int									m_nFieldColumns;
-	int									m_nFieldRows;
+	int	m_nBlockColumns;
+	int	m_nBlockRows;
+	int	m_nFieldColumns;
+	int	m_nFieldRows;
 
 private:	// pre calculated numbers (optimizations)
-	size_t							m_nSymbolsCount;
-	int									m_nFieldsCount;
-	int									m_nBlockSize;
-	int									m_nBlockRowsSize;
+	size_t	m_nSymbolsCount;
+	int	m_nFieldsCount;
+	int	m_nBlockSize;
+	int	m_nBlockRowsSize;
 
-	int									**m_pnBlockLookup;
-	int									*m_pnFieldRowLookup;
+	int	**m_pnBlockLookup;
+	int	*m_pnFieldRowLookup;
 
-	int									*m_pnBlockColIndexLookup;
-	int									*m_pnBlockRowIndexLookup;
-	int									*m_pnFieldColIndexLookup;
-	int									*m_pnFieldRowIndexLookup;
+	int	*m_pnBlockColIndexLookup;
+	int	*m_pnBlockRowIndexLookup;
+	int	*m_pnFieldColIndexLookup;
+	int	*m_pnFieldRowIndexLookup;
 
-private:	// function call counters
-	unsigned long				m_nCount1;
-	unsigned long				m_nCount2;
+	unsigned long	m_nCount1;
+	unsigned long	m_nCount2;
 };
 
 #endif // _SUDOKU_H

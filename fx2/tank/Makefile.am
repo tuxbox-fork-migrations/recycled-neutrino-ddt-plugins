@@ -13,4 +13,4 @@ install-exec-local:
 	install -d $(DESTDIR)$(CONFIGDIR)
 	$(LIBTOOL) --mode=install install --strip-program=$(STRIP) -s -m 0755 tank $(DESTDIR)$(PLUGINDIR)/tank.so
 	install -m 0644 $(srcdir)/tank.cfg $(DESTDIR)$(PLUGINDIR)
-
+	install -m 0644 $(srcdir)/tank_hint.png $(DESTDIR)$(PLUGINDIR)

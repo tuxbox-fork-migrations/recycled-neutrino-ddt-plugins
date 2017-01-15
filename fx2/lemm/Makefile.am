@@ -15,4 +15,4 @@ install-exec-local:
 	install -d $(DESTDIR)$(CONFIGDIR)
 	$(LIBTOOL) --mode=install install --strip-program=$(STRIP) -s -m 0755 lemmings $(DESTDIR)$(PLUGINDIR)/lemmings.so
 	install -m 0644 $(srcdir)/lemmings.cfg $(DESTDIR)$(PLUGINDIR)
-
+	install -m 0644 $(srcdir)/lemmings_hint.png $(DESTDIR)$(PLUGINDIR)

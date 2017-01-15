@@ -13,4 +13,4 @@ install-exec-local:
 	install -d $(DESTDIR)$(CONFIGDIR)
 	$(LIBTOOL) --mode=install install --strip-program=$(STRIP) -s -m 0755 master $(DESTDIR)$(PLUGINDIR)/master.so
 	install -m 0644 $(srcdir)/master.cfg $(DESTDIR)$(PLUGINDIR)
-
+	install -m 0644 $(srcdir)/master_hint.png $(DESTDIR)$(PLUGINDIR)

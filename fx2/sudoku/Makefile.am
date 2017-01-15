@@ -13,3 +13,4 @@ install-exec-local:
 	install -d $(DESTDIR)$(CONFIGDIR)
 	$(LIBTOOL) --mode=install install --strip-program=$(STRIP) -s -m 0755 sudoku $(DESTDIR)$(PLUGINDIR)/sudoku.so
 	install -m 0644 $(srcdir)/sudoku.cfg $(DESTDIR)$(PLUGINDIR)
+	install -m 0644 $(srcdir)/sudoku_hint.png $(DESTDIR)$(PLUGINDIR)

@@ -8,13 +8,13 @@
 #include <signal.h>
 #include <sys/time.h>
 
-#include <rcinput.h>
-#include <draw.h>
-#include <board.h>
-#include <colors.h>
-#include <pig.h>
+#include "rcinput.h"
+#include "draw.h"
+#include "board.h"
+#include "colors.h"
+#include "pig.h"
+#include "fx2math.h"
 #include <plugin.h>
-#include <fx2math.h>
 
 extern	int	doexit;
 extern	int	debug;
@@ -64,8 +64,7 @@ int tank_exec( int fdfb, int fdrc, int fdlcd, char *cfgfile )
 #endif
 
 		doexit=0;
-		while( !doexit )
-		{
+		while ( !doexit ) {
 			tv.tv_sec = 0;
 			tv.tv_usec = 200000;
 			select( 0, 0, 0, 0, &tv );
@@ -76,22 +75,20 @@ int tank_exec( int fdfb, int fdrc, int fdlcd, char *cfgfile )
 #if defined(USEX) || defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 			FBFlushGrafic();
 #endif
-			while( realcode != 0xee )
+			while ( realcode != 0xee )
 				RcGetActCode( );
 		}
-		if ( doexit == 4 )		// level changed
-		{
+		if ( doexit == 4 ) {	// level changed
 			doexit=0;
 			actcode=0xee;
-			while(( actcode != RC_OK ) && !doexit )
-			{
+			while (( actcode != RC_OK ) && !doexit ) {
 				tv.tv_sec = 0;
 				tv.tv_usec = 200000;
 				select( 0, 0, 0, 0, &tv );
 
 				RcGetActCode( );
 			}
-			while( realcode != 0xee )
+			while ( realcode != 0xee )
 				RcGetActCode( );
 			actcode=0xee;
 		}
@@ -99,11 +96,10 @@ int tank_exec( int fdfb, int fdrc, int fdlcd, char *cfgfile )
 
 	Fx2StopPig();
 
-/* fx2 */
-/* buffer leeren, damit neutrino nicht rumspinnt */
+	/* fx2 */
+	/* buffer leeren, damit neutrino nicht rumspinnt */
 	realcode = RC_0;
-	while( realcode != 0xee )
-	{
+	while ( realcode != 0xee ) {
 		tv.tv_sec = 0;
 		tv.tv_usec = 300000;
 		x = select( 0, 0, 0, 0, &tv );		/* 300ms pause */

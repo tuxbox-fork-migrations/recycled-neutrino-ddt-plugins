@@ -5,7 +5,8 @@
 #include <unistd.h>
 #include "text.h"
 #include "gfx.h"
-#include "msgbox.h"
+
+#include "current.h"
 
 #define FH_ERROR_OK 0
 #define FH_ERROR_FILE 1		/* read/access error */
@@ -25,9 +26,6 @@ int just, color=CMCT;
 
 	if(!(fh=fopen(name,"rb")))	return(FH_ERROR_FILE);
 
-#ifndef MARTII
-	first=(line==0);
-#endif
 	*x=0;
 	*y=0;
 	while((loop>0) && (fgets(tstr, sizeof(tstr), fh)))
@@ -66,11 +64,10 @@ int just, color=CMCT;
 		if((loop>0) && (ys<(ey-dy)))
 		{
 			rstr[j]=0;
-#ifdef MARTII
 			char *t = (char *)alloca(j * 4 + 1);
 			memcpy(t, rstr, j + 1);
 			TranslateString(t, j * 4);
-#endif
+
 			if(plot)
 			{
 				if(loop>=line)
@@ -90,17 +87,9 @@ int just, color=CMCT;
 			}
 			else
 			{
-#ifdef MARTII
 				if(strlen(t))
-#else
-				if(strlen(rstr))
-#endif
 				{
-#ifdef MARTII
 					slen=GetStringLen(xs, t, size);
-#else
-					slen=GetStringLen(xs, rstr, size);
-#endif
 					if(slen>*x)
 					{
 						*x=slen;
@@ -118,11 +107,11 @@ int just, color=CMCT;
 	return(FH_ERROR_OK);
 }
 
-int fh_txt_load(const char *name, int sx, int wx, int sy, int dy, int size, int line, int *cut)
+int fh_txt_load(const char *name, int _sx, int wx, int _sy, int dy, int size, int line, int *cut)
 {
 int dummy;
 
-	return fh_txt_trans(name, sx, wx, sy, dy, size, line, cut, &dummy, &dummy, 1);
+	return fh_txt_trans(name, _sx, wx, _sy, dy, size, line, cut, &dummy, &dummy, 1);
 }
 
 
