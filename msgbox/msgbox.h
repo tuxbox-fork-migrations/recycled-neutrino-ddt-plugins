@@ -4,7 +4,6 @@
 #ifdef MARTII
 #include <config.h>
 #endif
-
 #define _FILE_OFFSET_BITS 64
 #include <errno.h>
 #include <fcntl.h>
@@ -36,8 +35,6 @@ extern int sync_blitter;
 
 #define MAX_BUTTONS 16
 #define BUFSIZE 	4095
-
-extern unsigned char FONT[64];
 
 enum {LEFT, CENTER, RIGHT};
 
@@ -136,7 +133,12 @@ enum {
 	ORANGE,
 	GREEN,
 	YELLOW,
-	RED
+	RED,
+	COL_MENUCONTENT_PLUS_0,
+	COL_MENUCONTENT_PLUS_1,
+	COL_MENUCONTENT_PLUS_2,
+	COL_MENUCONTENT_PLUS_3,
+	COL_SHADOW_PLUS_0
 };
 
 #define TRANSP 0
@@ -153,7 +155,8 @@ struct fb_var_screeninfo var_screeninfo;
 extern uint32_t bgra[];
 extern int stride;
 
-int startx, starty, sx, ex, sy, ey, debounce, rblock;
+int startx, starty, sx, ex, sy, ey;
+//int debounce, rblock;
 
 extern char *butmsg[MAX_BUTTONS];
 extern int buttons,selection;

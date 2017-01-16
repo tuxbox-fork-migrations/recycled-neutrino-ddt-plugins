@@ -6,6 +6,7 @@ int FSIZE_BIG=28;
 int FSIZE_MED=24;
 int FSIZE_SMALL=20;
 int TABULATOR=72;
+extern int flash;
 
 static char *sc = "aouAOUzd",
 	*su= "\xA4\xB6\xBC\x84\x96\x9C\x9F",
@@ -221,7 +222,7 @@ int RenderChar(FT_ULong currentchar, int _sx, int _sy, int _ex, int color)
 		if(color != -1)
 		{
 			if (_sx + 10 < _ex)
-				RenderBox(_sx, _sy - 10, _sx + 10, _sy, GRID, color);
+				RenderBox(_sx, _sy - 16, _sx + 10, _sy - 6, GRID, color);
 			else
 				return -1;
 		}
@@ -248,6 +249,16 @@ int RenderChar(FT_ULong currentchar, int _sx, int _sy, int _ex, int color)
 		return 0;
 	}
 
+	int _d = 0;
+	if (1)
+	{
+		FT_UInt _i = FT_Get_Char_Index(face, 'g');
+		FTC_SBit _g;
+		FTC_SBitCache_Lookup(cache, &desc, _i, &_g, NULL);
+		_d = _g->height - _g->top;
+		_d += 1;
+	}
+
 	if(use_kerning)
 	{
 		FT_Get_Kerning(face, prev_glyphindex, glyphindex, ft_kerning_default, &kerning);
@@ -270,10 +281,14 @@ int RenderChar(FT_ULong currentchar, int _sx, int _sy, int _ex, int color)
 #endif
 		if (_sx + sbit->xadvance >= _ex)
 			return -1; /* limit to maxwidth */
-		uint32_t bgcolor = *(lbb + (sy + _sy) * stride + (sx + _sx));
-		uint32_t fgcolor = bgra[color];
+		uint32_t fgcolor;
+		uint32_t bgcolor = *(lbb + (sy + _sy - sbit->top) * stride + (sx + _sx));
+		if ( color == -2) /* flash */
+			fgcolor = bgcolor;
+		else	
+			fgcolor = bgra[color];
 		uint32_t *colors = lookup_colors(fgcolor, bgcolor);
-		uint32_t *p = lbb + (sx + _sx + sbit->left + kerning.x) + stride * (sy + _sy - sbit->top);
+		uint32_t *p = lbb + (sx + _sx + sbit->left + kerning.x) + stride * (sy + _sy - sbit->top - _d);
 		uint32_t *r = p + (_ex - _sx);	/* end of usable box */
 		for(row = 0; row < sbit->height; row++)
 		{
@@ -324,6 +339,18 @@ int GetStringLen(int _sx, char *string, size_t size)
 				string+=5;
 				stringlen=i-_sx;
 			}
+			else if(*string=='l' ||
+					*string=='c' ||
+					*string=='r' ||
+					*string=='R' ||
+					*string=='G' ||
+					*string=='B' ||
+					*string=='Y' ||
+					*string=='S' ||
+					*string=='F' ||
+					*string=='C') {
+				string+=1;
+			}
 			break;
 		default:
 			stringlen += RenderChar(UTF8ToUnicode(&string, 1), -1, -1, -1, -1);
@@ -332,6 +359,17 @@ int GetStringLen(int _sx, char *string, size_t size)
 	}
 
 	return stringlen;
+}
+
+void CatchLF(char *text)
+{
+char *src, *dst;
+	for (src = dst = text; *src != '\0'; src++)
+	{
+		*dst = *src;
+		if (*dst != 0x0A) dst++;
+	}
+	*dst = '\0';
 }
 
 void CatchTabs(char *text)
@@ -360,9 +398,9 @@ extern int psx;
 
 int RenderString(char *string, int _sx, int _sy, int maxwidth, int layout, int size, int color)
 {
-	int stringlen, _ex, charwidth, i;
-	char rstr[BUFSIZE], *rptr=rstr;
-	int varcolor=color;
+	int stringlen, _ex, charwidth, i, col;
+	char rstr[BUFSIZE]={0}, *rptr=rstr;
+	int varcolor=color, butcolor=color;
 
 	//set size
 
@@ -412,6 +450,15 @@ int RenderString(char *string, int _sx, int _sy, int maxwidth, int layout, int s
 				case 'Y': varcolor=YELLOW; break;
 				case 'B': varcolor=BLUE1; break;
 				case 'S': varcolor=color; break;
+				case 'F':
+					if(butcolor == CMCST)
+						col = CMCIT;
+					else if(butcolor == CMCIT)
+						col = CMCST;
+					else
+						col = -2;
+					varcolor = flash ? col : varcolor;
+					break;
 				case 't':
 					_sx=TABULATOR*((int)(_sx/TABULATOR)+1);
 					break;

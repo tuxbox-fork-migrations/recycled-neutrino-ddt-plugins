@@ -9,10 +9,15 @@ msgbox_SOURCES = \
 	gfx.c \
 	io.c \
 	txtform.c \
-	text.c
+	text.c \
+	fb_display.c \
+	resize.c \
+	pngw.cpp \
+	png_helper.cpp
 
 msgbox_LDADD = \
-	@FREETYPE_LIBS@
+	@FREETYPE_LIBS@ \
+	@PNG_LIBS@
 
 install-exec-local:
 	install -d $(DESTDIR)/bin

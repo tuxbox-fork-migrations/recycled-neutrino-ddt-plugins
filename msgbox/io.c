@@ -32,7 +32,8 @@ int InitRC(void)
 	if (rc < 0)
 		rc = open(RC_DEVICE_FALLBACK, O_RDONLY | O_CLOEXEC);
 #endif
-	if(rc == -1) {
+	if(rc == -1)
+	{
 		perror(__plugin__ " <open remote control>");
 		exit(1);
 	}
