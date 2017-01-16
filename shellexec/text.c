@@ -68,7 +68,7 @@ void CopyUTF8Char(char **to, char **from)
 	int remaining_unicode_length;
 	if (!((unsigned char)(**from) & 0x80))
 		remaining_unicode_length = 1;
-	else if ((((unsigned char)(**from)) & 0xf8) == 0xf0)
+	else if ((((unsigned char)(**from)) & 0xf5) == 0xf0)
 		remaining_unicode_length = 4;
 	else if ((((unsigned char)(**from)) & 0xf0) == 0xe0)
 		remaining_unicode_length = 3;
@@ -107,6 +107,16 @@ void TranslateString(char *src, size_t size)
 			if (tc[i]) {
 				*tptr++ = 0xC3;
 				*tptr++ = su[i];
+				fptr++;
+			} else if (*fptr == '§' /* 1252, 28591 */ || *fptr == 'õ' /* 850 */) {
+				/*
+				   Take care about the line above!
+
+				   Workaround for different codepages in user's conf
+				   Convert paragraph symbol to utf-8
+				*/
+				*tptr++ = 0xC2;
+				*tptr++ = 0xa7;
 				fptr++;
 			} else if (*fptr & 0x80)
 				fptr++;
@@ -255,6 +265,16 @@ int RenderChar(FT_ULong currentchar, int _sx, int _sy, int _ex, int color)
 		return 0;
 	}
 
+	int _d = 0;
+	if (1)
+	{
+		FT_UInt _i = FT_Get_Char_Index(face, 'g');
+		FTC_SBit _g;
+		FTC_SBitCache_Lookup(cache, &desc, _i, &_g, NULL);
+		_d = _g->height - _g->top;
+		_d += 1;
+	}
+
 	if(use_kerning)
 	{
 		FT_Get_Kerning(face, prev_glyphindex, glyphindex, ft_kerning_default, &kerning);
@@ -277,10 +297,10 @@ int RenderChar(FT_ULong currentchar, int _sx, int _sy, int _ex, int color)
 				perror("RenderString ioctl STMFBIO_SYNC_BLITTER");
 		}
 #endif
-		uint32_t bgcolor = *(lbb + (starty + _sy) * stride + (startx + _sx));
+		uint32_t bgcolor = *(lbb + (starty + _sy - sbit->top) * stride + (startx + _sx));
 		uint32_t fgcolor = bgra[color];
 		uint32_t *colors = lookup_colors(fgcolor, bgcolor);
-		uint32_t *p = lbb + (startx + _sx + sbit->left + kerning.x) + stride * (starty + _sy - sbit->top);
+		uint32_t *p = lbb + (startx + _sx + sbit->left + kerning.x) + stride * (starty + _sy - sbit->top - _d);
 		uint32_t *r = p + (_ex - _sx);	/* end of usable box */
 		for(row = 0; row < sbit->height; row++)
 		{
@@ -483,42 +503,45 @@ char *rmptr, *rmstr, *rmdptr;
 
 void ShowMessage(char *mtitle, char *message, int wait)
 {
-	extern int radius;
-	int ixw=400;
-	int lx=startx/*, ly=starty*/;
+	extern int radius, radius_small;
+	int ixw=420;
+	int iyw=wait?327:300;
+	int lx=startx;
+	//int ly=starty;
 	char *tdptr;
 
 	startx = sx + (((ex-sx) - ixw)/2);
 	//starty=sy;
 
 	//layout
-	RenderBox(0, 178, ixw, 327, radius, CMH);
-	RenderBox(2, 180, ixw-4, 323, radius, CMC);
+	RenderBox(0+4, 178+4, ixw+4, iyw+4, radius, COL_SHADOW_PLUS_0);
+	RenderBox(0, 178, ixw, iyw, radius, CMC);
 	RenderBox(0, 178, ixw, 220, radius, CMH);
 
 	//message
 	tdptr=strdup(mtitle);
 	remove_tabs(tdptr);
-	RenderString(tdptr, 2, 213, ixw, CENTER, FSIZE_BIG, CMHT);
+	RenderString(tdptr, 5, 215, ixw-10, CENTER, FSIZE_BIG, CMHT);
 	free(tdptr);
 	tdptr=strdup(message);
 	remove_tabs(tdptr);
-	RenderString(tdptr, 2, 270, ixw, CENTER, FSIZE_MED, CMCT);
+	RenderString(tdptr, 5, 270, ixw-10, CENTER, FSIZE_MED, CMCT);
 	free(tdptr);
 
 	if(wait)
 	{
-		RenderBox(ixw/2-25, 286, ixw/2+25, 310, radius, CMCS);
-		RenderString("OK", ixw/2-25, 305, 50, CENTER, FSIZE_MED, CMCT);
+		RenderBox(ixw/2-35+4, 286+4, ixw/2+35+4, 310+4, radius_small, COL_SHADOW_PLUS_0);
+		RenderBox(ixw/2-35, 286, ixw/2+35, 310, radius_small, CMCS);
+		RenderString("OK", ixw/2-25, 312, 50, CENTER, FSIZE_MED, CMCT);
 	}
 #ifdef MARTII
 	blit();
 
 	while(wait && (GetRCCode(-1) != RC_OK));
 #else
-	memcpy(lfb, lbb, fix_screeninfo.line_length*var_screeninfo.yres);
+	memcpy(lfb, lbb, var_screeninfo.xres*var_screeninfo.yres*sizeof(uint32_t));
 
-	while(wait && (GetRCCode() != RC_OK));
+	while(wait && (GetRCCode(300) != RC_OK));
 #endif
 
 	startx=lx;

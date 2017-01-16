@@ -8,10 +8,15 @@ shellexec_SOURCES = \
 	shellexec.c \
 	text.c \
 	gfx.c \
-	io.c
+	io.c \
+	fb_display.c \
+	resize.c \
+	pngw.cpp \
+	png_helper.cpp
 
 shellexec_LDADD = \
-	@FREETYPE_LIBS@
+	@FREETYPE_LIBS@ \
+	@PNG_LIBS@
 
 install-exec-local:
 	install -d $(DESTDIR)$(PLUGINDIR)

@@ -169,6 +169,11 @@ int GetRCCode(int timeout_in_ms)
 {
 	int rv = -1;
 
+	if (get_instance()>instance)
+	{
+		return rv;
+	}
+
 	if (timeout_in_ms) {
 		struct pollfd pfd;
 		struct timeval tv;

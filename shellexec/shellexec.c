@@ -5,11 +5,14 @@
 #include <sys/stat.h>
 
 #include "current.h"
+#include "icons.h"
 #include "text.h"
 #include "io.h"
 #include "gfx.h"
+#include "pngw.h"
 
-#define SH_VERSION 1.20
+
+#define SH_VERSION 2.0
 
 static char CFG_FILE[128] = CONFIGDIR "/shellexec.conf";
 
@@ -17,23 +20,24 @@ static char CFG_FILE[128] = CONFIGDIR "/shellexec.conf";
 // if font is not in usual place, we look here:
 char FONT[128] = FONTDIR "/neutrino.ttf";
 
-//					  CMCST,    CMCS,   CMCT,   CMC,    CMCIT,  CMCI,   CMHT,   CMH
-//					  WHITE,    BLUE0,  TRANSP, CMS,    ORANGE, GREEN,  YELLOW, RED
+//						CMCST,	CMCS,	CMCT,	CMC,	CMCIT,	CMCI,	CMHT,	CMH
+//						WHITE,	BLUE0,	TRANSP,	CMS,	ORANGE,	GREEN,	YELLOW,	RED
+//						COL_MENUCONTENT_PLUS_0 - 3, COL_SHADOW_PLUS_0
 
 unsigned char bl[] = {	0x00,	0x00,	0xFF,	0x80,	0xFF,	0x80,	0x00,	0x80,
 						0xFF,	0x80,	0x00,	0xFF,	0x00,	0x00,	0x00,	0x00,
-						0x00,	0x00,	0x00,	0x00};
+						0x00,	0x00,	0x00,	0x00,	0x00};
 unsigned char gn[] = {	0x00,	0x00,	0xFF,	0x00,	0xFF,	0x00,	0xC0,	0x00,
 						0xFF,	0x00,	0x00,	0x80,	0x80,	0x80,	0x80,	0x00,
-						0x00,	0x00,	0x00,	0x00};
+						0x00,	0x00,	0x00,	0x00,	0x00};
 unsigned char rd[] = {	0x00,	0x00,	0xFF,	0x00,	0xFF,	0x00,	0xFF,	0x00,
 						0xFF,	0x00,	0x00,	0x00,	0xFF,	0x00,	0x80,	0x80,
-						0x00,	0x00,	0x00,	0x00};
+						0x00,	0x00,	0x00,	0x00,	0x00};
 unsigned char tr[] = {	0xFF,	0xFF,	0xFF,	0xA0,	0xFF,	0x80,	0xFF,	0xFF,
 						0xFF,	0xFF,	0x00,	0xFF,	0xFF,	0xFF,	0xFF,	0xFF,
-						0x00,	0x00,	0x00,	0x00};
+						0x00,	0x00,	0x00,	0x00,	0x00};
 
-uint32_t bgra[20];
+uint32_t bgra[22];
 void TrimString(char *strg);
 
 // OSD stuff
@@ -81,10 +85,12 @@ char VFD[256]="";
 char url[256]="time.fu-berlin.de";
 char *line_buffer=NULL;
 char *trstr;
-int paging=1, mtmo=120, radius=10;
+int paging=1, mtmo=120, radius=0, radius_small=0;
 int ixw=600, iyw=680, xoffs=13, vfd=0;
 char INST_FILE[]="/tmp/rc.locked";
 int instance=0;
+int rclocked=0;
+int stride;
 
 #if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 int sync_blitter = 0;
@@ -123,7 +129,6 @@ void blit(void) {
 	sync_blitter = 1;
 }
 #endif
-int stride;
 
 int get_instance(void)
 {
@@ -144,6 +149,10 @@ void put_instance(int pval)
 
 	if(pval)
 	{
+		if (!rclocked) {
+			rclocked=1;
+			system("pzapit -lockrc > /dev/null");
+		}
 		if((fh=fopen(INST_FILE,"w"))!=NULL)
 		{
 			fputc(pval,fh);
@@ -153,13 +162,26 @@ void put_instance(int pval)
 	else
 	{
 		remove(INST_FILE);
+		system("pzapit -unlockrc > /dev/null");
 	}
 }
 
 static void quit_signal(int sig)
 {
-	printf("%s Version %.2f killed, signal (%d)\n", __plugin__, SH_VERSION, sig);
+	char *txt=NULL;
+	switch (sig)
+	{
+		case SIGINT:  txt=strdup("SIGINT");  break;
+		case SIGTERM: txt=strdup("SIGTERM"); break;
+		case SIGQUIT: txt=strdup("SIGQUIT"); break;
+		case SIGSEGV: txt=strdup("SIGSEGV"); break;
+		default:
+			txt=strdup("UNKNOWN"); break;
+	}
+
+	printf("%s Version %.2f killed, signal %s(%d)\n", __plugin__, SH_VERSION, txt, sig);
 	put_instance(get_instance()-1);
+	free(txt);
 	exit(1);
 }
 
@@ -332,6 +354,11 @@ int Read_Neutrino_Cfg(char *entry)
 					}
 				}
 			}
+			if((strncmp(entry, tstr, 10) == 0) && (strncmp(entry, "font_file=", 10) == 0))
+			{
+				sscanf(tstr, "font_file=%127s", FONT);
+				rv = 1;
+			}
 			//printf("%s\n%s=%s -> %d\n",tstr,entry,cfptr,rv);
 		}
 		fclose(nfh);
@@ -496,7 +523,8 @@ int Check_Config(void)
 				}
 				else
 				{
-					if(strstr(line_buffer,"FONT=")==line_buffer)
+					int neutrinofont = Read_Neutrino_Cfg("font_file=");
+					if(neutrinofont!=1 && strstr(line_buffer,"FONT=")==line_buffer)
 					{
 						strcpy(FONT,strchr(line_buffer,'=')+1);
 					}
@@ -526,9 +554,14 @@ int Check_Config(void)
 					{
 						sscanf(strchr(line_buffer,'=')+1,"%d",&ixw);
 					}
+					if(strstr(line_buffer,"HEIGHT=")==line_buffer)
+					{
+						sscanf(strchr(line_buffer,'=')+1,"%d",&iyw);
+					}
 					if(strstr(line_buffer,"HIGHT=")==line_buffer)
 					{
 						sscanf(strchr(line_buffer,'=')+1,"%d",&iyw);
+						printf("shellexec::Check_Config: please use HEIGHT instead of HIGHT\n");
 					}
 					if(strstr(line_buffer,"TIMESERVICE=")==line_buffer)
 					{
@@ -888,10 +921,8 @@ int Get_Selection(MENU *m)
 
 			case -1:
 				knew=0;
-				if(mtmo == 0)
-				break;
 				time(&tm2);
-				if((tm2-tm1)<mtmo)
+				if(mtmo==0 || (tm2-tm1)<mtmo)
 				{
 					break;
 				}
@@ -910,27 +941,17 @@ int Get_Selection(MENU *m)
 #endif
 				blit();
 #else
-				memset(lfb, TRANSP, fix_screeninfo.line_length*var_screeninfo.yres);
+				memset(lfb, TRANSP, var_screeninfo.xres*var_screeninfo.yres*sizeof(uint32_t));
 #endif
+
+
 #ifdef MARTII
 				usleep(500000L);
 				ClearRC();
 				while(GetRCCode(-1)!=RC_MUTE);
 				ClearRC();
 #else
-				usleep(500000L);
-				while(GetRCCode()!=-1)
-				{
-					usleep(100000L);
-				}
-				while(GetRCCode()!=RC_MUTE)
-				{
-					usleep(500000L);
-				}
-				while((rccode=GetRCCode())!=-1)
-				{
-					usleep(100000L);
-				}
+				while(GetRCCode(300)!=RC_MUTE);
 #endif
 				break;
 
@@ -1348,19 +1369,22 @@ void clean_string(char *_trstr, char *lcstr)
 
 static void ShowInfo(MENU *m, int knew )
 {
+	int icon_w=0, icon_h=0, xsize=0, ysize=0;
 	int loop, dloop, ldy, stlen;
 	double scrollbar_len, scrollbar_ofs, scrollbar_cor;
-	int index=m->act_entry,tind=m->act_entry, sbw=(m->num_entrys>MAX_FUNCS)?12:0;
-	char tstr[BUFSIZE], *tptr;
-	char dstr[BUFSIZE],*lcptr,*lcstr;
+	int index=m->act_entry,tind=m->act_entry;
+	int sbw=(m->num_entrys>MAX_FUNCS)?15:0; // scrollbar width
+	int sbo=2; // inner scrollbar offset
+	char tstr[BUFSIZE]={0}, *tptr;
+	char dstr[BUFSIZE]={0}, *lcptr,*lcstr;
 	int dy, my, moffs, mh, toffs, soffs=4, oldx=startx, oldy=starty, sbar=0, nosel;
 	PLISTENTRY pl;
 
-	moffs=iyw/(MAX_FUNCS+1);
+	moffs=iyw/(MAX_FUNCS+1)+5;
 	mh=iyw-moffs;
 	dy=mh/(MAX_FUNCS+1);
 	toffs=dy/2;
-	my=moffs+dy+toffs;
+	my=moffs+toffs+dy;
 
 	startx = sx + (((ex-sx) - ixw)/2);
 	starty = sy + (((ey-sy) - iyw)/2);
@@ -1368,10 +1392,11 @@ static void ShowInfo(MENU *m, int knew )
 	tind=index;
 
 	//frame layout
+	RenderBox(6, 6, ixw+6, iyw+6, radius, COL_SHADOW_PLUS_0);
 	RenderBox(0, 0, ixw, iyw, radius, CMC);
 
 	// titlebar
-	RenderBox(0, 0, ixw, moffs+5, radius, CMH);
+	RenderBox(0, 0, ixw, moffs, radius, CMH);
 
 	for(loop=MAX_FUNCS*(index/MAX_FUNCS); loop<MAX_FUNCS*(index/MAX_FUNCS+1) && loop<m->num_entrys && !sbar; loop++)
 	{
@@ -1392,13 +1417,34 @@ static void ShowInfo(MENU *m, int knew )
 		scrollbar_len = (double)mh / (double)((m->num_entrys/MAX_FUNCS+1)*MAX_FUNCS);
 		scrollbar_ofs = scrollbar_len*(double)((index/MAX_FUNCS)*MAX_FUNCS);
 		scrollbar_cor = scrollbar_len*(double)MAX_FUNCS;
-		RenderBox(ixw-sbw, moffs + scrollbar_ofs, ixw, moffs + scrollbar_ofs + scrollbar_cor , radius, COL_MENUCONTENT_PLUS_3);
+		RenderBox(ixw-sbw + sbo, moffs + scrollbar_ofs + sbo, ixw - sbo, moffs + scrollbar_ofs + scrollbar_cor - sbo, radius, COL_MENUCONTENT_PLUS_3);
+	}
+	int iw,ih;
+	int offset, hoffs = (m->headermed[m->act_header]==1)?0:46;
+	int ioffs = xoffs+8; // + half standard icon
+	if(m->icon[m->act_header])
+	{
+		png_getsize(m->icon[m->act_header], &icon_w, &icon_h);
+		// limit icon size
+		if(icon_w > 150 || icon_h > 36) {
+			icon_w = xsize = 150;
+			icon_h = ysize = 36;
+		}
+		if (icon_w > 32) {
+			offset = ioffs-16;
+		}
+		else
+			offset = ioffs-icon_w/2;
+		paintIcon(m->icon[m->act_header], offset, (moffs-icon_h)/2+1, xsize, ysize, &iw, &ih);
 	}
 
 	// Title text
+	if (icon_w > 32) {
+		hoffs  = offset+iw+8;
+	}
 	lcstr=strdup(m->headertxt[m->act_header]);
 	clean_string(m->headertxt[m->act_header],lcstr);
-	RenderString(lcstr, (m->headermed[m->act_header]==1)?0:45, dy-soffs+2+FSIZE_BIG/10, ixw-sbw-((m->headermed[m->act_header]==1)?0:45) , (m->headermed[m->act_header]==1)?CENTER:LEFT, FSIZE_BIG, CMHT);
+	RenderString(lcstr, hoffs, moffs-(moffs-FSIZE_BIG)/2+2, ixw-sbw-hoffs, (m->headermed[m->act_header]==1)?CENTER:LEFT, FSIZE_BIG, CMHT);
 	free(lcstr);
 
 	index /= MAX_FUNCS;
@@ -1407,6 +1453,7 @@ static void ShowInfo(MENU *m, int knew )
 	//Show table of commands
 	for(loop = index*MAX_FUNCS; (loop < (index+1)*MAX_FUNCS) && (loop < m->num_entrys); ++loop)
 	{
+		int clh=2; // comment line height
 		dy=ldy;
 		pl=m->list[loop];
 		strcpy(dstr,pl->entry);
@@ -1429,16 +1476,28 @@ static void ShowInfo(MENU *m, int knew )
 
 		if(m->num_active && sbar && (loop==m->act_entry))
 		{
-			RenderBox(2, my+soffs-dy, ixw-sbw, my+soffs, radius, CMCS);
+			RenderBox(0, my+soffs-dy, ixw-sbw, my+soffs, radius, CMCS);
 		}
 		nosel=(pl->type==TYP_COMMENT) || (pl->type==TYP_INACTIVE);
 		if(!(pl->type==TYP_COMMENT && pl->underline==2))
 		{
-			RenderString(dstr, 45, my, ixw-sbw-65, LEFT, (pl->type==TYP_COMMENT)?SMALL:MED, (((loop%MAX_FUNCS) == (tind%MAX_FUNCS)) && (sbar) && (!nosel))?CMCST:(nosel)?CMCIT:CMCT);
+			int font_type = MED;
+			int font_size = FSIZE_MED;
+			int coffs=0; // comment offset
+			if (pl->type==TYP_COMMENT)
+			{
+				font_type = SMALL;
+				font_size = FSIZE_SMALL;
+				if (pl->underline==1)
+				{
+					coffs=clh;
+				}
+			}
+			RenderString(dstr, 46, my+soffs-(dy-font_size)/2-coffs+2, ixw-sbw-65, LEFT, font_type, (((loop%MAX_FUNCS) == (tind%MAX_FUNCS)) && (sbar) && (!nosel))?CMCST:(nosel)?CMCIT:CMCT);
 		}
 		if(pl->type==TYP_MENU)
 		{
-			RenderString(">", 30, my, 65, LEFT, MED, (((loop%MAX_FUNCS) == (tind%MAX_FUNCS)) && (sbar) && (!nosel))?CMCST:CMCT);
+			RenderString(">", 30, my+soffs-(dy-FSIZE_MED)/2+1, 65, LEFT, MED, (((loop%MAX_FUNCS) == (tind%MAX_FUNCS)) && (sbar) && (!nosel))?CMCST:CMCT);
 		}
 		if(pl->underline)
 		{
@@ -1447,21 +1506,18 @@ static void ShowInfo(MENU *m, int knew )
 			{
 				if(strlen(dstr)==0)
 				{
+					cloffs=dy/2;
 					if(pl->underline==2)
 					{
-						dy/=2;
-						cloffs=4*dy/3;
-					}
-					else
-					{
-						cloffs=dy/3;
+						dy/=2; // FIXME: these substraction causes space at bottom of painted box
+						cloffs+=dy/2;
 					}
 				}
 				else
 				{
 					if(pl->underline==2)
 					{
-						cloffs=dy/3;
+						cloffs=dy/2;
 						ccenter=1;
 					}
 				}
@@ -1470,45 +1526,34 @@ static void ShowInfo(MENU *m, int knew )
 			{
 				if(pl->underline==2)
 				{
-					dy+=dy/2;
+					dy+=dy/2; // FIXME: these addition causes text outside painted box
 					cloffs=-dy/4;
 				}
 			}
+			RenderBox(xoffs, my+soffs-cloffs-clh, ixw-xoffs-sbw, my+soffs-cloffs, 0, COL_MENUCONTENT_PLUS_3);
 			if(ccenter)
 			{
-				RenderBox(xoffs, my+soffs-cloffs+2, ixw-10-sbw, my+soffs-cloffs+3, 0, CMS);
-				RenderBox(xoffs, my+soffs-cloffs+1, ixw-10-sbw, my+soffs-cloffs+2, 0, CMCIT);
 				stlen=GetStringLen(xoffs, dstr, MED);
 				RenderBox(xoffs+(ixw-xoffs-sbw)/2-stlen/2, my+soffs-ldy, xoffs+(ixw-xoffs-sbw)/2+stlen/2+15, my+soffs, FILL, CMC);
-				RenderString(dstr, xoffs, my, ixw-sbw, CENTER, MED, CMCIT);
-			}
-			else
-			{
-				RenderBox(xoffs, my+soffs-cloffs+2, ixw-xoffs-sbw, my+soffs-cloffs+3, 0, CMS);
-				RenderBox(xoffs, my+soffs-cloffs+1, ixw-xoffs-sbw, my+soffs-cloffs+2, 0, CMCIT);
+				RenderString(dstr, xoffs, my+soffs-(dy-FSIZE_MED)/2, ixw-sbw, CENTER, MED, CMCIT);
 			}
 		}
 		if((pl->type!=TYP_COMMENT) && ((pl->type!=TYP_INACTIVE) || (pl->showalways==2)))
 		{
+			icon_w = icon_h = 0;
+			png_getsize(ICON_BUTTON_RED, &icon_w, &icon_h);
 			direct[dloop++]=(pl->type!=TYP_INACTIVE)?loop:-1;
 			switch(dloop)
 			{
-
-				case 1: RenderCircle(xoffs+1,my-15,RED);    break;
-				case 2: RenderCircle(xoffs+1,my-15,GREEN);  break;
-				case 3: RenderCircle(xoffs+1,my-15,YELLOW); break;
-				case 4: RenderCircle(xoffs+1,my-15,BLUE0);  break;
-/*
-				case 1: PaintIcon("/share/tuxbox/neutrino/icons/rot.raw",xoffs-2,my-15,1); break;
-				case 2: PaintIcon("/share/tuxbox/neutrino/icons/gruen.raw",xoffs-2,my-15,1); break;
-				case 3: PaintIcon("/share/tuxbox/neutrino/icons/gelb.raw",xoffs-2,my-15,1); break;
-				case 4: PaintIcon("/share/tuxbox/neutrino/icons/blau.raw",xoffs-2,my-15,1); break;
-*/
+				case 1: paintIcon(ICON_BUTTON_RED,    ioffs-icon_w/2, my+soffs-(dy+icon_h)/2, 0, 0, &iw, &ih); break;
+				case 2: paintIcon(ICON_BUTTON_GREEN,  ioffs-icon_w/2, my+soffs-(dy+icon_h)/2, 0, 0, &iw, &ih); break;
+				case 3: paintIcon(ICON_BUTTON_YELLOW, ioffs-icon_w/2, my+soffs-(dy+icon_h)/2, 0, 0, &iw, &ih); break;
+				case 4: paintIcon(ICON_BUTTON_BLUE,   ioffs-icon_w/2, my+soffs-(dy+icon_h)/2, 0, 0, &iw, &ih); break;
 				default:
 					if(dloop<15)
 					{
 						sprintf(tstr,"%1d",(dloop-4)%10);
-						RenderString(tstr, xoffs, my-1, 15, CENTER, SMALL, ((loop%MAX_FUNCS) == (tind%MAX_FUNCS))?CMCST:((pl->type==TYP_INACTIVE)?CMCIT:CMCT));
+						RenderString(tstr, xoffs, my+soffs-(dy-FSIZE_SMALL)/2+2, 15, CENTER, SMALL, ((loop%MAX_FUNCS) == (tind%MAX_FUNCS))?CMCST:((pl->type==TYP_INACTIVE)?CMCIT:CMCT));
 					}
 				break;
 			}
@@ -1649,6 +1694,17 @@ int main (int argc, char **argv)
 			rd[index]=(float)tv*2.55;
 	}
 
+	if(Read_Neutrino_Cfg("rounded_corners")>0) {
+		radius = 11;
+		radius_small = 7;
+	}
+	else
+		radius = radius_small = 0;
+
+	mtmo = Read_Neutrino_Cfg("timing.menu");
+	if (mtmo < 0)
+		mtmo = 0;
+
 	cindex=CMC;
 	for(index=COL_MENUCONTENT_PLUS_0; index<=COL_MENUCONTENT_PLUS_3; index++)
 	{
@@ -1658,8 +1714,23 @@ int main (int argc, char **argv)
 		tr[index]=tr[cindex];
 		cindex=index;
 	}
+	sprintf(trstr,"infobar_alpha");
+	if((tv=Read_Neutrino_Cfg(trstr))>=0)
+		tr[COL_SHADOW_PLUS_0]=255-(float)tv*2.55;
 
-	for (index = 0; index <= COL_MENUCONTENT_PLUS_3; index++)
+	sprintf(trstr,"infobar_blue");
+	if((tv=Read_Neutrino_Cfg(trstr))>=0)
+		bl[COL_SHADOW_PLUS_0]=(float)tv*2.55*0.4;
+
+	sprintf(trstr,"infobar_green");
+	if((tv=Read_Neutrino_Cfg(trstr))>=0)
+		gn[COL_SHADOW_PLUS_0]=(float)tv*2.55*0.4;
+
+	sprintf(trstr,"infobar_red");
+	if((tv=Read_Neutrino_Cfg(trstr))>=0)
+			rd[COL_SHADOW_PLUS_0]=(float)tv*2.55*0.4;
+
+	for (index = 0; index <= COL_SHADOW_PLUS_0; index++)
 		bgra[index] = (tr[index] << 24) | (rd[index] << 16) | (gn[index] << 8) | bl[index];
 
 	fb = open(FB_DEVICE, O_RDWR);
@@ -1691,11 +1762,7 @@ int main (int argc, char **argv)
 	var_screeninfo.xres = DEFAULT_XRES;
 	var_screeninfo.yres = DEFAULT_YRES;
 #endif
-#ifdef MARTII
-	if(!(lfb = (uint32_t*)mmap(0, fix_screeninfo.smem_len, PROT_READ | PROT_WRITE, MAP_SHARED, fb, 0)))
-#else
-	if(!(lfb = (unsigned char*)mmap(0, fix_screeninfo.smem_len, PROT_READ | PROT_WRITE, MAP_SHARED, fb, 0)))
-#endif
+	if(!(lfb = (uint32_t*)mmap(0, fix_screeninfo.smem_len, PROT_WRITE | PROT_READ, MAP_SHARED, fb, 0)))
 	{
 		perror(__plugin__ " <mapping of Framebuffer>\n");
 		return -1;
@@ -1759,23 +1826,13 @@ int main (int argc, char **argv)
 	use_kerning = FT_HAS_KERNING(face);
 	desc.flags = FT_LOAD_RENDER | FT_LOAD_FORCE_AUTOHINT;
 
-	if(Read_Neutrino_Cfg("rounded_corners")>0)
-		radius=9;
-	else
-		radius=0;
-
 	//init backbuffer
-
-#ifdef MARTII
 #if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 	lbb = lfb + 1920 * 1080;
 	fix_screeninfo.line_length = DEFAULT_XRES * sizeof(uint32_t);
 	stride = DEFAULT_XRES;
-# else
-	stride = fix_screeninfo.line_length/sizeof(uint32_t);
-# endif
 #else
-	if(!(lbb = malloc(fix_screeninfo.line_length*var_screeninfo.yres)))
+	if(!(lbb = malloc(var_screeninfo.xres*var_screeninfo.yres*sizeof(uint32_t))))
 	{
 		printf("%s <allocating of Backbuffer failed>\n", __plugin__);
 		FTC_Manager_Done(manager);
@@ -1783,23 +1840,25 @@ int main (int argc, char **argv)
 		munmap(lfb, fix_screeninfo.smem_len);
 		return -1;
 	}
+	stride = fix_screeninfo.line_length/sizeof(uint32_t);
 #endif
 
-//	lbb=lfb;
-#ifdef MARTII
+	//lbb=lfb;
 #if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 	FillRect(0, 0, DEFAULT_XRES, DEFAULT_YRES, 0);
-#else
-	memset(lbb, TRANSP, var_screeninfo.xres*var_screeninfo.yres*sizeof(uint32_t));
-#endif
 	blit();
 #else
-	memset(lbb, TRANSP, fix_screeninfo.line_length*var_screeninfo.yres);
-	memcpy(lfb, lbb, fix_screeninfo.line_length*var_screeninfo.yres);
+	memset(lbb, TRANSP, var_screeninfo.xres*var_screeninfo.yres*sizeof(uint32_t));
+	memcpy(lfb, lbb, var_screeninfo.xres*var_screeninfo.yres*sizeof(uint32_t));
+	//blit();
 #endif
 	startx = sx + (((ex-sx) - (fix_screeninfo.line_length-200))/2);
 	starty = sy + (((ey-sy) - (var_screeninfo.yres-150))/2);
 
+	signal(SIGINT, quit_signal);
+	signal(SIGTERM, quit_signal);
+	signal(SIGQUIT, quit_signal);
+	signal(SIGSEGV, quit_signal);
 
 	index=0;
 	if(vfd)
@@ -1819,9 +1878,6 @@ int main (int argc, char **argv)
 		return -1;
 	}
 	cindex=0;
-	signal(SIGINT, quit_signal);
-	signal(SIGTERM, quit_signal);
-	signal(SIGQUIT, quit_signal);
 
 	put_instance(instance=get_instance()+1);
 
@@ -1886,16 +1942,13 @@ int main (int argc, char **argv)
 								}
 								else
 								{
-#ifdef MARTII
 #if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 									FillRect(0, 0, DEFAULT_XRES, DEFAULT_YRES, 0);
-#else
-									memset(lbb, TRANSP, var_screeninfo.xres * var_screeninfo.yres * sizeof(uint32_t));
-#endif
 									blit();
 #else
-									memset(lbb, TRANSP, fix_screeninfo.line_length*var_screeninfo.yres);
-									memcpy(lfb, lbb, fix_screeninfo.line_length*var_screeninfo.yres);
+									memset(lbb, TRANSP, var_screeninfo.xres*var_screeninfo.yres*sizeof(uint32_t));
+									memcpy(lfb, lbb, var_screeninfo.xres*var_screeninfo.yres*sizeof(uint32_t));
+									//blit();
 #endif
 								}
 
@@ -1946,16 +1999,13 @@ int main (int argc, char **argv)
 	free(trstr);
 
 	// clear Display
-#ifdef MARTII
 #if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 	FillRect(0, 0, DEFAULT_XRES, DEFAULT_YRES, 0);
-#else
-	memset(lbb, TRANSP,var_screeninfo.xres*var_screeninfo.yres*sizeof(uint32_t));
-#endif
 	blit();
 #else
-	memset(lbb, TRANSP,fix_screeninfo.line_length*var_screeninfo.yres);
-	memcpy(lfb, lbb, fix_screeninfo.line_length*var_screeninfo.yres);
+	memset(lbb, TRANSP, var_screeninfo.xres*var_screeninfo.yres*sizeof(uint32_t));
+	memcpy(lfb, lbb, var_screeninfo.xres*var_screeninfo.yres*sizeof(uint32_t));
+	//blit();
 #endif
 	munmap(lfb, fix_screeninfo.smem_len);
 
