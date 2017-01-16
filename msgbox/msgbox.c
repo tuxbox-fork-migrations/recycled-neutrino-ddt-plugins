@@ -26,7 +26,7 @@
 
 #define FONT2 FONTDIR "/pakenham.ttf"
 // if font is not in usual place, we look here:
-char FONT[128]="/share/fonts/neutrino.ttf";
+char FONT[128] = FONTDIR "/neutrino.ttf";
 
 //						CMCST,   CMCS,  CMCT,    CMC,    CMCIT,  CMCI,   CMHT,   CMH
 //						WHITE,   BLUE0, TRANSP,  CMS,    ORANGE, GREEN,  YELLOW, RED
