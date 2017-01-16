@@ -4,7 +4,6 @@
 #ifdef MARTII
 #include <config.h>
 #endif
-
 #define _FILE_OFFSET_BITS 64
 #include <errno.h>
 #include <fcntl.h>
@@ -134,7 +133,12 @@ enum {
 	ORANGE,
 	GREEN,
 	YELLOW,
-	RED
+	RED,
+	COL_MENUCONTENT_PLUS_0,
+	COL_MENUCONTENT_PLUS_1,
+	COL_MENUCONTENT_PLUS_2,
+	COL_MENUCONTENT_PLUS_3,
+	COL_SHADOW_PLUS_0
 };
 #define TRANSP 0
 
@@ -149,6 +153,7 @@ int startx, starty, sx, ex, sy, ey;
 
 extern char *butmsg[3];
 extern int buttons,selection;
+extern const char sc[8], tc[8];
 
 #ifndef FB_DEVICE
 #define FB_DEVICE	"/dev/fb/0"

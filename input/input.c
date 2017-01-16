@@ -5,7 +5,6 @@
 
 #include "current.h"
 
-#include "input.h"
 #include "text.h"
 #include "io.h"
 #include "gfx.h"
@@ -13,25 +12,31 @@
 
 #define NCF_FILE CONFIGDIR "/neutrino.conf"
 #define BUFSIZE 	1024
-#define I_VERSION	1.08
+#define I_VERSION	2.0
 
 
-#define FONT FONTDIR "/neutrino.ttf"
+char FONT[128]="/share/fonts/neutrino.ttf";
 // if font is not in usual place, we look here:
 #define FONT2 FONTDIR "/pakenham.ttf"
 
-//					   CMCST,   CMCS,  CMCT,    CMC,    CMCIT,  CMCI,   CMHT,   CMH
-//					   WHITE,   BLUE0, TRANSP,  CMS,    ORANGE, GREEN,  YELLOW, RED
+//						CMCST,   CMCS,  CMCT,    CMC,    CMCIT,  CMCI,   CMHT,   CMH
+//						WHITE,   BLUE0, TRANSP,  CMS,    ORANGE, GREEN,  YELLOW, RED
+//						COL_MENUCONTENT_PLUS_0 - 3, COL_SHADOW_PLUS_0
 
 unsigned char bl[] = {	0x00, 	0x00, 	0xFF, 	0x80, 	0xFF, 	0x80, 	0x00, 	0x80,
-					    0xFF, 	0xFF, 	0x00, 	0xFF, 	0x00, 	0x00, 	0x00, 	0x00};
+						0xFF, 	0xFF, 	0x00, 	0xFF, 	0x00, 	0x00, 	0x00, 	0x00,
+						0x00,	0x00,	0x00,	0x00,	0x00};
 unsigned char gn[] = {	0x00, 	0x00, 	0xFF, 	0x00, 	0xFF, 	0x00, 	0xC0, 	0x00,
-					    0xFF, 	0x80, 	0x00, 	0x80, 	0xC0, 	0xFF, 	0xFF, 	0x00};
+						0xFF, 	0x80, 	0x00, 	0x80, 	0xC0, 	0xFF, 	0xFF, 	0x00,
+						0x00,	0x00,	0x00,	0x00,	0x00};
 unsigned char rd[] = {	0x00, 	0x00, 	0xFF, 	0x00, 	0xFF, 	0x00, 	0xFF, 	0x00,
-					    0xFF, 	0x00, 	0x00, 	0x00, 	0xFF, 	0x00, 	0xFF, 	0xFF};
+						0xFF, 	0x00, 	0x00, 	0x00, 	0xFF, 	0x00, 	0xFF, 	0xFF,
+						0x00,	0x00,	0x00,	0x00,	0x00};
 unsigned char tr[] = {	0xFF, 	0xFF, 	0xFF,  	0xA0,  	0xFF,  	0xA0,  	0xFF,  	0xFF,
-						0xFF, 	0xFF, 	0x00,  	0xFF,  	0xFF,  	0xFF,  	0xFF,  	0xFF};
-uint32_t bgra[20];
+						0xFF, 	0xFF, 	0x00,  	0xFF,  	0xFF,  	0xFF,  	0xFF,  	0xFF,
+						0x00,	0x00,	0x00,	0x00,	0x00};
+
+uint32_t bgra[22];
 
 void TrimString(char *strg);
 void closedown(void);
@@ -52,20 +57,14 @@ static char spres[][5]={"", "_crt", "_lcd"};
 char *line_buffer=NULL;
 
 // Misc
-char NOMEM[]="input <Out of memory>\n";
-char TMP_FILE[]="/tmp/input.tmp";
-#ifdef MARTII
+const char NOMEM[]="input <Out of memory>\n";
+const char TMP_FILE[]="/tmp/input.tmp";
 uint32_t *lfb = NULL, *lbb = NULL, *obb = NULL;
-char nstr[512]="",rstr[512]="";
-char *trstr;
-#else
-unsigned char *lfb = 0, *lbb = 0, *obb = 0;
-unsigned char nstr[512]="",rstr[512]="";
-unsigned char *trstr;
-unsigned char rc,sc[8]={'a','o','u','A','O','U','z','d'}, tc[8]={0xE4,0xF6,0xFC,0xC4,0xD6,0xDC,0xDF,0xB0};
-#endif
-int radius=10;
-
+char nstr[512]={0};
+char *trstr=NULL;
+const char sc[8]={'a','o','u','A','O','U','z','d'}, tc[8]={0xE4,0xF6,0xFC,0xC4,0xD6,0xDC,0xDF,0xB0};
+int radius;
+int stride;
 
 #if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 int sync_blitter = 0;
@@ -104,7 +103,6 @@ void blit(void) {
 	sync_blitter = 1;
 }
 #endif
-int stride;
 
 
 #ifdef MARTII
@@ -113,12 +111,20 @@ static void quit_signal(int sig __attribute__((unused)))
 static void quit_signal(int sig)
 #endif
 {
-	put_instance(get_instance()-1);
-#ifdef MARTII
-	fprintf(stderr, "input Version %.2f killed\n",I_VERSION);
-#else
-	printf("input Version %.2f killed\n",I_VERSION);
-#endif
+	char *txt=NULL;
+	switch (sig)
+	{
+		case SIGINT:  txt=strdup("SIGINT");  break;  // 2
+		case SIGQUIT: txt=strdup("SIGQUIT"); break;  // 3
+		case SIGSEGV: txt=strdup("SIGSEGV"); break;  // 11
+		case SIGTERM: txt=strdup("SIGTERM"); break;  // 15
+		default:
+			txt=strdup("UNKNOWN"); break;
+	}
+
+	printf("%s Version %.2f killed, signal %s(%d)\n", __plugin__, I_VERSION, txt, sig);
+	free(txt);
+	closedown();
 	exit(1);
 }
 
@@ -157,6 +163,11 @@ int rv=-1;
 					}
 				}
 			}
+			if((strncmp(entry, tstr, 10) == 0) && (strncmp(entry, "font_file=", 10) == 0))
+			{
+				sscanf(tstr, "font_file=%127s", FONT);
+				rv = 1;
+			}
 //			printf("%s\n%s=%s -> %d\n",tstr,entry,cfptr,rv);
 		}
 		fclose(nfh);
@@ -189,20 +200,11 @@ char *pt1=strg, *pt2=strg;
 	}
 }
 
-#ifdef MARTII
-int Transform_Msg(char **msg) {
-	size_t l = strlen(*msg);
-	char *t = (char *)alloca(l * 4 + 1);
-	memcpy(t, *msg, l + 1);
-	TranslateString(t, l * 4);
-	*msg = strdup(t);
-	return -1;
-}
-#else
 int Transform_Msg(char *msg)
 {
-int found=0,i;
-char *sptr=msg, *tptr=msg;
+	unsigned i;
+	int found=0;
+	char *sptr=msg, *tptr=msg, rc;
 
 	while(*sptr)
 	{
@@ -214,7 +216,7 @@ char *sptr=msg, *tptr=msg;
 		{
 			rc=*(sptr+1);
 			found=0;
-			for(i=0; i<sizeof(sc) && !found; i++)
+			for(i=0; i<sizeof(sc)/sizeof(sc[0]) && !found; i++)
 			{
 				if(rc==sc[i])
 				{
@@ -238,7 +240,6 @@ char *sptr=msg, *tptr=msg;
 	*tptr=0;
 	return strlen(msg);
 }
-#endif
 
 void ShowUsage(void)
 {
@@ -263,10 +264,10 @@ void ShowUsage(void)
 
 int main (int argc, char **argv)
 {
-int tv,cols=25,tmo=0,ix, spr;
-char ttl[]="Eingabe";
-int dloop=1,keys=0,frame=1,mask=0,bhelp=0;
-char *title=NULL, *format=NULL, *defstr=NULL, *aptr, *rptr;
+	int tv,cols=25,tmo=0,ix, spr;
+	const char ttl[]="Eingabe";
+	int dloop=1,keys=0,frame=1,mask=0,bhelp=0;
+	char rstr[512]={0}, *title=NULL, *format=NULL, *defstr=NULL, *aptr=NULL, *rptr=NULL;
 
 		if(argc==1)
 		{
@@ -284,33 +285,21 @@ char *title=NULL, *format=NULL, *defstr=NULL, *aptr, *rptr;
 				if(strstr(aptr,"l=")!=NULL)
 				{
 					format=rptr;
-#ifdef MARTII
-					dloop=Transform_Msg(&format)==0;
-#else
 					dloop=Transform_Msg(format)==0;
-#endif
 				}
 				else
 				{
 					if(strstr(aptr,"t=")!=NULL)
 					{
 						title=rptr;
-#ifdef MARTII
-						dloop=Transform_Msg(&title)==0;
-#else
 						dloop=Transform_Msg(title)==0;
-#endif
 					}
 					else
 					{
 						if(strstr(aptr,"d=")!=NULL)
 						{
 							defstr=rptr;
-#ifdef MARTII
-							dloop=Transform_Msg(&defstr)==0;
-#else
 							dloop=Transform_Msg(defstr)==0;
-#endif
 						}
 						else
 						{
@@ -400,7 +389,7 @@ char *title=NULL, *format=NULL, *defstr=NULL, *aptr, *rptr;
     	}
 		if(!title)
 		{
-			title=ttl;
+			title=strdup(ttl);
 		}
 
 		if((line_buffer=calloc(BUFSIZE+1, sizeof(char)))==NULL)
@@ -444,11 +433,38 @@ char *title=NULL, *format=NULL, *defstr=NULL, *aptr, *rptr;
 			if((tv=Read_Neutrino_Cfg(rstr))>=0)
 				rd[ix]=(float)tv*2.55;
 		}
-		for (ix = 0; ix <= RED; ix++)
+
+		int	cix=CMC;
+		for(ix=COL_MENUCONTENT_PLUS_0; ix<=COL_MENUCONTENT_PLUS_3; ix++)
+		{
+			rd[ix]=rd[cix]+25;
+			gn[ix]=gn[cix]+25;
+			bl[ix]=bl[cix]+25;
+			tr[ix]=tr[cix];
+			cix=ix;
+		}
+
+		sprintf(rstr,"infobar_alpha");
+		if((tv=Read_Neutrino_Cfg(rstr))>=0)
+			tr[COL_SHADOW_PLUS_0]=255-(float)tv*2.55;
+
+		sprintf(rstr,"infobar_blue");
+		if((tv=Read_Neutrino_Cfg(rstr))>=0)
+			bl[COL_SHADOW_PLUS_0]=(float)tv*2.55*0.4;
+
+		sprintf(rstr,"infobar_green");
+		if((tv=Read_Neutrino_Cfg(rstr))>=0)
+			gn[COL_SHADOW_PLUS_0]=(float)tv*2.55*0.4;
+
+		sprintf(rstr,"infobar_red");
+		if((tv=Read_Neutrino_Cfg(rstr))>=0)
+			rd[COL_SHADOW_PLUS_0]=(float)tv*2.55*0.4;
+
+		for (ix = 0; ix <= COL_SHADOW_PLUS_0; ix++)
 			bgra[ix] = (tr[ix] << 24) | (rd[ix] << 16) | (gn[ix] << 8) | bl[ix];
 
 		if(Read_Neutrino_Cfg("rounded_corners")>0)
-			radius=10;
+			radius=11;
 		else
 			radius = 0;
 
@@ -548,7 +564,7 @@ char *title=NULL, *format=NULL, *defstr=NULL, *aptr, *rptr;
 		fix_screeninfo.line_length = DEFAULT_XRES * sizeof(uint32_t);
 		stride = DEFAULT_XRES;
 #else
-		if(!(lbb = malloc(fix_screeninfo.line_length*var_screeninfo.yres)))
+		if(!(lbb = malloc(var_screeninfo.xres*var_screeninfo.yres*sizeof(uint32_t))))
 		{
 			perror(__plugin__ " <allocating of Backbuffer>\n");
 			FTC_Manager_Done(manager);
@@ -556,9 +572,10 @@ char *title=NULL, *format=NULL, *defstr=NULL, *aptr, *rptr;
 			munmap(lfb, fix_screeninfo.smem_len);
 			return -1;
 		}
+		stride = fix_screeninfo.line_length/sizeof(uint32_t);
 #endif
 
-		if(!(obb = malloc(fix_screeninfo.line_length*var_screeninfo.yres)))
+		if(!(obb = malloc(var_screeninfo.xres*var_screeninfo.yres*sizeof(uint32_t))))
 		{
 			perror(__plugin__ " <allocating of Backbuffer>\n");
 			FTC_Manager_Done(manager);
@@ -574,12 +591,13 @@ char *title=NULL, *format=NULL, *defstr=NULL, *aptr, *rptr;
 		memcpy(obb, lfb, var_screeninfo.xres*var_screeninfo.yres*sizeof(uint32_t));
 #endif
 
-		startx = sx /*+ (((ex-sx) - 620)/2)*/;
-		starty = sy /* + (((ey-sy) - 505)/2)*/;
+		startx = sx;
+		starty = sy;
 
 	signal(SIGINT, quit_signal);
 	signal(SIGQUIT, quit_signal);
 	signal(SIGTERM, quit_signal);
+	signal(SIGSEGV, quit_signal);
 
 	//main loop
 	put_instance(instance=get_instance()+1);

@@ -1,4 +1,3 @@
-
 AM_CPPFLAGS =  \
 	@FREETYPE_CFLAGS@ \
 	-I$(top_srcdir)/include
@@ -10,10 +9,15 @@ input_SOURCES = \
 	gfx.c \
 	io.c \
 	inputd.c \
-	text.c
+	text.c \
+	fb_display.c \
+	resize.c \
+	pngw.cpp \
+	png_helper.cpp
 
 input_LDADD = \
-	@FREETYPE_LIBS@
+	@FREETYPE_LIBS@ \
+	@PNG_LIBS@
 
 install-exec-local:
 	install -d $(DESTDIR)/bin

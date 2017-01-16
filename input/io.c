@@ -3,7 +3,6 @@
 #include <errno.h>
 #include <locale.h>
 #include <fcntl.h>
-#include <stdio.h>
 #include <ctype.h>
 #include <time.h>
 #include <stdlib.h>
@@ -22,10 +21,11 @@
 #include "io.h"
 
 extern int instance;
+extern int get_instance(void);
+extern int rcvalue;
 struct input_event ev;
 static unsigned short rccode=-1;
 static int rc;
-
 
 int InitRC(void)
 {
@@ -57,6 +57,7 @@ int RCKeyPressed(void)
 	{
 		if(ev.value)
 		{
+			rcvalue=ev.value;
 			rccode=ev.code;
 			return 1;
 		}
@@ -80,6 +81,11 @@ void ClearRC(void)
 int GetRCCode(int timeout_in_ms)
 {
 	int rv = -1;
+
+	if (get_instance()>instance)
+	{
+		return rv;
+	}
 
 	if (timeout_in_ms) {
 		struct pollfd pfd;
