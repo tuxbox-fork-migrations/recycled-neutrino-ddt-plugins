@@ -3079,7 +3079,7 @@ void read_neutrino_osd_conf(int *ex,int *sx,int *ey, int *sy)
 #endif
 {
 	const char *filename="/var/tuxbox/config/neutrino.conf";
-	const char spres[][5]={"","_crt","_lcd"};
+	const char spres[][7]={"","_crt_0","_lcd_0"};
 	char sstr[4][32];
 #ifdef MARTII
 	int pres=-1, loop, *sptr[4]={eX, sX, eY, sY};
