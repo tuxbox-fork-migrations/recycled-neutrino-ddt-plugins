@@ -338,7 +338,7 @@ int x,y;
    		x=cfx;
    		y=cfy;
    	}
-   
+   	
     unsigned int stride = fix.line_length;
 	
 	switch(cpp){
@@ -569,4 +569,3 @@ int showBusy(int sx, int sy, int width, char r, char g, char b)
 	}
 return 0;
 }
-// vim:ts=4

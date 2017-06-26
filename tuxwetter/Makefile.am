@@ -5,29 +5,31 @@ AM_CPPFLAGS = \
 	@PNG_CFLAGS@ \
 	-I$(top_srcdir)/include
 
-noinst_PROGRAMS = tuxwetter
-
-tuxwetter_SOURCES = \
-	tuxwetter.c \
-	fb_display.c \
-	gfx.c \
-	gif.c \
-	gifdecomp.c \
-	http.c \
-	io.c \
-	jpeg.c \
-	parser.c \
-	php.c \
-	pngw.c \
-	resize.c \
-	text.c
-
 tuxwetter_LDADD = \
 	@FREETYPE_LIBS@ \
 	@CURL_LIBS@ \
 	@PNG_LIBS@ \
+	-lcrypto \
+	-lssl \
 	-ljpeg \
 	-lgif
+
+noinst_PROGRAMS = tuxwetter
+
+tuxwetter_SOURCES = \
+	tuxwetter.c \
+	gfx.c \
+	io.c \
+	text.c \
+	parser.c \
+	php.c \
+	http.c \
+	jpeg.c \
+	fb_display.c \
+	resize.c \
+	pngw.c \
+	gif.c \
+	gifdecomp.c
 
 install-exec-local:
 	install -d $(DESTDIR)$(PLUGINDIR)

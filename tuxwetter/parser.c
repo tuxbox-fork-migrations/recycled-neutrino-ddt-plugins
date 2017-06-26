@@ -4,11 +4,11 @@
 *********************************************************************************************
 */
 //getline needed #define _GNU_SOURCE
-#define _GNU_SOURCE
-#include <ctype.h>
+//#define _GNU_SOURCE
+//#include <ctype.h>
 
 #include <curl/curl.h>
-#include <strings.h>
+//#include <strings.h>
 #include "tuxwetter.h"
 #include "parser.h"
 #include "http.h"
@@ -16,9 +16,8 @@
 /*
 Interne Variablen Bitte nicht direkt aufrufen!!!
 */
-
 #ifdef WWEATHER
-#	define MAXITEM	200
+#	define MAXITEM	1000
 #	define MAXMEM	300
 #else
 #	define MAXITEM	1000
@@ -28,6 +27,7 @@ char 	data		[MAXITEM][MAXMEM];
 char 	conveng		[500][40]; 
 char	convger		[500][40];
 int	prev_count =	0;
+int days_count =	0;
 char    null[2]=  	{0,0};
 int 	ptc=		0;
 int 	t_actday=	0;
@@ -35,10 +35,11 @@ int	t_actmonth=	0;
 int 	t_actyear=	0;
 const char mnames[12][10]={"Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"};
 char prstrans[512];
+extern int num_of_days;
 
 //**************************************** Preview Counter ********************************
 
-extern char CONVERT_LIST[];
+extern const char CONVERT_LIST[];
 extern void TrimString(char *strg);
 
 void prs_check_missing(char *entry)
@@ -72,7 +73,7 @@ FILE *fh;
 	}
 }
 
-char  *prs_translate(char *trans, char *tfile)
+char  *prs_translate(char *trans, const char *tfile)
 {
 char *sptr;
 int i,found=0;
@@ -111,6 +112,11 @@ FILE *fh;
 int prs_get_prev_count (void)
 {
 	return prev_count;
+}
+
+int prs_get_days_count(void)
+{
+	return days_count;
 }
 
 int prs_get_day (int i, char *out, int metric)
@@ -173,6 +179,8 @@ int prs_get_val (int i, int what, int nacht, char *out)
 int z;
 
 	strcpy(out,data[(what & ~TRANSLATION)+(i*PRE_STEP)+(nacht*NIGHT_STEP)]);
+	TrimString(out);
+
 	if(what & TRANSLATION)
 	{
 		for(z=0;z<=ptc;z++)
@@ -190,6 +198,31 @@ int z;
 	}
 	return (strlen(out)==0);
 }
+
+#ifdef WWEATHER
+int prs_get_val2 (int i, int what, int nacht, char *out)
+{
+	int z;
+
+	strcpy(out,data[(what & ~TRANSLATION)+(i*PRE_STEP2)+(nacht*NIGHT_STEP2)]);
+	if(what & TRANSLATION)
+	{
+		for(z=0;z<=ptc;z++)
+		{
+			if (strcasecmp(out,conveng[z])==0)
+			{
+				strcpy (out,convger[z]);
+				return 0;
+			}
+		}
+		if(sscanf(out,"%d",&z)!=1)
+		{
+			prs_check_missing(out);
+		}
+	}
+	return (strlen(out)==0);
+}
+#endif
 
 int prs_get_dbl (int i, int what, int nacht, char *out)
 {
@@ -296,7 +329,7 @@ int prs_get_dwday(int i, int what, char *out)
 
 //*** XML File ***
 
-int parser(char *citycode, char *trans, int metric, int inet, int ctmo)
+int parser(char *citycode, const char *trans, int metric, int inet, int ctmo)
 {
 	int  rec=0, flag=0;
 	int cc=0, bc=1, exit_ind=-1;
@@ -306,10 +339,9 @@ int parser(char *citycode, char *trans, int metric, int inet, int ctmo)
 	char debug[505];
 
 #ifdef WWEATHER
+	char tagname[512];
+	int getold=0, skip=1, tag=0, tcc=0;
 	extern char key[];
-	int d_flag=0;	//data flag ">DATA<"
-	int D_flag=0;	//data flag "[DATA]"
-	int l_flag=0;	//do not change to upper case (URL)
 #else
 	int day_data=PRE_DAY;
 	int previews=9;
@@ -319,6 +351,7 @@ int parser(char *citycode, char *trans, int metric, int inet, int ctmo)
 	memset(conveng,0,500*40); 
 	memset(convger,0,500*40);
 	prev_count=0;
+	days_count=0;
 	memset(null,0,2);
 	ptc=0;
 	t_actday=0;
@@ -329,7 +362,7 @@ int parser(char *citycode, char *trans, int metric, int inet, int ctmo)
 	exit_ind=system(url);
 	sleep(1);
 */
-	sprintf (url,"http://api.worldweatheronline.com/free/v1/weather.ashx?q=%s&format=xml&num_of_days=5&includeLocation=yes&key=%s",citycode,key);
+	sprintf (url,"http://api.wunderground.com/api/%s/geolookup/conditions/forecast10day/astronomy/lang:DL/pws:0/q/%s.json",key,citycode);
 	exit_ind=HTTP_downloadFile(url, "/tmp/tuxwettr.tmp", 0, inet, ctmo, 3);
 
 	if(exit_ind != 0)
@@ -348,17 +381,19 @@ int parser(char *citycode, char *trans, int metric, int inet, int ctmo)
 	}
 	else
 	{
+		fgets(debug,5,wxfile);
+		fgets(debug,5,wxfile);
 		fgets(debug,50,wxfile);
 	    	//printf("%s\n",debug);
-		if((debug[45] != 'r')||(debug[46] != 'e')||(debug[47] != 'q'))
+		if((debug[3] != 'r')||(debug[4] != 'e')||(debug[5] != 's'))
 		{
 			fclose(wxfile);
 			return exit_ind;
-		 }
-		else 
+		}
+		else
 		{
 			// starting position forcast
-			bc = NA; 
+			bc = NA;
 			strcpy(data[bc],"N/A");
 			bc++;
 
@@ -366,36 +401,80 @@ int parser(char *citycode, char *trans, int metric, int inet, int ctmo)
 			while (!feof(wxfile))
 			{
 				gettemp=fgetc(wxfile);
-				if (gettemp == '<' || gettemp == ']') rec = 0;
-				if (gettemp == ':') l_flag = 1;
-				if (rec == 1)
+				if(rec==0 && tag==0 && gettemp=='"')
 				{
-					if(!l_flag)
-						data[bc][cc] = toupper(gettemp);
-					else
-						data[bc][cc] = gettemp;
+					tag=1;
+				}
+				if(tag==1 && gettemp!='"' && gettemp!=':')
+				{
+					tagname[tcc]=gettemp;
+					tcc++;
+				}
+				if(getold=='"' && gettemp==':')
+				{
+					tagname[tcc]='\0';
+					tag=0;
+					rec=1;
+
+					if(!strcmp(tagname,"current_observation"))
+					{
+						skip=0;
+					}
+					else if(!strcmp(tagname,"error"))
+					{
+						return exit_ind;
+					}
+
+					getold=gettemp;
+					continue;
+				}
+
+				if(gettemp=='\n')
+				{
+					if(!strcmp(tagname,"")) {
+						continue;
+					}
+
+					//remove last ","
+					if(data[bc][cc-1]==',') {
+
+						cc--;
+					}
+
+					data[bc][cc]='\0';
+					//printf("[%s%d]%s = %s\n",(skip==1?"skip ":""),bc,tagname,data[bc]);
+
+					if(skip==1) {
+						data[bc][0]='\0';
+						tagname[0]='\0';
+					}
+					else {
+						tagname[0]='\0';
+						bc++;
+					}
+
+					rec=0;
+					cc=0;
+					tag=0;
+					tcc=0;
+				}
+
+				if(rec==1 && gettemp!='"')
+				{
+					if(getold==':' && gettemp==' ')
+						continue;
+
+					data[bc][cc]=gettemp;
 					//printf("#2 data[%d][%d] = %c(%d)\n",bc,cc,gettemp,gettemp);
 					cc++;
-					d_flag=1;
-					if(cc == MAXMEM-1) rec = 0;
-				}
-				if (gettemp == '>' || gettemp == '[') rec = 1;
-				if (gettemp == '[' && !D_flag)
-				{
-					rec = 0;
-					D_flag = 1;
-				}
-				if ((gettemp == '<' || gettemp == ']') && d_flag)
-				{
-					data[bc][cc] = '\0';
-					//printf("data[%d] = %s\n",bc,data[bc]);
-					bc++;
-					cc = 0;
-					rec = 0;
-					d_flag = 0;
-					D_flag = 0;
-					l_flag = 0;
-				}
+
+					if(cc==MAXMEM-1)
+					{
+						printf("data MAXMEM\n");
+						return exit_ind;
+					}
+ 				}
+				getold=gettemp;
 			}
 		}
 	}
@@ -404,9 +483,11 @@ int parser(char *citycode, char *trans, int metric, int inet, int ctmo)
 
 	exit_ind=1;
 #else
+/*	sprintf (url,"http://xoap.weather.com/weather/local/%s?cc=*&dayf=%d&prod=xoap&unit=%c&par=1005530704&key=a9c95f7636ad307b",citycode,previews,(metric)?'m':'u');
+	exit_ind=HTTP_downloadFile(url, "/tmp/tuxwettr.tmp", 0, inet, ctmo, 3);
+*/
 	sprintf (url,"wget -q -O /tmp/tuxwettr.tmp http://xoap.weather.com/weather/local/%s?unit=%c\\&dayf=%d\\&cc=*\\&prod=xoap\\&link=xoap\\&par=%s\\&key=%s",citycode,(metric)?'m':'u',previews,par,key);
 	exit_ind=system(url);
-
 	sleep(1);
 	if(exit_ind != 0)
 	{
@@ -459,34 +540,7 @@ int parser(char *citycode, char *trans, int metric, int inet, int ctmo)
 				{
 					bc++;
 					cc = 0;
-				int prs_get_dwday(int i, int what, char *out)
-{
-	int ret=1;
-	char *wday[] = {"SUNDAY","MONDAY","TUESDAY","WEDNESDAY","THURSDAY","FRIDAY","SATURDAY","???"};
-
-	struct tm ts;
-
-	*out=0;
-
-	if(sscanf(data[(what & ~TRANSLATION)+(i*PRE_STEP)],"%d-%d-%d",&t_actyear,&t_actmonth,&t_actday)==3)
-	{
-		ts.tm_year = t_actyear - 1900;
-		ts.tm_mon  = t_actmonth - 1;
-		ts.tm_mday = t_actday;
-
-		ts.tm_hour = 0;
-		ts.tm_min  = 0;
-		ts.tm_sec  = 1;
-		ts.tm_isdst = -1;
-
-		if ( mktime(&ts) == -1 )
-			ts.tm_wday = 7;
-
-		sprintf(out,"%s", wday[ts.tm_wday]);
-		ret=0;
-	}
-	return ret;
-}	rec = 0;
+					rec = 0;
 					flag=1;
 					prev_count++;
 				}
@@ -523,7 +577,7 @@ int parser(char *citycode, char *trans, int metric, int inet, int ctmo)
 
 	exit_ind=1;
 #endif
-	
+
 //*** Übersetzungs File ***
 	
 	if ((wxfile = fopen(trans,"r"))==NULL)

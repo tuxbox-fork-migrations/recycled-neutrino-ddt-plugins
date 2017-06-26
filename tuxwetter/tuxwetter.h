@@ -12,9 +12,9 @@
 #include <string.h>
 #include <unistd.h>
 #include <linux/fb.h>
-#if HAVE_DVB_API_VERSION == 3
-#include <linux/input.h>
-#endif
+//#if HAVE_DVB_API_VERSION == 3
+//#include <linux/input.h>
+//#endif
 #include <sys/ioctl.h>
 #include <sys/mman.h>
 #include <sys/socket.h>
@@ -34,9 +34,11 @@ extern int sync_blitter;
 #include FT_CACHE_H
 #include FT_CACHE_SMALL_BITMAPS_H
 
+#define MISS_FILE	CONFIGDIR "/missing_translations.txt"
+
+//#define WWEATHER
 #define BUFSIZE 	4095
 
-#define MISS_FILE	"/var/tuxbox/config/tuxwetter/missing_translations.txt"
 
 enum {LEFT, CENTER, RIGHT};
 
@@ -82,7 +84,7 @@ FT_Bool			use_kerning;
 #define KEY_HELP                138
 #define KEY_HOME                102
 #define KEY_EXIT				174
-#define KEY_SETUP               141
+#define KEY_MENU               	139
 #define KEY_PAGEUP              104
 #define KEY_PAGEDOWN            109
 #define KEY_OK           		0x160
@@ -143,13 +145,14 @@ extern int stride;
 extern unsigned char rd[],gn[],bl[],tr[];
 #endif
 
-int startx, starty, sx, ex, sy, ey, debounce, rblock;
+int startx, starty, sx, ex, sy, ey, preset, debounce, rblock;
 #ifndef MARTII
 extern unsigned sc[8], tc[8];
 #endif
 extern int instance;
 int get_instance(void);
 void put_instance(int pval);
+int PaintWideString(int dy, const char *string, int sx, int sy, int maxwidth, int layout, int size, int color);
 
 #ifndef FB_DEVICE
 #define FB_DEVICE	"/dev/fb/0"

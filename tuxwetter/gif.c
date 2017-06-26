@@ -36,6 +36,7 @@
 #define FH_ERROR_FORMAT 2	/* file format error */
 #define FH_ERROR_MALLOC 3	/* error during malloc */
 #define min(a,b) ((a) < (b) ? (a) : (b))
+
 #define gflush return(FH_ERROR_FILE);
 #define grflush { DGifCloseFile(gft, &err); return(FH_ERROR_FORMAT); }
 #define mgrflush { free(lb); free(slb); DGifCloseFile(gft, &err); return(FH_ERROR_FORMAT); }
@@ -68,7 +69,8 @@ inline void m_rend_gif_decodecolormap(unsigned char *cmb,unsigned char *rgbb,Col
 int fh_gif_load(const char *name,unsigned char *buffer,int x,int y)
 {
 	int err = 0;
-	int px,py,i,j,ibxs;
+	int px,py,i;
+	int j;
 	unsigned char *fbptr;
 	unsigned char *lb;
 	unsigned char *slb;
@@ -98,7 +100,6 @@ int fh_gif_load(const char *name,unsigned char *buffer,int x,int y)
 					cmap=(gft->Image.ColorMap ? gft->Image.ColorMap : gft->SColorMap);
 					cmaps=cmap->ColorCount;
 
-					ibxs=ibxs*3;
 					fbptr=buffer;
 					if(!(gft->Image.Interlace))
 					{
@@ -139,6 +140,7 @@ int fh_gif_load(const char *name,unsigned char *buffer,int x,int y)
 	DGifCloseFile(gft, &err);
 	return(FH_ERROR_OK);
 }
+
 int fh_gif_getsize(const char *name,int *x,int *y, int wanted_width, int wanted_height)
 {
 	int err = 0;
