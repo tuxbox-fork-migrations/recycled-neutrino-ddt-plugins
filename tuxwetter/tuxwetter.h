@@ -19,14 +19,12 @@
 #include <sys/mman.h>
 #include <sys/socket.h>
 #include <sys/un.h>
-#ifdef MARTII
 #include <stdint.h>
 #if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 #include <linux/stmfb.h>
 #define DEFAULT_XRES 1280
 #define DEFAULT_YRES 720
 extern int sync_blitter;
-#endif
 #endif
 
 #include <ft2build.h>
@@ -118,9 +116,34 @@ int fb;
 
 //framebuffer stuff
 
-enum {FILL, GRID};
+enum {
+	FILL,
+	GRID
+};
 
-enum {CMCST, CMCS, CMCT, CMC, CMCIT, CMCI, CMHT, CMH, WHITE, BLUE0, GTRANSP, CMS, ORANGE, GREEN, YELLOW, RED, CMCP0, CMCP1, CMCP2, CMCP3};
+enum {
+	CMCST,
+	CMCS,
+	CMCT,
+	CMC,
+	CMCIT,
+	CMCI,
+	CMHT,
+	CMH,
+	WHITE,
+	BLUE0,
+	GTRANSP,
+	CMS,
+	ORANGE,
+	GREEN,
+	YELLOW,
+	RED,
+	CMCP0,
+	CMCP1,
+	CMCP2,
+	CMCP3,
+	CSP0
+};
 #define TRANSP 0
 
 extern int FSIZE_BIG;
@@ -129,26 +152,15 @@ extern int FSIZE_SMALL;
 extern int FSIZE_VSMALL;
 extern int TABULATOR;
 
-#ifdef MARTII
-extern uint32_t *lfb, *lbb;
-extern char *proxyadress, *proxyuserpwd;
-#else
-extern unsigned char *lfb, *lbb;
-extern unsigned char *proxyadress, *proxyuserpwd;
-#endif
-struct fb_fix_screeninfo fix_screeninfo;
-struct fb_var_screeninfo var_screeninfo;
-#ifdef MARTII
 extern uint32_t bgra[];
 extern int stride;
-#else
-extern unsigned char rd[],gn[],bl[],tr[];
-#endif
+extern uint32_t *lfb, *lbb;
+
+extern char *proxyadress, *proxyuserpwd;
+struct fb_fix_screeninfo fix_screeninfo;
+struct fb_var_screeninfo var_screeninfo;
 
 int startx, starty, sx, ex, sy, ey, preset, debounce, rblock;
-#ifndef MARTII
-extern unsigned sc[8], tc[8];
-#endif
 extern int instance;
 int get_instance(void);
 void put_instance(int pval);

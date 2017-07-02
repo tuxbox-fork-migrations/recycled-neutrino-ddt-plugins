@@ -3,11 +3,12 @@
 #define __GFX_H__
 
 void Center_Screen(int wx, int wy, int *csx, int *csy);
-void RenderBox(int sx, int sy, int ex, int ey, int mode, int color);
-//void PaintIcon(char *filename, int x, int y, unsigned char offset);
+void RenderBox(int rsx, int rsy, int rex, int rey, int mode, int color);
+int paintIcon(const char *const fname, int xstart, int ystart, int xsize, int ysize, int *iw, int *ih);
+void scale_pic(unsigned char **buffer, int x1, int y1, int xstart, int ystart, int xsize, int ysize,
+			   int *imx, int *imy, int *dxp, int *dyp, int *dxo, int *dyo, int center, int alpha);
 
 void RenderLine( int xa, int ya, int xb, int yb, unsigned char farbe );
-void RenderCircle(int sx, int sy, int col);
 #ifdef MARTII
 void FillRect(int _sx, int _sy, int _dx, int _dy, uint32_t color);
 #endif

@@ -175,7 +175,7 @@ int i, err = 0;
 
 	   		switch (RecordType) {
 			case IMAGE_DESC_RECORD_TYPE:
-			FileEmpty = false;
+			FileEmpty = FALSE;
 			if (DGifGetImageDesc(GifFileIn) == GIF_ERROR)
 			    QuitGifError(GifFileIn, GifFileOut, err);
 		 	   /* Put same image descriptor to out file: */
@@ -197,7 +197,7 @@ int i, err = 0;
 				    QuitGifError(GifFileIn, GifFileOut, err);
 		    	break;
 			case EXTENSION_RECORD_TYPE:
-				FileEmpty = false;
+				FileEmpty = FALSE;
 		    		/* Skip any extension blocks in file: */
 		    		if (DGifGetExtension(GifFileIn, &ExtCode, &Extension)
 				    == GIF_ERROR)
@@ -261,18 +261,15 @@ int LoadImage(GifFileType *GifFile, GifRowType **ImageBufferPtr)
     /* Allocate the image as vector of column of rows. We cannt allocate     */
     /* the all screen at once, as this broken minded CPU can allocate up to  */
     /* 64k at a time and our image can be bigger than that:		     */
-    if ((ImageBuffer = (GifRowType *) malloc(GifFile->Image.Height * sizeof(GifRowType *))) == NULL) {
-	printf("Failed to allocate memory required, aborted.");
-	return GIF_ERROR;
-	}
+    if ((ImageBuffer = (GifRowType *)
+	malloc(GifFile->Image.Height * sizeof(GifRowType *))) == NULL)
+	    GIF_EXIT("Failed to allocate memory required, aborted.");
 
     Size = GifFile->Image.Width * sizeof(GifPixelType);/* One row size in bytes.*/
     for (i = 0; i < GifFile->Image.Height; i++) {
 	/* Allocate the rows: */
-	if ((ImageBuffer[i] = (GifRowType) malloc(Size)) == NULL) {
-		printf("Failed to allocate memory required, aborted.");
-		return GIF_ERROR;
-	}
+	if ((ImageBuffer[i] = (GifRowType) malloc(Size)) == NULL)
+	    GIF_EXIT("Failed to allocate memory required, aborted.");
     }
 
     *ImageBufferPtr = ImageBuffer;

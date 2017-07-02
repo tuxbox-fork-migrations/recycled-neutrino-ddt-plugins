@@ -15,10 +15,8 @@
 #include <sys/dir.h>
 #include <sys/stat.h>
 #include <linux/input.h>
-#ifdef MARTII
 #include <poll.h>
 #include <stdint.h>
-#endif
 
 #include "io.h"
 #include "tuxwetter.h"
@@ -33,7 +31,7 @@ static int rc;
 
 int InitRC(void)
 {
-	rc = open(RC_DEVICE, O_RDONLY);
+	rc = open(RC_DEVICE, O_RDONLY | O_CLOEXEC);
 #ifdef MARTII
 	if (rc < 0)
 		rc = open(RC_DEVICE_FALLBACK, O_RDONLY);
@@ -69,8 +67,6 @@ int RCKeyPressed(void)
 	return 0;
 }
 
-
-#ifdef MARTII
 void ClearRC(void)
 {
 	struct pollfd pfd;
@@ -83,9 +79,15 @@ void ClearRC(void)
 	while(read(rc, &ev, sizeof(ev)) == sizeof(ev));
 }
 
+
 int GetRCCode(int timeout_in_ms)
 {
 	int rv = -1;
+
+	if (get_instance()>instance)
+	{
+		return rv;
+	}
 
 	if (timeout_in_ms) {
 		struct pollfd pfd;
@@ -99,7 +101,7 @@ int GetRCCode(int timeout_in_ms)
 		gettimeofday( &tv, NULL );
 		ms_now = tv.tv_usec/1000 + tv.tv_sec * 1000;
 		if (timeout_in_ms > 0)
-		ms_final = ms_now + timeout_in_ms;
+			ms_final = ms_now + timeout_in_ms;
 		else
 			ms_final = UINT64_MAX;
 		while (ms_final > ms_now) {
@@ -128,20 +130,3 @@ int GetRCCode(int timeout_in_ms)
 	}
 	return rv;
 }
-#else
-int GetRCCode(void)
-{
-	int rv;
-	
-	if(!RCKeyPressed() || (get_instance()>instance))
-	{
-		return -1;
-	}
-	rv=rccode;
-	while(RCKeyPressed());
-	
-	return rv;
-}
-#endif
-
-
