@@ -8,11 +8,7 @@ tetris_LDFLAGS = -rpath $(PLUGINDIR) -R$(TARGET_PLUGINDIR)
 
 tetris_LDADD = -lfx2
 
-if !BOXTYPE_DREAMBOX
-
 tetris_LDFLAGS += @CURL_LIBS@
-
-endif
 
 install-exec-local:
 	install -d $(DESTDIR)$(PLUGINDIR)

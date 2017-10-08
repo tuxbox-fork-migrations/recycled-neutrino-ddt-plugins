@@ -1,54 +1,27 @@
 AC_INIT([tuxbox-plugins], [0.0.1])
 AM_INIT_AUTOMAKE
+m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES])
+AC_CONFIG_MACRO_DIR([m4])
+AC_GNU_SOURCE
 
 TUXBOX_APPS
 TUXBOX_APPS_DIRECTORY
-TUXBOX_APPS_PKGCONFIG
+TUXBOX_BOXTYPE
 
 AC_PROG_CC
 AC_PROG_CXX
+PKG_PROG_PKG_CONFIG
+## both disabled => libtool still defaults to static
+##                  at least the libtool I tested with ;-)
+## --enable-shared => build only shared
+## --enable-shared --enable-static => build both
 AC_DISABLE_STATIC
-AM_PROG_LIBTOOL
+AC_SYS_LARGEFILE
+AC_PROG_LIBTOOL
 
-TUXBOX_BOXTYPE
-
-if false; then
-if test "$BOXTYPE" != "tripledragon"; then
-# we neither have dvb headers nor driver sources nor the dbox capture api on TD ;)
-TUXBOX_APPS_DVB
-TUXBOX_APPS_DRIVER
-TUXBOX_APPS_CAPTURE
-fi
-fi
-
-# needed by enigma/movieplayer
-TUXBOX_APPS_LIB_PKGCONFIG(CURL,libcurl)
-
-# needed by tuxmail
-TUXBOX_APPS_LIB_PKGCONFIG(FREETYPE,freetype2)
-TUXBOX_APPS_LIB_PKGCONFIG(PNG,libpng)
-
-# needed by enigma-demo
-# TUXBOX_APPS_LIB_PKGCONFIG(SIGC,sigc++-1.2)
-if test "$BOXTYPE" = "dbox2"; then
-TUXBOX_APPS_LIB_PKGCONFIG(TUXBOX,tuxbox)
-fi
-
-# needed by enigma-demo
-# TUXBOX_APPS_LIB_PKGCONFIG(XMLTREE,tuxbox-xmltree)
-
-# needed by vncviewer
-# TUXBOX_APPS_LIB_PKGCONFIG(CONFIGFILE,tuxbox-configfile)
-
-# needed by sysinfo
-# TUXBOX_APPS_LIB_PKGCONFIG(MD5SUM,tuxbox-md5sum)
-# TUXBOX_APPS_LIB_PKGCONFIG(UCODES,tuxbox-ucodes)
-
-# needed by tuxtxt
-# TUXBOX_APPS_LIB_PKGCONFIG(TUXTXT,tuxbox-tuxtxt)
-
-# CPPFLAGS="$CPPFLAGS $TUXTXT_CFLAGS"
-# CFLAGS="$CFLAGS $TUXTXT_CFLAGS"
+PKG_CHECK_MODULES(CURL,libcurl)
+PKG_CHECK_MODULES(FREETYPE,freetype2)
+PKG_CHECK_MODULES(PNG,libpng)
 
 AC_OUTPUT([
 Makefile
