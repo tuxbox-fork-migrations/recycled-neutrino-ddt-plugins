@@ -37,7 +37,7 @@ static int sync_blitter = 0;
  * GetRCCode  (Code from Tuxmail)
  ******************************************************************************/
 
-#if defined HAVE_DBOX_HARDWARE || defined HAVE_COOL_HARDWARE || HAVE_TRIPLEDRAGON || HAVE_SPARK_HARDWARE || defined(HAVE_DUCKBOX_HARDWARE)
+#if defined HAVE_DBOX_HARDWARE || defined HAVE_COOL_HARDWARE || HAVE_TRIPLEDRAGON || HAVE_SPARK_HARDWARE || defined(HAVE_DUCKBOX_HARDWARE) || HAVE_ARM_HARDWARE
 int GetRCCode()
 {
 	static int count = 0;
@@ -301,34 +301,6 @@ int GetRCCode(int mode)
 }
 #endif
 
-#if 0
-int GetRCCode()
-{
-	static unsigned short LastKey = -1;
-	if (read(rc, &rccode, 2) == 2)
-	{
-		// fprintf(stderr, "rccode: %04x\n", rccode);
-		if (rccode != LastKey)
-		{
-			LastKey = rccode;
-			if ((rccode & 0xFF00) == 0x0000)
-				if (rccode < 0x23)
-				{
-					rccode = rccodes[rccode];
-					return 1;
-				}
-		}
-		rccode = -1;
-
-		return 0;
-	}
-
-	rccode = -1;
-	usleep(1000000/100);
-
-	return 0;
-}
-#endif
 
 /******************************************************************************
  * MyFaceRequester
@@ -1010,11 +982,11 @@ int main()
 	}
 
 	/* open Remote Control */
-#if HAVE_COOL_HARDWARE || HAVE_TRIPLEDRAGON || HAVE_SPARK_HARDWARE || defined(HAVE_DUCKBOX_HARDWARE)
+#if HAVE_COOL_HARDWARE || HAVE_TRIPLEDRAGON || HAVE_SPARK_HARDWARE || HAVE_DUCKBOX_HARDWARE || HAVE_ARM_HARDWARE
 	rc = open("/dev/input/nevis_ir", O_RDONLY);
-#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
+#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE) || defined(HAVE_ARM_HARDWARE)
 	if (rc < 0)
-#if HAVE_DUCKBOX_HARDWARE
+#if HAVE_DUCKBOX_HARDWARE || HAVE_ARM_HARDWARE
 		rc = open("/dev/input/event0", O_RDONLY);
 #else
 		rc = open("/dev/input/event1", O_RDONLY);
@@ -1235,12 +1207,7 @@ int main()
 	// lock keyboard-conversions, this is done by the plugin itself
 	fclose(fopen(KBLCKFILE,"w"));
 
-#if defined HAVE_DREAMBOX_HARDWARE || defined HAVE_IPBOX_HARDWARE
-//	fcntl(rc, F_SETFL, O_NONBLOCK);
-#endif
-#ifdef HAVE_DBOX_HARDWARE
-//	fcntl(rc, F_SETFL, fcntl(rc, F_GETFL) &~ O_NONBLOCK);
-#endif
+	//	fcntl(rc, F_SETFL, fcntl(rc, F_GETFL) &~ O_NONBLOCK);
 
 	int dosave = autosave;
 	int firstentry = 1;

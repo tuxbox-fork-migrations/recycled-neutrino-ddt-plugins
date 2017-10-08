@@ -50,13 +50,6 @@
 #define FB_DEVICE_FALLBACK	"/dev/fb0"
 #endif
 
-#if 0
-#include <dbox/avs_core.h>
-#include <dbox/saa7126_core.h>
-#define AVS "/dev/dbox/avs0"
-#define SAA "/dev/dbox/saa0"
-#endif
-
 #include <netinet/in.h>
 #include <netdb.h>
 #include <sys/socket.h>
@@ -68,9 +61,7 @@
 #include FT_CACHE_SMALL_BITMAPS_H
 
 
-#if HAVE_COOL_HARDWARE || HAVE_TRIPLEDRAGON || HAVE_SPARK_HARDWARE || defined(HAVE_DUCKBOX_HARDWARE)
 #include <linux/input.h>
-#endif
 
 #define MENUROWS      10
 #define MENUITEMS     10
@@ -93,87 +84,6 @@ static const char *charset = " abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVW
 #define MSG_VERSION    "Tuxbox Commander Version 1.17-hd"
 #define MSG_COPYRIGHT  "© dbluelle 2004-2007"
 
-#if defined HAVE_DREAMBOX_HARDWARE || defined HAVE_IPBOX_HARDWARE
-//rc codes
-#define KEY_0		0x5C00
-#define KEY_1		0x5C01
-#define KEY_2		0x5C02
-#define KEY_3		0x5C03
-#define KEY_4		0x5C04
-#define KEY_5		0x5C05
-#define KEY_6		0x5C06
-#define KEY_7		0x5C07
-#define KEY_8		0x5C08
-#define KEY_9		0x5C09
-#define KEY_POWER	0x5C0C
-#define KEY_UP		0x5C0E
-#define KEY_DOWN	0x5C0F
-#define KEY_VOLUMEUP	0x5C16
-#define KEY_VOLUMEDOWN	0x5C17
-#define KEY_HOME	0x5C20
-#define KEY_SETUP	0x5C27
-#define KEY_MUTE	0x5C28
-#define KEY_RED		0x5C2D
-#define KEY_RIGHT	0x5C2E
-#define KEY_LEFT	0x5C2F
-#define KEY_OK		0x5C30
-#define KEY_BLUE	0x5C3B
-#define KEY_YELLOW	0x5C52
-#define KEY_GREEN	0x5C55
-#define KEY_HELP	0x5C82
-#endif
-
-#if 0
-// HAVE_TRIPLEDRAGON
-#define	RC_0		0x00
-#define	RC_1		0x01
-#define	RC_2		0x02
-#define	RC_3		0x03
-#define	RC_4		0x04
-#define	RC_5		0x05
-#define	RC_6		0x06
-#define	RC_7		0x07
-#define	RC_8		0x08
-#define	RC_9		0x09
-#define	RC_RIGHT	0x0A
-#define	RC_LEFT		0x0B
-#define	RC_UP		0x0C
-#define	RC_DOWN		0x0D
-#define	RC_OK		0x0E
-#define	RC_MUTE		0x0F
-#define	RC_STANDBY	0x10
-#define	RC_GREEN	0x11
-#define	RC_YELLOW	0x12
-#define	RC_RED		0x13
-#define	RC_BLUE		0x14
-#define	RC_PLUS		0x15
-#define	RC_MINUS	0x16
-#define	RC_HELP		0x17
-#define	RC_DBOX		0x18
-#define	RC_HOME		0x1F
-
-#define RC_PAGEUP	RC_LEFT
-#define RC_PAGEDOWN	RC_RIGHT
-/* translate from TD rc code to the above defines */
-static const signed char rccodes[0x23] =
-	{ -1,
-			RC_STANDBY,
-	RC_1,	RC_2,	RC_3,
-	RC_4,	RC_5,	RC_6,	-1,
-	RC_7,	RC_8,	RC_9,	-1,
-	-1,	RC_0,	-1,	-1,
-		RC_MUTE,
-	RC_DBOX, -1, RC_HELP, RC_HOME,
-	   RC_PAGEDOWN, RC_PAGEUP,
-		   RC_UP,
-	  RC_LEFT, RC_OK, RC_RIGHT,
-		   RC_DOWN,
-	    RC_MINUS,	    RC_PLUS,
-	RC_RED,RC_GREEN,RC_YELLOW,RC_BLUE };
-#endif
-
-
-#if defined HAVE_DBOX_HARDWARE || defined HAVE_COOL_HARDWARE || HAVE_TRIPLEDRAGON || HAVE_SPARK_HARDWARE || defined(HAVE_DUCKBOX_HARDWARE)
 // rc codes
 #define	RC_0			'0'
 #define	RC_1			'1'
@@ -282,7 +192,6 @@ int rcaltgrtable[] =
 #define KBC_PAGEUP	0x0B
 #define KBC_PAGEDOWN	0x0C
 #define KBC_RETURN	0x0D
-#endif
 
 #define KBLCKFILE "/tmp/keyboard.lck"										//! file to lock keyboard-conversion
 
@@ -402,10 +311,6 @@ char szTextSearchstring[FILENAME_MAX];
 char szPass[20];
 long commandsize;
 
-#ifdef HAVE_DBOX_HARDWARE
-int fncmodes[] = {AVS_FNCOUT_EXT43, AVS_FNCOUT_EXT169};
-int saamodes[] = {SAA_WSS_43F, SAA_WSS_169F};
-#endif
 
 FILE *conf;
 int language, langselect, autosave, filesize_in_byte;
