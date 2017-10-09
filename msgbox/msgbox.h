@@ -1,9 +1,9 @@
 #ifndef __MSGBOX_H__
 #define __MSGBOX_H__
 
-#ifdef MARTII
+
 #include <config.h>
-#endif
+
 #define _FILE_OFFSET_BITS 64
 #include <errno.h>
 #include <fcntl.h>
@@ -146,6 +146,7 @@ enum {
 extern int FSIZE_BIG;
 extern int FSIZE_MED;
 extern int FSIZE_SMALL;
+
 extern int TABULATOR;
 
 extern uint32_t *lfb, *lbb, *obb, *hbb;
