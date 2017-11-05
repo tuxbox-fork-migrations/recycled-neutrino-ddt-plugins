@@ -17,7 +17,7 @@
 	typeof (b) __b = (b); \
 	__a > __b ? __a : __b; })
 
-#define M_VERSION 2.0
+#define M_VERSION 2.12
 
 #define NCF_FILE CONFIGDIR "/neutrino.conf"
 #ifndef MARTII
@@ -60,12 +60,12 @@ static char menucoltxt[][25]={
 	"Head_Text",
 	"Head"
 };
-static char spres[][5]={"","_crt","_lcd"};
+static char spres[][4]={"","crt","lcd"};
 
 char *line_buffer=NULL, *title=NULL, *icon=NULL;
 int size=24, type=0, timeout=0, refresh=3, flash=0, selection=0, tbuttons=0, buttons=0, bpline=3, echo=0, absolute=0, mute=1, header=1, cyclic=1;
-char *butmsg[16]={0};
-int rbutt[16],hide=0,radius=0, radius_small=0;
+char *butmsg[MAX_BUTTONS]={0};
+int rbutt[MAX_BUTTONS],hide=0,radius=0, radius_small=0;
 
 // Misc
 const char NOMEM[]="MsgBox <Out of memory>\n";
@@ -178,7 +178,7 @@ static void quit_signal(int sig)
 int Read_Neutrino_Cfg(char *entry)
 {
 	FILE *nfh;
-	char tstr [512], *cfptr=NULL;
+	char tstr [512]={0}, *cfptr=NULL;
 	int rv=-1;
 
 	if((nfh=fopen(NCF_FILE,"r"))!=NULL)
@@ -220,6 +220,14 @@ int Read_Neutrino_Cfg(char *entry)
 		fclose(nfh);
 	}
 	return rv;
+}
+
+int scale2res(int s)
+{
+	if (var_screeninfo.xres == 1920)
+		s += s/2;
+
+	return s;
 }
 
 void TrimString(char *strg)
@@ -293,18 +301,18 @@ int GetSelection(char *sptr)
 	return rv;
 }
 
-static int yo=80,dy;
 #if HAVE_SPARK_HARDWARE || HAVE_DUCKBOX_HARDWARE
 int psx;
-static int psy, pxw, pyw, myo=0, buttx=80, butty=30, buttdx=20, buttdy=10, buttsize=0, buttxstart=0, buttystart=0;
+static int dy, psy, pxw, pyw, myo=0, buttsize=0, buttxstart=0, buttystart=0;
 #else
-static int psx, psy, pxw, pyw, myo=0, buttx=80, butty=30, buttdx=20, buttdy=10, buttsize=0, buttxstart=0, buttystart=0;
+static int dy, psx, psy, pxw, pyw, myo=0, buttsize=0, buttxstart=0, buttystart=0;
 #endif
 
 int show_txt(int buttonly)
 {
 	FILE *tfh;
 	char const *fname=NULL;
+	int yo=scale2res(80), buttx=scale2res(80), butty=scale2res(30), buttdx=scale2res(20), buttdy=scale2res(10);
 	int icon_w=0, icon_h=0, xsize=0, ysize=0;
 	int i,bx,by,x1,y1,rv=-1,run=1,line=0,action=1,cut,itmp,btns=buttons,lbtns=(buttons>bpline)?bpline:buttons,blines=1+((btns-1)/lbtns);
 
@@ -345,6 +353,8 @@ int show_txt(int buttonly)
 	if((tfh=fopen(TMP_FILE,"r"))!=NULL)
 	{
 		fclose(tfh);
+		int fsizebut = scale2res(26);
+
 		if(!buttonly)
 		{
 			if(type!=1)
@@ -353,13 +363,13 @@ int show_txt(int buttonly)
 				myo=0;
 			}	
 		
-			pxw=GetStringLen(sx,title,FSIZE_BIG)+10;
+			pxw=GetStringLen(sx,title,FSIZE_BIG)+OFFSET_MED;
 			if(type==1)
 			{
 				myo=blines*(butty+buttdy);
 				for(i=0; i<btns; i++)
 				{
-					itmp=GetStringLen(sx,butmsg[i], 26)+10;
+					itmp=GetStringLen(sx,butmsg[i],fsizebut)+OFFSET_MED;
 					if(itmp>buttx)
 					{
 						buttx=itmp;
@@ -373,7 +383,7 @@ int show_txt(int buttonly)
 				printf(__plugin__ " <invalid Text-Format>\n");
 				return -1;
 			}
-			x1+=10;
+			x1+=OFFSET_MED;
 
 			dy=size;
 			if(pxw<x1)
@@ -398,7 +408,7 @@ int show_txt(int buttonly)
 			if(btns)
 			{
 				buttxstart=psx+pxw/2-(((double)lbtns*(double)buttsize+(((lbtns>2)&&(lbtns&1))?((double)buttdx):0.0))/2.0);
-				buttystart=psy+y1*dy+20;
+				buttystart=psy+y1*dy+2*OFFSET_MED;
 			}
 		}
 
@@ -410,17 +420,17 @@ int show_txt(int buttonly)
 				if(!buttonly)
 				{
 					int iw, ih, pxoffs = 0;
-					int slen = GetStringLen(sx, title, FSIZE_BIG)+20;
-					if (icon_w > 0 && (psx+pxw-20-slen <= psx-10+icon_w+10))
+					int slen = GetStringLen(sx, title, FSIZE_BIG)+2*OFFSET_MED;
+					if (icon_w > 0 && (psx+pxw-2*OFFSET_MED-slen <= psx-OFFSET_MED+icon_w+OFFSET_MED))
 						pxoffs = (icon_w)/2;
-					RenderBox(psx-20-pxoffs+6, psy-yo-h_head/3-6, psx+pxw+pxoffs+26, psy+pyw+myo+(h_head/3)+16, radius, COL_SHADOW_PLUS_0);
-					RenderBox(psx-20-pxoffs, psy-yo-h_head/3-10, psx+pxw+pxoffs+20, psy+pyw+myo+(h_head/3)+10, radius, CMC);
+					RenderBox(psx-2*OFFSET_MED-pxoffs+OFFSET_SMALL, psy-yo-h_head/3-OFFSET_SMALL, psx+pxw+pxoffs+2*OFFSET_MED+OFFSET_SMALL, psy+pyw+myo+(h_head/3)+OFFSET_MED+OFFSET_SMALL, radius, COL_SHADOW_PLUS_0);
+					RenderBox(psx-2*OFFSET_MED-pxoffs, psy-yo-h_head/3-OFFSET_MED, psx+pxw+pxoffs+2*OFFSET_MED, psy+pyw+myo+(h_head/3)+OFFSET_MED, radius, CMC);
 					if(header)
 					{
 						int pyoffs=(icon_h < h_head)?1:0;
-						RenderBox(psx-20-pxoffs, psy-yo-h_head/3-10, psx+pxw+pxoffs+20, psy-yo+(h_head*2)/3-10, radius, CMH);
-						paintIcon(fname,  psx-10-pxoffs, psy-yo-h_head/3+h_head/2-icon_h/2+pyoffs-10, xsize, ysize, &iw, &ih);
-						RenderString(title, psx+pxoffs, psy-moffs-10, pxw, CENTER, FSIZE_BIG, CMHT);
+						RenderBox(psx-2*OFFSET_MED-pxoffs, psy-yo-h_head/3-OFFSET_MED, psx+pxw+pxoffs+2*OFFSET_MED, psy-yo+(h_head*2)/3-OFFSET_MED, radius, CMH);
+						paintIcon(fname,  psx-OFFSET_MED-pxoffs, psy-yo-h_head/3+h_head/2-icon_h/2+pyoffs-OFFSET_MED, xsize, ysize, &iw, &ih);
+						RenderString(title, psx+pxoffs, psy-moffs-OFFSET_MED, pxw, CENTER, FSIZE_BIG, CMHT);
 					}
 				}
 				if(buttonly || !(rv=fh_txt_load(TMP_FILE, psx, pxw, psy+size, dy, size, line, &cut)))
@@ -431,10 +441,10 @@ int show_txt(int buttonly)
 						{
 							bx=i%lbtns;
 							by=i/lbtns;
-							RenderBox(buttxstart+bx*(buttsize+buttdx/2)+4, buttystart+by*(butty+buttdy/2)+4, buttxstart+(bx+1)*buttsize+bx*(buttdx/2)+4, buttystart+by*(butty+buttdy/2)+butty+4, radius_small, COL_SHADOW_PLUS_0);
+							RenderBox(buttxstart+bx*(buttsize+buttdx/2)+OFFSET_SMALL/2, buttystart+by*(butty+buttdy/2)+OFFSET_SMALL/2, buttxstart+(bx+1)*buttsize+bx*(buttdx/2)+OFFSET_SMALL/2, buttystart+by*(butty+buttdy/2)+butty+OFFSET_SMALL/2, radius_small, COL_SHADOW_PLUS_0);
 							RenderBox(buttxstart+bx*(buttsize+buttdx/2), buttystart+by*(butty+buttdy/2), buttxstart+(bx+1)*buttsize+bx*(buttdx/2), buttystart+by*(butty+buttdy/2)+butty, radius_small, CMCS/*YELLOW*/);
 							RenderBox(buttxstart+bx*(buttsize+buttdx/2)+1, buttystart+by*(butty+buttdy/2)+1, buttxstart+(bx+1)*buttsize+bx*(buttdx/2)-1, buttystart+by*(butty+buttdy/2)+butty-1, radius_small, ((by*bpline+bx)==(selection-1))?CMCS:CMC);
-							RenderString(butmsg[i], buttxstart+bx*(buttsize+buttdx/2), buttystart+by*(butty+buttdy/2)+butty, buttsize, CENTER, 26, (i==(selection-1))?CMCST:CMCIT);
+							RenderString(butmsg[i], buttxstart+bx*(buttsize+buttdx/2), buttystart+by*(butty+buttdy/2)+butty, buttsize, CENTER, fsizebut, (i==(selection-1))?CMCST:CMCIT);
 						}
 					}
 #if HAVE_SPARK_HARDWARE || HAVE_DUCKBOX_HARDWARE
@@ -528,7 +538,7 @@ void ShowUsage(void)
 	printf("    timeout=nn            : set autoclose-timeout\n");
 	printf("    icon=n                : n=none(0), error(1), info(2) or /path/my.png (default: \"info\")\n");
 	printf("    refresh=n             : n=1..3, see readme.txt\n");
-	printf("    select=\"Button1,..\"   : Labels of up to 16 Buttons, see readme.txt\n");
+	printf("    select=\"Button1,..\"   : Labels of up to 24 Buttons, see readme.txt\n");
 	printf("    absolute=n            : n=0/1 return relative/absolute button number (default: 0)\n");
 	printf("    order=n               : maximal buttons per line (default: 3)\n");
 	printf("    default=n             : n=1..buttons, initially selected button, see readme.txt\n");
@@ -543,7 +553,7 @@ void ShowUsage(void)
 
 int main (int argc, char **argv)
 {
-int ix,tv,found=0, spr;
+int ix,tv,found=0, spr, resolution;
 int dloop=1, rcc=-1;
 char rstr[BUFSIZE]={0}, *rptr=NULL, *aptr=NULL;
 time_t tm1,tm2;
@@ -556,6 +566,39 @@ FILE *fh;
 			ShowUsage();
 			return 0;
 		}
+
+		//init framebuffer before 1st scale2res
+		fb = open(FB_DEVICE, O_RDWR);
+#if HAVE_SPARK_HARDWARE || HAVE_DUCKBOX_HARDWARE
+		if (fb < 0)
+			fb = open(FB_DEVICE_FALLBACK, O_RDWR);
+#endif
+		if(fb == -1)
+		{
+			perror(__plugin__ " <open framebuffer device>");
+			exit(1);
+		}
+		if(ioctl(fb, FBIOGET_FSCREENINFO, &fix_screeninfo) == -1)
+		{
+			perror(__plugin__ " <FBIOGET_FSCREENINFO>\n");
+			return -1;
+		}
+		if(ioctl(fb, FBIOGET_VSCREENINFO, &var_screeninfo) == -1)
+		{
+			perror(__plugin__ " <FBIOGET_VSCREENINFO>\n");
+			return -1;
+		}
+#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
+		var_screeninfo.xres = DEFAULT_XRES;
+		var_screeninfo.yres = DEFAULT_YRES;
+#endif
+
+		if(!(lfb = (uint32_t*)mmap(0, fix_screeninfo.smem_len, PROT_READ | PROT_WRITE, MAP_SHARED, fb, 0)))
+		{
+			perror(__plugin__ " <mapping of Framebuffer>\n");
+			return -1;
+		}
+
 		dloop=0;
 		for(tv=1; !dloop && tv<argc; tv++)
 		{
@@ -733,7 +776,7 @@ FILE *fh;
 			}
 		}
 
-		FSIZE_BIG=(FSIZE_MED*5)/4;
+		FSIZE_BIG=(float)FSIZE_MED*1.25;
 		FSIZE_SMALL=(FSIZE_MED*4)/5;
 		TABULATOR=2*FSIZE_MED;
 		size=FSIZE_MED;
@@ -797,21 +840,35 @@ FILE *fh;
 		}
 	
 		spr=Read_Neutrino_Cfg("screen_preset")+1;
-		sprintf(line_buffer,"screen_StartX%s",spres[spr]);
+		resolution=Read_Neutrino_Cfg("osd_resolution");
+
+		if (resolution == -1)
+			sprintf(line_buffer,"screen_StartX_%s", spres[spr]);
+		else
+			sprintf(line_buffer,"screen_StartX_%s_%d", spres[spr], resolution);
 		if((sx=Read_Neutrino_Cfg(line_buffer))<0)
-			sx=100;
+			sx=scale2res(100);
 
-		sprintf(line_buffer,"screen_EndX%s",spres[spr]);
+		if (resolution == -1)
+			sprintf(line_buffer,"screen_EndX_%s", spres[spr]);
+		else
+			sprintf(line_buffer,"screen_EndX_%s_%d", spres[spr], resolution);
 		if((ex=Read_Neutrino_Cfg(line_buffer))<0)
-			ex=1180;
+			ex=scale2res(1180);
 
-		sprintf(line_buffer,"screen_StartY%s",spres[spr]);
+		if (resolution == -1)
+			sprintf(line_buffer,"screen_StartY_%s", spres[spr]);
+		else
+			sprintf(line_buffer,"screen_StartY_%s_%d", spres[spr], resolution);
 		if((sy=Read_Neutrino_Cfg(line_buffer))<0)
-			sy=100;
+			sy=scale2res(100);
 
-		sprintf(line_buffer,"screen_EndY%s",spres[spr]);
+		if (resolution == -1)
+			sprintf(line_buffer,"screen_EndY_%s", spres[spr]);
+		else
+			sprintf(line_buffer,"screen_EndY_%s_%d", spres[spr], resolution);
 		if((ey=Read_Neutrino_Cfg(line_buffer))<0)
-			ey=620;
+			ey=scale2res(620);
 
 		for(ix=CMCST; ix<=CMH; ix++)
 		{
@@ -863,51 +920,17 @@ FILE *fh;
 
 		if(Read_Neutrino_Cfg("rounded_corners")>0)
 		{
-			radius = 11;
-			radius_small = 7;
+			radius = scale2res(11);
+			radius_small = scale2res(5);
 		}
 		else
 			radius = radius_small = 0;
-
-		fb = open(FB_DEVICE, O_RDWR);
-#if HAVE_SPARK_HARDWARE || HAVE_DUCKBOX_HARDWARE
-		if (fb < 0)
-			fb = open(FB_DEVICE_FALLBACK, O_RDWR);
-#endif
-		if(fb == -1)
-		{
-			perror(__plugin__ " <open framebuffer device>");
-			exit(1);
-		}
 
 		InitRC();
 		
 		if((trstr=malloc(BUFSIZE))==NULL)
 		{
 			printf(NOMEM);
-			return -1;
-		}
-
-	//init framebuffer
-
-		if(ioctl(fb, FBIOGET_FSCREENINFO, &fix_screeninfo) == -1)
-		{
-			perror(__plugin__ " <FBIOGET_FSCREENINFO>\n");
-			return -1;
-		}
-		if(ioctl(fb, FBIOGET_VSCREENINFO, &var_screeninfo) == -1)
-		{
-			perror(__plugin__ " <FBIOGET_VSCREENINFO>\n");
-			return -1;
-		}
-
-#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
-		var_screeninfo.xres = DEFAULT_XRES;
-		var_screeninfo.yres = DEFAULT_YRES;
-#endif
-		if(!(lfb = (uint32_t*)mmap(0, fix_screeninfo.smem_len, PROT_READ | PROT_WRITE, MAP_SHARED, fb, 0)))
-		{
-			perror(__plugin__ " <mapping of Framebuffer>\n");
 			return -1;
 		}
 		
@@ -958,13 +981,16 @@ FILE *fh;
 
 		desc.flags = FT_LOAD_RENDER | FT_LOAD_FORCE_AUTOHINT;
 
-	//init backbuffer
-
+		//init backbuffer
 #if HAVE_SPARK_HARDWARE || HAVE_DUCKBOX_HARDWARE
 		lbb = lfb + 1920 * 1080;
 		fix_screeninfo.line_length = DEFAULT_XRES * sizeof(uint32_t);
 		stride = DEFAULT_XRES;
 #else
+		stride = fix_screeninfo.line_length/sizeof(uint32_t);
+		if(stride == 7680 && var_screeninfo.xres == 1280) {
+			var_screeninfo.yres = 1080;
+		}
 		if(!(lbb = malloc(var_screeninfo.xres*var_screeninfo.yres*sizeof(uint32_t))))
 		{
 			perror(__plugin__ " <allocating of Backbuffer>\n");
@@ -973,9 +999,7 @@ FILE *fh;
 			munmap(lfb, fix_screeninfo.smem_len);
 			return -1;
 		}
-		stride = fix_screeninfo.line_length/sizeof(uint32_t);
 #endif
-
 		if(!(obb = malloc(var_screeninfo.xres*var_screeninfo.yres*sizeof(uint32_t))))
 		{
 			perror(__plugin__ " <allocating of Backbuffer>\n");
@@ -1035,6 +1059,19 @@ FILE *fh;
 		startx = sx;
 		starty = sy;
 
+
+	/* scale to resolution */
+	FSIZE_BIG = scale2res(FSIZE_BIG);
+	FSIZE_MED = scale2res(FSIZE_MED);
+	FSIZE_SMALL = scale2res(FSIZE_SMALL);
+
+	TABULATOR = scale2res(TABULATOR);
+
+	OFFSET_MED = scale2res(OFFSET_MED);
+	OFFSET_SMALL = scale2res(OFFSET_SMALL);
+	OFFSET_MIN = scale2res(OFFSET_MIN);
+
+	size = scale2res(size);
 
 	/* Set up signal handlers. */
 	signal(SIGINT, quit_signal);
