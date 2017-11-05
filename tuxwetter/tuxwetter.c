@@ -44,18 +44,18 @@
 #include "gifdecomp.h"
 #include "icons.h"
 
-#define P_VERSION "4.02"
+#define P_VERSION "4.11"
 #define S_VERSION ""
 
+char CONVERT_LIST[]=	TUXWETTERDIR "/convert.list";
+#define CFG_FILE	TUXWETTERDIR "/tuxwetter.conf"
+#define MCF_FILE	TUXWETTERDIR "/tuxwetter.mcfg"
+//#define TIME_FILE	TUXWETTERDIR "/swisstime"
+#define START_PIC	TUXWETTERDIR "/startbild.jpg"
+#define TUX_ICON	TUXWETTERDIR "/tuxwetter.png"
 
-char CONVERT_LIST[]= CONFIGDIR "/tuxwetter/convert.list";
-#define CFG_FILE     CONFIGDIR "/tuxwetter/tuxwetter.conf"
-#define MCF_FILE     CONFIGDIR "/tuxwetter/tuxwetter.mcfg"
-//#define TIME_FILE    CONFIGDIR "/tuxwetter/swisstime"
-#define START_PIC	 CONFIGDIR "/tuxwetter/startbild.jpg"
-#define TUX_ICON     CONFIGDIR "/tuxwetter/tuxwetter.png"
-#define NCF_FILE 	"/var/tuxbox/config/neutrino.conf"
-#define ECF_FILE	"/var/tuxbox/config/enigma/config"
+#define NCF_FILE	CONFIGDIR "/neutrino.conf"
+#define ECF_FILE	CONFIGDIR "/enigma/config"
 #define BMP_FILE 	"tuxwettr.bmp"
 #define JPG_FILE	"/tmp/picture.jpg"
 #define GIF_FILE	"/tmp/picture.gif"
@@ -643,6 +643,13 @@ int Transform_Entry(char *src, char *trg)
 	return tret;
 }
 
+int scale2res(int s)
+{
+	if (var_screeninfo.xres == 1920)
+		s += s/2;
+
+	return s;
+}
 
 void TrimString(char *strg)
 {
@@ -1188,12 +1195,12 @@ void ShowInfo(MENU *m)
 {
 	int iw, ih, icon_w=0, icon_h=0, xsize=0, ysize=0, loop;
 	double scrollbar_len, scrollbar_ofs, scrollbar_cor;
-	int ix=m->act_entry,tind=m->act_entry, sbw=(m->num_entrys > LIST_STEP)?14:0;
+	int ix=m->act_entry,tind=m->act_entry, sbw=(m->num_entrys > LIST_STEP)?scale2res(14):0;
 	char tstr[BUFSIZE]={0}, *tptr=NULL;
-	int moffs=35, roffs=8, ixw=400, iyw=(m->num_entrys < LIST_STEP)?((m->num_entrys+1)*30+moffs):375, dy, my, mh, toffs, soffs=4, isx, isy;
+	int moffs=scale2res(35), roffs=scale2res(8), ixw=scale2res(400), iyw=(m->num_entrys < LIST_STEP)?((m->num_entrys+1)*3*OFFSET_MED+moffs):scale2res(375), dy, my, mh, toffs, soffs=2*OFFSET_MIN, isx, isy;
 
-	mh=iyw-moffs-roffs-(radius?4:0);
-	dy=(m->num_entrys < LIST_STEP)?30:(mh/(LIST_STEP+1));
+	mh=iyw-moffs-roffs-(radius ? 2*OFFSET_MIN : 0);
+	dy=(m->num_entrys < LIST_STEP)?scale2res(30):(mh/(LIST_STEP+1));
 	toffs=dy/2;
 	my=moffs+dy+toffs;
 	
@@ -1202,23 +1209,23 @@ void ShowInfo(MENU *m)
 	tind=ix;
 	
 	//frame layout
-	RenderBox(isx+6, isy+6, ixw, iyw, radius, CSP0);
+	RenderBox(isx+OFFSET_SMALL, isy+OFFSET_SMALL, ixw, iyw, radius, CSP0);
 	RenderBox(isx, isy, ixw, iyw, radius, CMC);
 	// titlebar
 	RenderBox(isx, isy, ixw, moffs+roffs, radius, CMH);
 
 	//selectbar
-	RenderBox(isx+2, isy+moffs+toffs+soffs+(ix%10)*dy+2, ixw-sbw-2, dy+2, radius, CMCS);
+	RenderBox(isx+OFFSET_MIN, isy+moffs+toffs+soffs+(ix%10)*dy+OFFSET_MIN, ixw-sbw-OFFSET_MIN, dy+OFFSET_MIN, radius, CMCS);
 
 	if(sbw)
 	{
 		//sliderframe
 		RenderBox(isx+ixw-sbw, isy+moffs+roffs, sbw, mh, radius, CMCP1);
 		//slider
-		scrollbar_len = (double)(mh-4) / (double)(((m->num_entrys-1)/LIST_STEP+1)*LIST_STEP);
+		scrollbar_len = (double)(mh-2*OFFSET_MIN/*4*/) / (double)(((m->num_entrys-1)/LIST_STEP+1)*LIST_STEP);
 		scrollbar_ofs = scrollbar_len*(double)((ix/LIST_STEP)*LIST_STEP)+roffs;
 		scrollbar_cor = scrollbar_len*(double)LIST_STEP;
-		RenderBox(isx+ixw-sbw+2, isy+moffs+scrollbar_ofs+2, sbw-4, scrollbar_cor, radius, CMCP3);
+		RenderBox(isx+ixw-sbw+OFFSET_MIN, isy+moffs+scrollbar_ofs+OFFSET_MIN, sbw-2*OFFSET_MIN, scrollbar_cor, radius, CMCP3);
 	}
 
 	png_getsize(TUX_ICON, &icon_w, &icon_h);
@@ -1228,10 +1235,10 @@ void ShowInfo(MENU *m)
 		icon_h = ysize = 32;
 	}
 	multiple_pics=1;
-	paintIcon(TUX_ICON, isx+20-icon_w/2, (isy+dy-soffs-4)-icon_h/2, xsize, ysize, &iw, &ih);
+	paintIcon(TUX_ICON, isx+2*OFFSET_MED-icon_w/2, (isy+dy-soffs-2*OFFSET_MIN)-icon_h/2, xsize, ysize, &iw, &ih);
 
 	// Title text
-	RenderString(m->headertxt[m->act_header], isx+47, isy+dy-soffs+11, ixw-sbw-45, LEFT, FSIZE_BIG, CMHT);
+	RenderString(m->headertxt[m->act_header], isx+scale2res(47), isy+dy-soffs+scale2res(11), ixw-sbw-scale2res(45), LEFT, FSIZE_BIG, CMHT);
 
 	ix /= 10;
 	//Show table of commands
@@ -1242,15 +1249,15 @@ void ShowInfo(MENU *m)
 		{
 			*tptr=0;
 		}
-		RenderString(tstr, isx+47, isy+my+7, ixw-sbw-65, LEFT, FSIZE_MED, ((loop%10) == (tind%10))?CMCST:CMCT);
+		RenderString(tstr, isx+scale2res(47), isy+my+OFFSET_SMALL+OFFSET_MIN, ixw-sbw-scale2res(65), LEFT, FSIZE_MED, ((loop%10) == (tind%10))?CMCST:CMCT);
 		if(m->list[loop]->type==TYP_MENU)
 		{
-			RenderString(">", isx+32, isy+my+7, 65, LEFT, FSIZE_MED, ((loop%10) == (tind%10))?CMCST:CMCT);
+			RenderString(">", isx+scale2res(32), isy+my+OFFSET_SMALL+OFFSET_MIN, scale2res(65), LEFT, FSIZE_MED, ((loop%10) == (tind%10))?CMCST:CMCT);
 		}
 		if(m->list[loop]->underline)
 		{
-			RenderBox(isx+10, isy+my+soffs+2, ixw-10-sbw, my+soffs+2, 0, CMCP3);
-			RenderBox(isx+10, isy+my+soffs+3, ixw-10-sbw, my+soffs+3, 0, CMCP1);
+			RenderBox(isx+OFFSET_MED, isy+my+soffs+OFFSET_MIN, ixw-OFFSET_MED-sbw, my+soffs+OFFSET_MIN, 0, CMCP3);
+			RenderBox(isx+OFFSET_MED, isy+my+soffs+OFFSET_SMALL-OFFSET_MIN, ixw-OFFSET_MED-sbw, my+soffs+OFFSET_SMALL-OFFSET_MIN, 0, CMCP1);
 		}
 
 		icon_w = icon_h = 0;
@@ -1258,13 +1265,13 @@ void ShowInfo(MENU *m)
 		//multiple_pics=1;
 		switch(loop % 10)
 		{
-			case 0:	paintIcon(ICON_BUTTON_RED,   isx+18-icon_w/2, isy+my-8-(icon_h)/2, 0, 0, &iw, &ih); break;
-			case 1: paintIcon(ICON_BUTTON_GREEN, isx+18-icon_w/2, isy+my-8-(icon_h)/2, 0, 0, &iw, &ih); break;
-			case 2: paintIcon(ICON_BUTTON_YELLOW,isx+18-icon_w/2, isy+my-8-(icon_h)/2, 0, 0, &iw, &ih); break;
-			case 3: paintIcon(ICON_BUTTON_BLUE,  isx+18-icon_w/2, isy+my-8-(icon_h)/2, 0, 0, &iw, &ih); break;
+			case 0:	paintIcon(ICON_BUTTON_RED,   isx+9*OFFSET_MIN-icon_w/2, isy+my-4*OFFSET_MIN-(icon_h)/2, 0, 0, &iw, &ih); break;
+			case 1: paintIcon(ICON_BUTTON_GREEN, isx+9*OFFSET_MIN-icon_w/2, isy+my-4*OFFSET_MIN-(icon_h)/2, 0, 0, &iw, &ih); break;
+			case 2: paintIcon(ICON_BUTTON_YELLOW,isx+9*OFFSET_MIN-icon_w/2, isy+my-4*OFFSET_MIN-(icon_h)/2, 0, 0, &iw, &ih); break;
+			case 3: paintIcon(ICON_BUTTON_BLUE,  isx+9*OFFSET_MIN-icon_w/2, isy+my-4*OFFSET_MIN-(icon_h)/2, 0, 0, &iw, &ih); break;
 			default:
 				sprintf(tstr,"%1d",(loop % 10)-3);
-				RenderString(tstr, isx+10, isy+my+4, 15, CENTER, FSIZE_SMALL, ((loop%10) == (tind%10))?CMCST:CMCT);
+				RenderString(tstr, isx+OFFSET_MED, isy+my+2*OFFSET_MIN, scale2res(15), CENTER, FSIZE_SMALL, ((loop%10) == (tind%10))?CMCST:CMCT);
 			break;
 		}
 		my += dy;
@@ -1330,35 +1337,35 @@ void clear_screen(void)
 	int itmp;
 #endif
 
-	char vstr[512]={0},v2str[512]={0},rstr[512]={0},tstr[512]={0},icon[60]={0};
-	int col1=40, vy=70;
-	int col2=((preset)?340:300);
+char vstr[512]={0},v2str[512]={0},rstr[512]={0},tstr[512]={0},icon[60]={0};
+int col1=scale2res(40), vy=scale2res(70);
+int col2=((preset)?scale2res(380):scale2res(340));
 
-	int wxw=ex-sx-((preset)?120:30);  //box width
-	int wyw=ey-sy-((preset)?60:20);   //box height
-	int nc=10;			//table columns
-	int gys=vy;			//table space top
-	int gysf=34;			//table space bottom
-	int gxs=40;			//table space left
-//	int gxw=((wxw-(gxs*2))/nc) * nc;	//table width
-	int gicw=((wxw-(gxs*2))/nc);	//table data width
-	int gxw=gicw*nc;		//table width
-	int gywf=100;			//table footer height
-	int gyw=wyw-vy-gywf-gysf;	//table height
-//int gicw=gxw/nc;			//table data width
-	int vxs=0,wsx,wsy;
-	int prelate=0;
-	int rcd;
-	int HMED=((preset)?22:20);
-	int dy=26;			//linespace
-	int slim=0;			//using 720x576
+int wxw=ex-sx-((preset)?scale2res(120):scale2res(30));  //box width
+int wyw=ey-sy-((preset)?scale2res(60):scale2res(20));   //box height
+int nc=10;                   //table columns 10
+int gys=vy;                  //table space top
+int gysf=scale2res(34);      //table space bottom
+int gxs=4*OFFSET_MED;        //table space left
+//int gxw=((wxw-(gxs*2))/nc) * nc;	//table width
+int gicw=((wxw-(gxs*2))/nc); //table data width
+int gxw=gicw*nc;             //table width
+int gywf=scale2res(100);     //table footer height
+int gyw=wyw-vy-gywf-gysf;    //table height
+//int gicw=gxw/nc;           //table data width
+int vxs=0,wsx,wsy;
+int prelate=0;
+int rcd;
+int HMED=((preset)?scale2res(22):scale2res(20));
+int dy=scale2res(26);        //linespace
+int slim=0;                  //using 720x576
 
 	time_t atime;
 	struct tm *sltime;
 	char tun[2]="C",sun[5]="km/h",dun[6]="km",pun[5]="hPa",iun[7]="mm", cun[20];
 
 	//recalculate wigth
-	gicw += ((gicw%10) > 5 ? 10-(gicw%10) : -(gicw%10)); //rounded table data width, needing for smoothed curves
+	gicw += ((gicw%10) > OFFSET_SMALL ? OFFSET_MED-(gicw%10) : -(gicw%10)); //rounded table data width, needing for smoothed curves
 	gxw=gicw*nc;
 	gxs=(wxw-gxw)/2;
 
@@ -1373,14 +1380,14 @@ void clear_screen(void)
 	gyw+=wsy;
 	col1+=wsx;
 	col2+=wsx;
-	vy+=wsy+8;
+	vy+=wsy+4*OFFSET_MIN;
 
 	//frame layout
 	if(ix!=1)
 	{
-		RenderBox(wsx+6, wsy+6, wxw, wyw, radius, CSP0);
+		RenderBox(wsx+OFFSET_SMALL, wsy+OFFSET_SMALL, wxw, wyw, radius, CSP0);
 		RenderBox(wsx, wsy, wxw, wyw, radius, CMC);
-		RenderBox(wsx+2, wsy+2, wxw-4, 44, radius, CMH);
+		RenderBox(wsx, wsy, wxw, scale2res(44), radius, CMH);
 	}
 	else
 	{
@@ -1405,9 +1412,9 @@ void clear_screen(void)
 		int i;
 		char grstr[XL+1]={'G'^XX,'r'^XX,'\xFC'^XX,'\xDF'^XX,'e'^XX,' '^XX,'v'^XX,'o'^XX,'m'^XX,' '^XX,'N'^XX,'e'^XX,'w'^XX,'-'^XX,'T'^XX,'u'^XX,'x'^XX,'w'^XX,'e'^XX,'t'^XX,'t'^XX,'e'^XX,'r'^XX,'-'^XX,'T'^XX,'e'^XX,'a'^XX,'m'^XX,'!'^XX,' '^XX,' '^XX,';'^XX,'-'^XX,')'^XX,' '^XX,' '^XX,'w'^XX,'w'^XX,'w'^XX,'.'^XX,'k'^XX,'e'^XX,'y'^XX,'w'^XX,'e'^XX,'l'^XX,'t'^XX,'-'^XX,'b'^XX,'o'^XX,'a'^XX,'r'^XX,'d'^XX,'.'^XX,'c'^XX,'o'^XX,'m'^XX,0};
 
-		dy = ((preset)?dy:22);
+		dy = ((preset)?dy:scale2res(22));
 		sprintf(rstr,"Tuxwetter    Version %s%s",P_VERSION,S_VERSION);
-		RenderString(rstr, wsx, wsy+40, wxw, CENTER, FSIZE_BIG, CMHT);
+		RenderString(rstr, wsx, wsy+4*OFFSET_MED, wxw, CENTER, FSIZE_BIG, CMHT);
 
 		sprintf(rstr,"%s",prs_translate("Steuertasten in den Menüs",CONVERT_LIST));
 		RenderString(rstr, 0, vy, wxw, CENTER, HMED, GREEN);
@@ -1534,9 +1541,9 @@ void clear_screen(void)
 			double tstep=1, garr[nc*10], tv1, tv2, tv3;
 
 			RenderBox(wsx, wsy, wxw, wyw, radius, CMC);
-			RenderBox(wsx, wsy, wxw, 44, radius, CMH);
+			RenderBox(wsx, wsy, wxw, scale2res(44), radius, CMH);
 			sprintf(rstr,"%s %d %s",prs_translate("Trend für die kommende Woche",CONVERT_LIST),nc,prs_translate("Tage",CONVERT_LIST));
-			RenderString(rstr, wsx, wsy+40, wxw, CENTER, FSIZE_BIG, CMHT);
+			RenderString(rstr, wsx, wsy+4*OFFSET_MED, wxw, CENTER, FSIZE_BIG, CMHT);
 			RenderLine(gxs,gys,gxs,gys+gyw+gywf,CMCIT);
 			RenderLine(gxs+1,gys,gxs+1,gys+gyw+gywf,CMCIT);
 			for(i=0; i<nc; i++)
@@ -1593,7 +1600,7 @@ void clear_screen(void)
 					}
 #endif
 					strcpy(rstr,prs_translate(vstr,CONVERT_LIST));
-					RenderString(rstr, gxs+i*gicw, gys+gyw+7+(FSIZE_BIG/2+gywf/2), gicw, CENTER, FSIZE_BIG, CMCT);//weekday
+					RenderString(rstr, gxs+i*gicw, gys+gyw+OFFSET_SMALL+(FSIZE_BIG/2+gywf/2), gicw, CENTER, FSIZE_BIG, CMCT);//weekday
 				}
 				RenderLine(gxs+(i+1)*gicw,gys,gxs+(i+1)*gicw,gys+gyw+gywf,CMCIT);
 			}
@@ -1611,8 +1618,8 @@ void clear_screen(void)
 			RenderLine(gxs,gys+gyw+gywf+1,gxs+gxw,gys+gyw+gywf+1,CMCIT);
 			RenderString((metric)? "°C":"°F", gxs-22, gys+3, 30, RIGHT, FSIZE_SMALL, CMCT);
 			RenderString((metric)? "°C":"°F", gxs+gxw-22, gys+3, 30, RIGHT, FSIZE_SMALL, CMCT);
-			RenderString(prs_translate("Höchstwerte",CONVERT_LIST), gxs, gys+6, gxw/2, CENTER, FSIZE_SMALL, YELLOW);
-			RenderString(prs_translate("Tiefstwerte",CONVERT_LIST), gxs+(gxw/2), gys+6, gxw/2, CENTER, FSIZE_SMALL, GREEN);
+			RenderString(prs_translate("Höchstwerte",CONVERT_LIST), gxs, gys+5, gxw/2, CENTER, FSIZE_SMALL, YELLOW);
+			RenderString(prs_translate("Tiefstwerte",CONVERT_LIST), gxs+(gxw/2), gys+5, gxw/2, CENTER, FSIZE_SMALL, GREEN);
 
 			for(i=1; i<=(5*(1+(int)((maxt-mint)/5))+1); i++)
 			{
@@ -1626,8 +1633,8 @@ void clear_screen(void)
 					RenderLine(gxs,gys+gyw-(i*tstep)-1,gxs+gxw,gys+gyw-(i*tstep)-1,CMCP3);
 				}
 				sprintf(vstr,"%d",mint+i-1);
-				RenderString(vstr,gxs-35,gys+10+gyw-(i*tstep), 30, RIGHT, FSIZE_VSMALL, CMCT);
-				RenderString(vstr,gxs+gxw+2,gys+10+gyw-(i*tstep), 30, RIGHT, FSIZE_VSMALL, CMCT);
+				RenderString(vstr,gxs-scale2res(35),gys+OFFSET_MED+gyw-(i*tstep), scale2res(30), RIGHT, FSIZE_VSMALL, CMCT);
+				RenderString(vstr,gxs+gxw+scale2res(2),gys+OFFSET_MED+gyw-(i*tstep), scale2res(30), RIGHT, FSIZE_VSMALL, CMCT);
 			}
 			RenderLine(gxs,gys+gyw-((i-1)*tstep)-3,gxs+gxw,gys+gyw-((i-1)*tstep)-3,((!(mint+i-1)))?CMCT:CMCIT);
 
@@ -1735,7 +1742,7 @@ void clear_screen(void)
 					if (HTTP_downloadFile(icon, ICON_FILE, 0, intype, ctmo, 2) == 0)
 #endif
 					{
-						int picx=80,picy=80;
+						int picx=scale2res(80),picy=scale2res(80);
 						pic_on_data(icon,sx+gxs+(i*gicw)+((gicw/2)-(picx/2)),sy+gys+gyw+((gywf/2)-(picy/2)), picx, picy, 5, (i)?((i==4)?1:0):2, 0, 0);
 					}
 #ifdef WWEATHER
@@ -1745,7 +1752,7 @@ void clear_screen(void)
 					strcat(vstr,"_SIG");
 #endif
 					strcpy(rstr,prs_translate(vstr,CONVERT_LIST));
-					RenderString(rstr, gxs+(i*gicw+17), gys+12+gyw+FSIZE_BIG, gicw, LEFT, FSIZE_BIG,CMCIT );//weekday
+					RenderString(rstr, gxs+(i*gicw+scale2res(17)), gys+scale2res(12)+gyw+FSIZE_BIG, gicw, LEFT, FSIZE_BIG,CMCIT );//weekday
 				}
 				multiple_pics=0;
 			}
@@ -1755,8 +1762,8 @@ void clear_screen(void)
 		{
 			if(ix==0)
 			{
-				dy=24;
-				vy-=2;
+				dy=scale2res(24);
+				vy-=scale2res(2);
 
 				// show icon
 				prs_get_val(0, ACT_ICON, 0, vstr);
@@ -1779,7 +1786,7 @@ void clear_screen(void)
 				}
 
 				sprintf(rstr,"%s",prs_translate("Aktuelles Wetter",CONVERT_LIST));
-				RenderString(rstr, wsx, wsy+40, wxw, CENTER, FSIZE_BIG, CMHT);
+				RenderString(rstr, wsx, wsy+4*OFFSET_MED, wxw, CENTER, FSIZE_BIG, CMHT);
 
 				sprintf(rstr,"%s",prs_translate("Standort:",CONVERT_LIST));
 				RenderString(rstr, col1, vy, col2-col1, LEFT, FSIZE_MED, GREEN);
@@ -2028,7 +2035,7 @@ void clear_screen(void)
 						pic_on_data(icon,col2+200, wsy+115, 80, 80, 5, 3, 0, 0);
 */
 					if(!slim)
-						pic_on_data(icon,800, 270, 100, 100, 5, 3, 0, 0);
+						pic_on_data(icon,scale2res(800), scale2res(270), scale2res(100), scale2res(100), 5, 3, 0, 0);
 					else
 						pic_on_data(icon,540, 115, 80, 80, 5, 3, 0, 0);
 				}
@@ -2083,7 +2090,7 @@ void clear_screen(void)
 #endif
 				}
 				sprintf(rstr,"%s %s",prs_translate("Vorschau für",CONVERT_LIST),vstr);
-				RenderString(rstr, wsx, wsy+40, wxw, CENTER, FSIZE_BIG, CMHT);
+				RenderString(rstr, wsx, wsy+4*OFFSET_MED, wxw, CENTER, FSIZE_BIG, CMHT);
 
 				sprintf(rstr,"%s",prs_translate("Standort:",CONVERT_LIST));
 				RenderString(rstr, col1, vy, col2-col1, LEFT, FSIZE_MED, GREEN);
@@ -2218,7 +2225,7 @@ void clear_screen(void)
 					prs_get_val2(ix-1, PRE_COND_M, 1, rstr);
 				else
 					prs_get_val2(ix-1, PRE_COND, 1, rstr);
-				vy=PaintWideString(dy, rstr, col2, vy, wxw-col2-50, LEFT, FSIZE_MED, CMCT);
+				vy=PaintWideString(dy, rstr, col2, vy, wxw-col2-5*OFFSET_MED, LEFT, FSIZE_MED, CMCT);
 				vy+=dy;
 
 				sprintf(rstr,"%s",prs_translate("Regenrisiko:",CONVERT_LIST));
@@ -2289,7 +2296,7 @@ void clear_screen(void)
 				if(show_icons)
 				{
 					//pic_on_data(icon, 540, 115, 100, 100, 5, 3, 0, 0);
-					pic_on_data(icon,slim?540:700, 115, 100, 100, 5, 3, 0, 0);
+					pic_on_data(icon,slim?540:scale2res(700), scale2res(115), scale2res(100), scale2res(100), 5, 3, 0, 0);
 				}
 				blit();
 			}
@@ -2383,7 +2390,7 @@ int show_jpg(char *name, int xstart, int ystart, int xsize, int ysize, int wait,
 			}
 			else
 			{
-				showBusy(startx+3,starty+3,10,0xff,00,00);
+				showBusy(startx+OFFSET_SMALL-OFFSET_MIN,starty+OFFSET_SMALL-OFFSET_MIN,scale2res(10),0xff,00,00);
 				if(rcj==KEY_EXIT)
 				{
 					rcj=KEY_OK;
@@ -2439,7 +2446,7 @@ int show_png(char *name, int xstart, int ystart, int xsize, int ysize, int wait,
 			}
 			else
 			{
-				showBusy(startx+3,starty+3,10,0xff,00,00);
+				showBusy(startx+OFFSET_SMALL-OFFSET_MIN,starty+OFFSET_SMALL-OFFSET_MIN,scale2res(10),0xff,00,00);
 				if(rcn==KEY_EXIT)
 				{
 					rcn=KEY_OK;
@@ -2482,7 +2489,7 @@ int show_gif(char *name, int xstart, int ystart, int xsize, int ysize, int wait,
 		cloop=0;
 		while(count--)
 		{
-			sprintf(fname,"%s%02d.gif",GIF_MFILE,cloop++);
+			sprintf(fname,"%s%03d.gif",GIF_MFILE,cloop++);
 			if(fh_gif_getsize(fname, &x1, &y1, xsize, ysize))
 			{
 				printf("Tuxwetter <invalid GIF-Format>\n");
@@ -2499,13 +2506,14 @@ int show_gif(char *name, int xstart, int ystart, int xsize, int ysize, int wait,
 				fb_set_gmode(1);
 				fb_display(buffer, imx, imy, dxp, dyp, dxo, dyo, 1, 1, 0/*alpha*/);
 				gmodeon=1;
-
+#if 0
 				if(gifs>1)
 				{
 					sprintf(fname,"%s %2d / %d", prs_translate("Bild",CONVERT_LIST),cloop, gifs);
 // 					LCD_draw_string(13, 9, fname);
 // 					LCD_update();
 				}
+#endif
 			}
 			free(buffer);
 		}
@@ -2523,7 +2531,7 @@ int show_gif(char *name, int xstart, int ystart, int xsize, int ysize, int wait,
 			}
 			else
 			{
-				showBusy(startx+3,starty+3,10,0xff,00,00);
+				showBusy(startx+OFFSET_SMALL-OFFSET_MIN,starty+OFFSET_SMALL-OFFSET_MIN,scale2res(10),0xff,00,00);
 				if(rcg==KEY_EXIT)
 				{
 					rcg=KEY_OK;
@@ -2567,7 +2575,7 @@ int pic_on_data(char *url __attribute__((unused)), int xstart, int ystart, int x
 			scale_pic(&buffer,x1,y1,xstart,ystart,xsize,ysize,&imx,&imy,&dxp,&dyp,&dxo,&dyo,center,0/*alpha*/);
 			if (rahmen >0)
 			{
-				RenderBox(xstart+1-sx-rahmen, ystart-6-sy-rahmen,xstart+xsize+2-sx+rahmen,ystart+ysize-sy-6+rahmen, 0, CMCS);
+				RenderBox(xstart+scale2res(1)-sx-rahmen, ystart-OFFSET_SMALL-sy-rahmen,xstart+xsize+OFFSET_MIN-sx+rahmen,ystart+ysize-sy-OFFSET_SMALL+rahmen, 0, CMCS);
 			}
 
 			if(single & 2)
@@ -2606,20 +2614,20 @@ int pic_on_data(char *url __attribute__((unused)), int xstart, int ystart, int x
 
 int show_php(char *name, char *title, int plain, int highlite)
 {
-	FILE *tfh;
-	int x1,y1,cs,rcp,rv=-1,run=1,line=0,action=1,cut;
-	int col1,ssy=0,dy=26,psx,psy;
-	int pxw=ex-sx-((preset)?120:30);	//box width old 620
-	int pyw=ey-sy-((preset)?60:20);		//box height old 510
+FILE *tfh;
+int x1,y1,cs,rcp,rv=-1,run=1,line=0,action=1,cut;
+int col1,ssy=0,dy=scale2res(26),psx,psy;
+int pxw=ex-sx-((preset)?scale2res(120):scale2res(30));		//box width old 620
+int pyw=ey-sy-((preset)?scale2res(60):scale2res(20));		//box height old 510
 
 	Center_Screen(pxw,pyw,&psx,&psy);
-	col1=psx+((preset)?60:40);
-	ssy=psy+78;
+	col1=psx+((preset)?scale2res(60):scale2res(40));
+	ssy=psy+scale2res(78);
 	if((tfh=fopen(name,"r"))!=NULL)
 	{
 		fclose(tfh);
 
-		RenderString("X", psx+pxw/2, psy+pyw/2, 100, LEFT, FSIZE_SMALL, CMCT);
+		RenderString("X", psx+pxw/2, psy+pyw/2, scale2res(100), LEFT, FSIZE_SMALL, CMCT);
 		if(fh_php_getsize(name, plain, &x1, &y1))
 		{
 			printf("Tuxwetter <invalid PHP-Format>\n");
@@ -2638,10 +2646,10 @@ int show_php(char *name, char *title, int plain, int highlite)
 			//frame layout
 			if(action)
 			{
-				RenderBox(psx+6, psy+6, pxw, pyw, radius, CSP0);
+				RenderBox(psx+OFFSET_SMALL, psy+OFFSET_SMALL, pxw, pyw, radius, CSP0);
 				RenderBox(psx, psy, pxw, pyw, radius, CMC);
-				RenderBox(psx+2, psy+2, pxw-4, 44, radius, CMH);
-				RenderString(title, psx, psy+40, pxw, CENTER, FSIZE_BIG, CMHT);
+				RenderBox(psx, psy, pxw, scale2res(44), radius, CMH);
+				RenderString(title, psx, psy+4*OFFSET_MED, pxw, CENTER, FSIZE_BIG, CMHT);
 
 				if(!(rv=fh_php_load(name, col1, ssy, dy, cs, line, highlite, plain, &cut)))
 				{
@@ -3016,8 +3024,38 @@ int main (int argc, char **argv)
 
 	}
 
-//	system("ping -c 2 google.com &");
+	//init framebuffer
+	fb = open(FB_DEVICE, O_RDWR);
+#ifdef MARTII
+	if (fb < 0)
+		fb = open(FB_DEVICE_FALLBACK, O_RDWR);
+#endif
+	if(fb == -1)
+	{
+		perror("tuxwetter <open framebuffer device>");
+		exit(1);
+	}
+	if(ioctl(fb, FBIOGET_FSCREENINFO, &fix_screeninfo) == -1)
+	{
+		perror("tuxwetter <FBIOGET_FSCREENINFO>\n");
+		return -1;
+	}
+	if(ioctl(fb, FBIOGET_VSCREENINFO, &var_screeninfo) == -1)
+	{
+		perror("tuxwetter <FBIOGET_VSCREENINFO>\n");
+		return -1;
+	}
+#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
+	var_screeninfo.xres = DEFAULT_XRES;
+	var_screeninfo.yres = DEFAULT_YRES;
+#endif
+	if(!(lfb = (uint32_t*)mmap(0, fix_screeninfo.smem_len, PROT_READ | PROT_WRITE, MAP_SHARED, fb, 0)))
+	{
+		perror("tuxwetter <mapping of Framebuffer>\n");
+		return -1;
+	}
 
+	// read config
 	if((line_buffer=calloc(BUFSIZE+1, sizeof(char)))==NULL)
 	{
 		printf(NOMEM);
@@ -3077,10 +3115,10 @@ int main (int argc, char **argv)
 
 	read_neutrino_osd_conf(&ex,&sx,&ey, &sy);
 	if((ex == -1) || (sx == -1) || (ey == -1) || (sy == -1)){
-		sx = 40;
-		ex = var_screeninfo.xres - 40;
-		sy = 40;
-		ey = var_screeninfo.yres - 40;
+		sx = scale2res(40);
+		ex = var_screeninfo.xres - scale2res(40);
+		sy = scale2res(40);
+		ey = var_screeninfo.yres - scale2res(40);
 	}
 	//printf("sx=%i, ex =%i, sy=%i, ey=%i \n", sx, ex, sy, ey);
 
@@ -3133,50 +3171,17 @@ int main (int argc, char **argv)
 		bgra[ix] = (tr[ix] << 24) | (rd[ix] << 16) | (gn[ix] << 8) | bl[ix];
 
 	if(Read_Neutrino_Cfg("rounded_corners")>0) {
-		radius = 11;
-		radius_small = 7;
+		radius = scale2res(11);
+		radius_small = scale2res(5);
 	}
 	else
 		radius = radius_small = 0;
-
-	fb = open(FB_DEVICE, O_RDWR);
-#ifdef MARTII
-	if (fb < 0)
-		fb = open(FB_DEVICE_FALLBACK, O_RDWR);
-#endif
-	if(fb == -1)
-	{
-		perror("tuxwetter <open framebuffer device>");
-		exit(1);
-	}
 
 	InitRC();
 
 	if((trstr=malloc(BUFSIZE))==NULL)
 	{
 		printf(NOMEM);
-		return -1;
-	}
-
-	//init framebuffer
-
-	if(ioctl(fb, FBIOGET_FSCREENINFO, &fix_screeninfo) == -1)
-	{
-		perror("tuxwetter <FBIOGET_FSCREENINFO>\n");
-		return -1;
-	}
-	if(ioctl(fb, FBIOGET_VSCREENINFO, &var_screeninfo) == -1)
-	{
-		perror("tuxwetter <FBIOGET_VSCREENINFO>\n");
-		return -1;
-	}
-#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
-	var_screeninfo.xres = DEFAULT_XRES;
-	var_screeninfo.yres = DEFAULT_YRES;
-#endif
-	if(!(lfb = (uint32_t*)mmap(0, fix_screeninfo.smem_len, PROT_READ | PROT_WRITE, MAP_SHARED, fb, 0)))
-	{
-		perror("tuxwetter <mapping of Framebuffer>\n");
 		return -1;
 	}
 
@@ -3233,10 +3238,12 @@ int main (int argc, char **argv)
 	lbb = lfb + 1920 * 1080;
 	fix_screeninfo.line_length = DEFAULT_XRES * sizeof(uint32_t);
 	stride = DEFAULT_XRES;
-# else
-	stride = fix_screeninfo.line_length/sizeof(uint32_t);
 # endif
 #else
+	stride = fix_screeninfo.line_length/sizeof(uint32_t);
+	if (stride == 7680 && var_screeninfo.xres == 1280) {
+		var_screeninfo.yres = 1080;
+	}
 	if(!(lbb = malloc(var_screeninfo.xres*var_screeninfo.yres*sizeof(uint32_t))))
 	{
 		perror("tuxwetter <allocating of Backbuffer>\n");
@@ -3255,6 +3262,18 @@ int main (int argc, char **argv)
 
 	startx = sx;
 	starty = sy;
+
+	/* scale to resolution */
+	FSIZE_BIG = scale2res(FSIZE_BIG);
+	FSIZE_MED = scale2res(FSIZE_MED);
+	FSIZE_SMALL = scale2res(FSIZE_SMALL);
+	FSIZE_VSMALL = scale2res(FSIZE_VSMALL);
+
+	TABULATOR = scale2res(TABULATOR);
+
+	OFFSET_MED = scale2res(OFFSET_MED);
+	OFFSET_SMALL = scale2res(OFFSET_SMALL);
+	OFFSET_MIN = scale2res(OFFSET_MIN);
 
 	/* Set up signal handlers. */
 	signal(SIGINT, quit_signal);
@@ -3805,7 +3824,7 @@ int main (int argc, char **argv)
 
     for(ix=0; ix<32; ix++)
     {
-	sprintf(tstr,"%s%02d.gif",GIF_MFILE,ix);
+	sprintf(tstr,"%s%03d.gif",GIF_MFILE,ix);
     	xremove(tstr);
     }
 	sprintf(tstr,"ls /tmp/picture* &>/dev/null && rm /tmp/picture*");
