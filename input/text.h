@@ -1,6 +1,7 @@
 #ifndef __TEXT_H__
 #define __TEXT_H__
 
+#include "input.h"
 #include "current.h"
 
 extern int FSIZE_BIG;
@@ -11,5 +12,6 @@ FT_Error MyFaceRequester(FTC_FaceID face_id, FT_Library library, FT_Pointer requ
 int RenderString(const char *string, int _sx, int _sy, int maxwidth, int layout, int size, int color);
 int GetStringLen(char *string, size_t size);
 void CatchTabs(char *text);
+int scale2res(int s);
 
 #endif

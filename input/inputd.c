@@ -10,14 +10,14 @@
 #include "pngw.h"
 
 
-#define xbrd 	25
-#define ybrd	25
-#define exsz	23
-#define eysz	38
-#define bxsz	60
-#define bysz	60
-#define hsz		50
-#define tys		30
+#define xbrd    scale2res(25)
+#define ybrd    scale2res(25)
+#define exsz    scale2res(23)
+#define eysz    scale2res(38)
+#define bxsz    scale2res(60)
+#define bysz    scale2res(60)
+#define hsz     scale2res(50)
+#define tys     scale2res(30)
 #define NUM		'#'
 #define ANUM	'@'
 #define HEX		'^'
@@ -303,7 +303,7 @@ char *inputd(char *form, char *title, char *defstr, int keys, int frame, int mas
 	format=form;
 	estr=strdup(form);
 	cnt=strlen(form);
-	tlen=i=GetStringLen(title, BIG)+10;
+	tlen=i=GetStringLen(title, BIG)+OFFSET_MED;
 	j=((cnt>cols)?cols:cnt)*exsz;
 	if(j>i)
 	{
@@ -318,7 +318,7 @@ char *inputd(char *form, char *title, char *defstr, int keys, int frame, int mas
 		}
 	}
 	wxw=i+2*xbrd;
-	wxw=(keys==1 && wxw < 265) ? 265 : wxw;
+	wxw=(keys==1 && wxw < scale2res(265)) ? scale2res(265) : wxw;
 
 	i=(((cnt-1)/cols)+1)*eysz;
 	if(keys)
@@ -362,18 +362,19 @@ char *inputd(char *form, char *title, char *defstr, int keys, int frame, int mas
 	estr[i]=0;
 
 	// icon & title
-	RenderBox(wxs+6, wys-hsz+6, wxs+wxw+6, wys+wyw+6, radius, COL_SHADOW_PLUS_0);
+	RenderBox(wxs+OFFSET_SMALL, wys-hsz+OFFSET_SMALL, wxs+wxw+OFFSET_SMALL, wys+wyw+OFFSET_SMALL, radius, COL_SHADOW_PLUS_0);
 	RenderBox(wxs, wys-hsz, wxs+wxw, wys+wyw, radius, CMC);
 	RenderBox(wxs, wys-hsz, wxs+wxw, wys, radius, CMH);
 
 	png_getsize(ICON_KEYS, &icon_w, &icon_h);
 	if(icon_w > 40 || icon_h > 40)
 		icon_w = icon_h = xsize = ysize = 40;
-	paintIcon(ICON_KEYS, wxs+8, wys-hsz/2-icon_h/2, xsize, ysize, &iw, &ih);
+	int offw = OFFSET_SMALL+OFFSET_MIN;
+	paintIcon(ICON_KEYS, wxs+offw, wys-hsz/2-icon_h/2, xsize, ysize, &iw, &ih);
 	int tstart, twide;
-	if(wxs+8+iw  >= wxs+wxw-8-iw-tlen ) {
-		tstart = wxs+8+iw;
-		twide  = wxw-8-iw;
+	if(wxs+offw+iw  >= wxs+wxw-offw-iw-tlen ) {
+		tstart = wxs+offw+iw;
+		twide  = wxw-offw-iw;
 	}
 	else {
 		tstart = wxs;
@@ -386,7 +387,7 @@ char *inputd(char *form, char *title, char *defstr, int keys, int frame, int mas
 	if(keys == 1)
 	{
 		png_getsize(ICON_NUMERIC_PAD, &icon_w, &icon_h);
-		paintIcon(ICON_NUMERIC_PAD, wxs+wxw/2-icon_w/2, bys+10, 0, 0, &iw, &ih);	
+		paintIcon(ICON_NUMERIC_PAD, wxs+wxw/2-scale2res(icon_w)/2, bys+OFFSET_MED, scale2res(icon_w), scale2res(icon_h), &iw, &ih);
 	}
 	if(keys == 2)
 	{
@@ -405,9 +406,9 @@ char *inputd(char *form, char *title, char *defstr, int keys, int frame, int mas
 	{
 		png_getsize(ICON_BUTTON_RED, &icon_w, &icon_h);
 		paintIcon(ICON_BUTTON_RED, bxs-icon_w/2, wys+wyw-ybrd-2-icon_h/2, 0, 0, &iw, &ih);
-		RenderString("Groß/Klein", bxs+icon_w/2+5,wys+wyw-ybrd+10, 3*bxsz, LEFT, SMALL, CMCIT);
-		paintIcon(ICON_BUTTON_YELLOW, bxs+125-icon_w/2, wys+wyw-ybrd-2-icon_h/2, 0, 0, &iw, &ih);
-		RenderString("löschen", bxs+125+icon_w/2+5,wys+wyw-ybrd+10, 65, LEFT, SMALL, CMCIT);
+		RenderString("Groß/Klein", bxs+icon_w/2+OFFSET_SMALL/*5*/,wys+wyw-ybrd+OFFSET_MED/*10*/, 2*bxsz, LEFT, SMALL, CMCIT);
+		paintIcon(ICON_BUTTON_YELLOW, bxs+scale2res(125)-icon_w/2, wys+wyw-ybrd-2-icon_h/2, 0, 0, &iw, &ih);
+		RenderString("löschen", bxs+scale2res(125)+icon_w/2+OFFSET_SMALL,wys+wyw-ybrd+OFFSET_MED, bxsz, LEFT, SMALL, CMCIT);
 	}
 
 	while(run)
@@ -418,12 +419,12 @@ char *inputd(char *form, char *title, char *defstr, int keys, int frame, int mas
 			yp=i/cols;
 			if(frame && IsInput(format[i]))
 			{
-				RenderBox(exs+xp*exsz, eys+5+yp*eysz, exs+(xp+1)*exsz, eys+(yp+1)*eysz, 0/*radius*/, CMS);
+				RenderBox(exs+xp*exsz, eys+OFFSET_SMALL+yp*eysz, exs+(xp+1)*exsz, eys+(yp+1)*eysz, 0/*radius*/, CMS);
 			}
-			RenderBox(exs+xp*exsz+1, eys+5+yp*eysz+1, exs+(xp+1)*exsz-1, eys+(yp+1)*eysz-1, 0/*radius*/, (epos==i)?CMCS:CMC);
+			RenderBox(exs+xp*exsz+1, eys+OFFSET_SMALL+yp*eysz+1, exs+(xp+1)*exsz-1, eys+(yp+1)*eysz-1, 0/*radius*/, (epos==i)?CMCS:CMC);
 
 			*trnd=(mask && format[i]==NUM && IsNum(estr[i]))?'*':estr[i];
-			RenderString(trnd, exs+xp*exsz+2, eys+yp*eysz+tys+7, exsz-2, CENTER, MED, (epos==i)?CMCST:(IsInput(format[i]))?CMCT:CMCIT);
+			RenderString(trnd, exs+xp*exsz, eys+yp*eysz+tys+OFFSET_SMALL/*7*/, exsz, CENTER, MED, (epos==i)?CMCST:(IsInput(format[i]))?CMCT:CMCIT);
 		}
 #ifdef MARTII
 		blit();
