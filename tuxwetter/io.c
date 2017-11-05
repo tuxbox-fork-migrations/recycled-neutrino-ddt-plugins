@@ -20,9 +20,6 @@
 
 #include "io.h"
 #include "tuxwetter.h"
-#ifndef MARTII
-#define RC_DEVICE	"/dev/input/nevis_ir"
-#endif
 
 extern int instance;
 struct input_event ev;
