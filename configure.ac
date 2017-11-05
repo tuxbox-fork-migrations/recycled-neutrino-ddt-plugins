@@ -32,6 +32,7 @@ msgbox/Makefile
 input/Makefile
 getrc/Makefile
 shellexec/Makefile
+stb-startup/Makefile
 fx2/Makefile
 fx2/lemm/Makefile
 fx2/master/Makefile
