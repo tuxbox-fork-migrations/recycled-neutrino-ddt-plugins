@@ -2641,7 +2641,7 @@ void DoEditFTP(char* szFile,char* szTitle)
 				continue;
 			*p=0;
 			p++;
-			p1=strchr(p,'\r'); // fuer Windows-Nutzer: '\r' überlesen
+			p1=strchr(p,'\r'); // fuer Windows-Nutzer: '\r' ueberlesen
 			if (p1 != NULL) *p1 = 0x00;
 			if      ( !strcmp(line,"host") ) strcpy(entries[0], p);
 			else if ( !strcmp(line,"port") ) strcpy(entries[1], p);
@@ -5157,7 +5157,7 @@ void OpenFTP()
 				continue;
 			*p=0;
 			p++;
-			p1=strchr(p,'\r'); // fuer Windows-Nutzer: '\r' überlesen
+			p1=strchr(p,'\r'); // fuer Windows-Nutzer: '\r' ueberlesen
 			if (p1 != NULL) *p1 = 0x00;
 			if      ( !strcmp(line,"host") ) strcpy(finfo[curframe].ftphost, p);
 			else if ( !strcmp(line,"port") ) finfo[curframe].ftpport = atoi(p);
