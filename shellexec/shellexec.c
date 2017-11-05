@@ -12,7 +12,7 @@
 #include "pngw.h"
 
 
-#define SH_VERSION 2.0
+#define SH_VERSION 2.14
 
 static char CFG_FILE[128] = CONFIGDIR "/shellexec.conf";
 
@@ -51,7 +51,7 @@ static char menucoltxt[][25]={
 	"Head_Text",
 	"Head"
 };
-static char spres[][5]={"","_crt","_lcd"};
+static char spres[][4]={"","crt","lcd"};
 
 #define LIST_STEP 	10
 #define BUFSIZE 	4095
@@ -85,8 +85,8 @@ char VFD[256]="";
 char url[256]="time.fu-berlin.de";
 char *line_buffer=NULL;
 char *trstr;
-int paging=1, mtmo=120, radius=0, radius_small=0;
-int ixw=600, iyw=680, xoffs=13, vfd=0;
+int paging=1, mtmo=120, vfd=0, radius=0, radius_small=0;
+int ixw, iyw, xoffs;
 char INST_FILE[]="/tmp/rc.locked";
 int instance=0;
 int rclocked=0;
@@ -206,6 +206,14 @@ char *strxchr(char *xstr, char srch)
 		}
 	}
 	return NULL;
+}
+
+int scale2res(int s)
+{
+	if (var_screeninfo.xres == 1920)
+		s += s/2;
+
+	return s;
 }
 
 void TrimString(char *strg)
@@ -581,8 +589,10 @@ int Check_Config(void)
 	FSIZE_BIG=(FSIZE_MED*5)/4;
 	FSIZE_SMALL=(FSIZE_MED*4)/5;
 	TABULATOR=2*FSIZE_MED;
-	ixw=(ixw>(ex-sx))?(ex-sx):((ixw<400)?400:ixw);
-	iyw=(iyw>(ey-sy))?(ey-sy):((iyw<380)?380:iyw);
+	ixw=scale2res(ixw);
+	iyw=scale2res(iyw);
+	ixw=(ixw>(ex-sx))?(ex-sx):((ixw<scale2res(400))?scale2res(400):ixw);
+	iyw=(iyw>(ey-sy))?(ey-sy):((iyw<scale2res(380))?scale2res(380):iyw);
 	return rv;
 }
 
@@ -1373,14 +1383,14 @@ static void ShowInfo(MENU *m, int knew )
 	int loop, dloop, ldy, stlen;
 	double scrollbar_len, scrollbar_ofs, scrollbar_cor;
 	int index=m->act_entry,tind=m->act_entry;
-	int sbw=(m->num_entrys>MAX_FUNCS)?15:0; // scrollbar width
-	int sbo=2; // inner scrollbar offset
+	int sbw=(m->num_entrys>MAX_FUNCS)?scale2res(15):0; // scrollbar width
+	int sbo=OFFSET_MIN; // inner scrollbar offset
 	char tstr[BUFSIZE]={0}, *tptr;
 	char dstr[BUFSIZE]={0}, *lcptr,*lcstr;
-	int dy, my, moffs, mh, toffs, soffs=4, oldx=startx, oldy=starty, sbar=0, nosel;
+	int dy, my, moffs, mh, toffs, soffs=OFFSET_SMALL/*4*/, oldx=startx, oldy=starty, sbar=0, nosel;
 	PLISTENTRY pl;
 
-	moffs=iyw/(MAX_FUNCS+1)+5;
+	moffs=iyw/(MAX_FUNCS+1)+OFFSET_SMALL;
 	mh=iyw-moffs;
 	dy=mh/(MAX_FUNCS+1);
 	toffs=dy/2;
@@ -1392,7 +1402,7 @@ static void ShowInfo(MENU *m, int knew )
 	tind=index;
 
 	//frame layout
-	RenderBox(6, 6, ixw+6, iyw+6, radius, COL_SHADOW_PLUS_0);
+	RenderBox(OFFSET_SMALL/*6*/, OFFSET_SMALL, ixw+OFFSET_SMALL, iyw+OFFSET_SMALL, radius, COL_SHADOW_PLUS_0);
 	RenderBox(0, 0, ixw, iyw, radius, CMC);
 
 	// titlebar
@@ -1420,7 +1430,7 @@ static void ShowInfo(MENU *m, int knew )
 		RenderBox(ixw-sbw + sbo, moffs + scrollbar_ofs + sbo, ixw - sbo, moffs + scrollbar_ofs + scrollbar_cor - sbo, radius, COL_MENUCONTENT_PLUS_3);
 	}
 	int iw,ih;
-	int offset, hoffs = (m->headermed[m->act_header]==1)?0:46;
+	int offset, hoffs = (m->headermed[m->act_header]==1)?0:scale2res(48);
 	int ioffs = xoffs+8; // + half standard icon
 	if(m->icon[m->act_header])
 	{
@@ -1493,11 +1503,11 @@ static void ShowInfo(MENU *m, int knew )
 					coffs=clh;
 				}
 			}
-			RenderString(dstr, 46, my+soffs-(dy-font_size)/2-coffs+2, ixw-sbw-65, LEFT, font_type, (((loop%MAX_FUNCS) == (tind%MAX_FUNCS)) && (sbar) && (!nosel))?CMCST:(nosel)?CMCIT:CMCT);
+			RenderString(dstr, scale2res(48), my+soffs-(dy-font_size)/2-coffs+2, ixw-sbw-scale2res(65), LEFT, font_type, (((loop%MAX_FUNCS) == (tind%MAX_FUNCS)) && (sbar) && (!nosel))?CMCST:(nosel)?CMCIT:CMCT);
 		}
 		if(pl->type==TYP_MENU)
 		{
-			RenderString(">", 30, my+soffs-(dy-FSIZE_MED)/2+1, 65, LEFT, MED, (((loop%MAX_FUNCS) == (tind%MAX_FUNCS)) && (sbar) && (!nosel))?CMCST:CMCT);
+			RenderString(">", scale2res(30), my+soffs-(dy-FSIZE_MED)/2+OFFSET_MIN, scale2res(65), LEFT, MED, (((loop%MAX_FUNCS) == (tind%MAX_FUNCS)) && (sbar) && (!nosel))?CMCST:CMCT);
 		}
 		if(pl->underline)
 		{
@@ -1534,7 +1544,7 @@ static void ShowInfo(MENU *m, int knew )
 			if(ccenter)
 			{
 				stlen=GetStringLen(xoffs, dstr, MED);
-				RenderBox(xoffs+(ixw-xoffs-sbw)/2-stlen/2, my+soffs-ldy, xoffs+(ixw-xoffs-sbw)/2+stlen/2+15, my+soffs, FILL, CMC);
+				RenderBox(xoffs+(ixw-xoffs-sbw)/2-stlen/2, my+soffs-ldy, xoffs+(ixw-xoffs-sbw)/2+stlen/2+3*OFFSET_SMALL, my+soffs, FILL, CMC);
 				RenderString(dstr, xoffs, my+soffs-(dy-FSIZE_MED)/2, ixw-sbw, CENTER, MED, CMCIT);
 			}
 		}
@@ -1553,7 +1563,7 @@ static void ShowInfo(MENU *m, int knew )
 					if(dloop<15)
 					{
 						sprintf(tstr,"%1d",(dloop-4)%10);
-						RenderString(tstr, xoffs, my+soffs-(dy-FSIZE_SMALL)/2+2, 15, CENTER, SMALL, ((loop%MAX_FUNCS) == (tind%MAX_FUNCS))?CMCST:((pl->type==TYP_INACTIVE)?CMCIT:CMCT));
+						RenderString(tstr, xoffs, my+soffs-(dy-FSIZE_SMALL)/2+2, 3*OFFSET_SMALL, CENTER, SMALL, ((loop%MAX_FUNCS) == (tind%MAX_FUNCS))?CMCST:((pl->type==TYP_INACTIVE)?CMCIT:CMCT));
 					}
 				break;
 			}
@@ -1633,7 +1643,7 @@ int llev=m->headerlevels[m->act_header], lmen=m->act_header, lentr=m->lastheader
 
 int main (int argc, char **argv)
 {
-	int index=0,cindex=0,mainloop=1,dloop=1,tv, spr;
+	int index=0,cindex=0,mainloop=1,dloop=1,tv, spr, resolution;
 	char tstr[BUFSIZE]={0}, *rptr;
 	PLISTENTRY pl;
 
@@ -1646,6 +1656,39 @@ int main (int argc, char **argv)
 		}
 	}
 
+	//init framebuffer before 1st scale2res
+	fb = open(FB_DEVICE, O_RDWR);
+#ifdef MARTII
+	if (fb < 0)
+		fb = open(FB_DEVICE_FALLBACK, O_RDWR);
+#endif
+	if(fb == -1)
+	{
+		perror(__plugin__ " <open framebuffer device>");
+		exit(1);
+	}
+	if(ioctl(fb, FBIOGET_FSCREENINFO, &fix_screeninfo) == -1)
+	{
+		perror(__plugin__ " <FBIOGET_FSCREENINFO>\n");
+		return -1;
+	}
+	if(ioctl(fb, FBIOGET_VSCREENINFO, &var_screeninfo) == -1)
+	{
+		perror(__plugin__ " <FBIOGET_VSCREENINFO>\n");
+		return -1;
+	}
+#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
+	var_screeninfo.xres = DEFAULT_XRES;
+	var_screeninfo.yres = DEFAULT_YRES;
+#endif
+	if(!(lfb = (uint32_t*)mmap(0, fix_screeninfo.smem_len, PROT_WRITE|PROT_READ, MAP_SHARED, fb, 0)))
+	{
+		perror(__plugin__ " <mapping of Framebuffer>\n");
+		return -1;
+	}
+
+	// read config
+	ixw=scale2res(600), iyw=scale2res(680), xoffs=scale2res(13);
 	if((line_buffer=calloc(BUFSIZE+1, sizeof(char)))==NULL)
 	{
 		printf(NOMEM);
@@ -1659,21 +1702,35 @@ int main (int argc, char **argv)
 	}
 
 	spr=Read_Neutrino_Cfg("screen_preset")+1;
-	sprintf(trstr,"screen_StartX%s",spres[spr]);
+	resolution=Read_Neutrino_Cfg("osd_resolution");
+
+	if (resolution == -1)
+		sprintf(trstr,"screen_StartX_%s", spres[spr]);
+	else
+		sprintf(trstr,"screen_StartX_%s_%d", spres[spr], resolution);
 	if((sx=Read_Neutrino_Cfg(trstr))<0)
-		sx=100;
+		sx=scale2res(100);
 
-	sprintf(trstr,"screen_EndX%s",spres[spr]);
+	if (resolution == -1)
+		sprintf(trstr,"screen_EndX_%s", spres[spr]);
+	else
+		sprintf(trstr,"screen_EndX_%s_%d", spres[spr], resolution);
 	if((ex=Read_Neutrino_Cfg(trstr))<0)
-		ex=1180;
+		ex=scale2res(1180);
 
-	sprintf(trstr,"screen_StartY%s",spres[spr]);
+	if (resolution == -1)
+		sprintf(trstr,"screen_StartY_%s", spres[spr]);
+	else
+		sprintf(trstr,"screen_StartY_%s_%d", spres[spr], resolution);
 	if((sy=Read_Neutrino_Cfg(trstr))<0)
-		sy=100;
+		sy=scale2res(100);
 
-	sprintf(trstr,"screen_EndY%s",spres[spr]);
+	if (resolution == -1)
+		sprintf(trstr,"screen_EndY_%s", spres[spr]);
+	else
+		sprintf(trstr,"screen_EndY_%s_%d", spres[spr], resolution);
 	if((ey=Read_Neutrino_Cfg(trstr))<0)
-		ey=620;
+		ey=scale2res(620);
 
 	for(index=CMCST; index<=CMH; index++)
 	{
@@ -1695,8 +1752,8 @@ int main (int argc, char **argv)
 	}
 
 	if(Read_Neutrino_Cfg("rounded_corners")>0) {
-		radius = 11;
-		radius_small = 7;
+		radius = scale2res(11);
+		radius_small = scale2res(5);
 	}
 	else
 		radius = radius_small = 0;
@@ -1733,40 +1790,8 @@ int main (int argc, char **argv)
 	for (index = 0; index <= COL_SHADOW_PLUS_0; index++)
 		bgra[index] = (tr[index] << 24) | (rd[index] << 16) | (gn[index] << 8) | bl[index];
 
-	fb = open(FB_DEVICE, O_RDWR);
-#ifdef MARTII
-	if (fb < 0)
-		fb = open(FB_DEVICE_FALLBACK, O_RDWR);
-#endif
-	if(fb == -1)
-	{
-		perror(__plugin__ " <open framebuffer device>");
-		exit(1);
-	}
-
 	InitRC();
 	//InitVFD();
-
-	//init framebuffer
-	if(ioctl(fb, FBIOGET_FSCREENINFO, &fix_screeninfo) == -1)
-	{
-		perror(__plugin__ " <FBIOGET_FSCREENINFO>\n");
-		return -1;
-	}
-	if(ioctl(fb, FBIOGET_VSCREENINFO, &var_screeninfo) == -1)
-	{
-		perror(__plugin__ " <FBIOGET_VSCREENINFO>\n");
-		return -1;
-	}
-#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
-	var_screeninfo.xres = DEFAULT_XRES;
-	var_screeninfo.yres = DEFAULT_YRES;
-#endif
-	if(!(lfb = (uint32_t*)mmap(0, fix_screeninfo.smem_len, PROT_WRITE | PROT_READ, MAP_SHARED, fb, 0)))
-	{
-		perror(__plugin__ " <mapping of Framebuffer>\n");
-		return -1;
-	}
 
 	//init fontlibrary
 	if((error = FT_Init_FreeType(&library)))
@@ -1832,6 +1857,11 @@ int main (int argc, char **argv)
 	fix_screeninfo.line_length = DEFAULT_XRES * sizeof(uint32_t);
 	stride = DEFAULT_XRES;
 #else
+	stride = fix_screeninfo.line_length/sizeof(uint32_t);
+	if(stride == 7680 && var_screeninfo.xres == 1280) {
+		var_screeninfo.yres = 1080;
+	}
+
 	if(!(lbb = malloc(var_screeninfo.xres*var_screeninfo.yres*sizeof(uint32_t))))
 	{
 		printf("%s <allocating of Backbuffer failed>\n", __plugin__);
@@ -1840,7 +1870,6 @@ int main (int argc, char **argv)
 		munmap(lfb, fix_screeninfo.smem_len);
 		return -1;
 	}
-	stride = fix_screeninfo.line_length/sizeof(uint32_t);
 #endif
 
 	//lbb=lfb;
@@ -1852,9 +1881,22 @@ int main (int argc, char **argv)
 	memcpy(lfb, lbb, var_screeninfo.xres*var_screeninfo.yres*sizeof(uint32_t));
 	//blit();
 #endif
-	startx = sx + (((ex-sx) - (fix_screeninfo.line_length-200))/2);
-	starty = sy + (((ey-sy) - (var_screeninfo.yres-150))/2);
 
+	startx = sx;
+	starty = sy;
+
+	/* scale to resolution */
+	FSIZE_BIG = scale2res(FSIZE_BIG);
+	FSIZE_MED = scale2res(FSIZE_MED);
+	FSIZE_SMALL = scale2res(FSIZE_SMALL);
+
+	TABULATOR = scale2res(TABULATOR);
+
+	OFFSET_MED = scale2res(OFFSET_MED);
+	OFFSET_SMALL = scale2res(OFFSET_SMALL);
+	OFFSET_MIN = scale2res(OFFSET_MIN);
+
+	/* Set up signal handlers. */
 	signal(SIGINT, quit_signal);
 	signal(SIGTERM, quit_signal);
 	signal(SIGQUIT, quit_signal);
