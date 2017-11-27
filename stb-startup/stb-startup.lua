@@ -100,6 +100,6 @@ if colorkey then
 		buttons={ "yes", "no" }
 	}
 	if res == "yes" then
-		os.execute("reboot")
+		os.execute("init 6")
 	end
 end
