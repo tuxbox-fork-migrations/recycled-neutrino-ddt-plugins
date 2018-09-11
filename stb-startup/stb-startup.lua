@@ -2,7 +2,7 @@
 -- (c) Markus Volk, Sven Hoefer, Don de Deckelwech
 -- distributed under BSD-2-Clause License
 
-caption = "STB-StartUp"
+caption = "STB-Startup"
 version = 0.04
 
 n = neutrino()
@@ -43,7 +43,7 @@ chooser = cwindow.new {
 	y = chooser_y,
 	dx = chooser_dx,
 	dy = chooser_dy,
-	title = caption .. " v" .. version,
+	title = caption, --.." v" .. version,
 	icon = "settings",
 	has_shadow = true,
 	btnRed = "Partition 1",
