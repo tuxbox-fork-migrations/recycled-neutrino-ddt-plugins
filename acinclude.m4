@@ -134,7 +134,7 @@ dnl end workaround
 
 AC_DEFUN([TUXBOX_BOXTYPE],[
 AC_ARG_WITH(boxtype,
-	[  --with-boxtype          valid values: tripledragon,spark,azbox,generic,duckbox,spark7162,armbox],
+	[  --with-boxtype          valid values: tripledragon,spark,azbox,generic,duckbox,spark7162,armbox,mipsbox],
 	[case "${withval}" in
 		tripledragon|azbox|generic)
 			BOXTYPE="$withval"
@@ -195,6 +195,10 @@ AC_ARG_WITH(boxtype,
 			BOXTYPE="armbox"
 			BOXMODEL="$withval"
 			;;
+		vuduo)
+			BOXTYPE="mipsbox"
+			BOXMODEL="$withval"
+			;;
 		*)
 			AC_MSG_ERROR([bad value $withval for --with-boxtype]) ;;
 	esac], [BOXTYPE="generic"])
@@ -203,7 +207,8 @@ AC_ARG_WITH(boxmodel,
 	[  --with-boxmodel         valid for generic: raspi
                           valid for duckbox: ufs910, ufs912, ufs913, ufs922, atevio7500, fortis_hdbox, octagon1008, hs7110, hs7810a, hs7119, hs7819, dp7000, cuberevo, cuberevo_mini, cuberevo_mini2, cuberevo_250hd, cuberevo_2000hd, cuberevo_3000hd, ipbox9900, ipbox99, ipbox55, arivalink200, tf7700, hl101
                           valid for spark: spark, spark7162
-                          valid for armbox: hd51, hd60, vusolo4k, bre2ze4k],
+                          valid for armbox: hd51, hd60, vusolo4k, bre2ze4k
+                          valid for mipsbox: vuduo],
 	[case "${withval}" in
 		ufs910|ufs912|ufs913|ufs922|atevio7500|fortis_hdbox|octagon1008|hs7110|hs7810a|hs7119|hs7819|dp7000|cuberevo|cuberevo_mini|cuberevo_mini2|cuberevo_250hd|cuberevo_2000hd|cuberevo_3000hd|ipbox9900|ipbox99|ipbox55|arivalink200|tf7700|hl101)
 			if test "$BOXTYPE" = "duckbox"; then
@@ -233,6 +238,13 @@ AC_ARG_WITH(boxmodel,
 				AC_MSG_ERROR([unknown model $withval for boxtype $BOXTYPE])
 			fi
 			;;
+		vuduo)
+			if test "$BOXTYPE" = "mipsbox"; then
+				BOXMODEL="$withval"
+			else
+				AC_MSG_ERROR([unknown model $withval for boxtype $BOXTYPE])
+			fi
+			;;
 		*)
 			AC_MSG_ERROR([unsupported value $withval for --with-boxmodel])
 			;;
@@ -247,6 +259,7 @@ AM_CONDITIONAL(BOXTYPE_SPARK, test "$BOXTYPE" = "spark")
 AM_CONDITIONAL(BOXTYPE_GENERIC, test "$BOXTYPE" = "generic")
 AM_CONDITIONAL(BOXTYPE_DUCKBOX, test "$BOXTYPE" = "duckbox")
 AM_CONDITIONAL(BOXTYPE_ARMBOX, test "$BOXTYPE" = "armbox")
+AM_CONDITIONAL(BOXTYPE_MIPSBOX, test "$BOXTYPE" = "mipsbox")
 
 AM_CONDITIONAL(BOXMODEL_UFS910, test "$BOXMODEL" = "ufs910")
 AM_CONDITIONAL(BOXMODEL_UFS912, test "$BOXMODEL" = "ufs912")
@@ -281,6 +294,8 @@ AM_CONDITIONAL(BOXMODEL_HD60, test "$BOXMODEL" = "hd60")
 AM_CONDITIONAL(BOXMODEL_VUSOLO4K, test "$BOXMODEL" = "vusolo4k")
 AM_CONDITIONAL(BOXMODEL_BRE2ZE4K, test "$BOXMODEL" = "bre2ze4k")
 
+AM_CONDITIONAL(BOXMODEL_VUDUO, test "$BOXMODEL" = "vuduo")
+
 AM_CONDITIONAL(BOXMODEL_RASPI, test "$BOXMODEL" = "raspi")
 
 if test "$BOXTYPE" = "azbox"; then
@@ -295,7 +310,8 @@ elif test "$BOXTYPE" = "duckbox"; then
 	AC_DEFINE(HAVE_DUCKBOX_HARDWARE, 1, [building for a duckbox])
 elif test "$BOXTYPE" = "armbox"; then
 	AC_DEFINE(HAVE_ARM_HARDWARE, 1, [building for a armbox])
-
+elif test "$BOXTYPE" = "mipsbox"; then
+	AC_DEFINE(HAVE_MIPS_HARDWARE, 1, [building for an mipsbox])
 fi
 
 # TODO: do we need more defines?
@@ -361,6 +377,8 @@ elif test "$BOXMODEL" = "vusolo4k"; then
 	AC_DEFINE(BOXMODEL_VUSOLO4K, 1, [vusolo4k])
 elif test "$BOXMODEL" = "bre2ze4k"; then
 	AC_DEFINE(BOXMODEL_BRE2ZE4K, 1, [bre2ze4k])
+elif test "$BOXMODEL" = "vuduo"; then
+	AC_DEFINE(BOXMODEL_VUDUO, 1, [vuduo])
 fi
 ])
 
