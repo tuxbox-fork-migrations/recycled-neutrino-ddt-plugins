@@ -105,7 +105,7 @@ if locale[lang] == nil then
 end
 timing_menu = neutrino_conf:getString("timing.menu", "0")
 
-cdx = 600;
+cdx = 700;
 
 if (get_imagename(3, "boxmode=12'")) then
 	btn_6 = get_imagename(3, "boxmode=12'")
