@@ -256,7 +256,7 @@ if res == "yes" then
 				if line:match(box_mode) then
 					if (j ~= bootfile) then
 						local file = io.open(bootfile, "w")
-						file:write(line)
+						file:write(line .. "\n")
 						file:close()
 					end
 				end
