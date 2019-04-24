@@ -9,7 +9,9 @@ extern const char NOMEM[];
 #if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 void FillRect(int _sx, int _sy, int _dx, int _dy, uint32_t color)
 {
-	uint32_t *p1, *p2, *p3, *p4;
+//	if (_dx <= 0 || _dy <= 0)
+//		return;
+
 	sync_blitter = 1;
 
 	STMFBIO_BLT_DATA bltData;
@@ -38,6 +40,9 @@ void FillRect(int _sx, int _sy, int _dx, int _dy, uint32_t color)
 
 void RenderBox(int _sx, int _sy, int _ex, int _ey, int rad, int col)
 {
+	if (_ex <= 0 || _ey <= 0)
+		return;
+
 	int F,R=rad,ssx=startx+_sx,ssy=starty+_sy,dxx=_ex-_sx,dyy=_ey-_sy,rx,ry,wx,wy,count;
 
 	uint32_t *pos = lbb + ssx + stride * ssy;
