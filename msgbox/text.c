@@ -437,7 +437,7 @@ int RenderString(char *string, int _sx, int _sy, int maxwidth, int layout, int s
 
 	_ex = _sx + maxwidth;
 
-#if defined(MARTII) && defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
+#if 0//defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE)
 	if(sync_blitter) {
 		sync_blitter = 0;
 		if (ioctl(fb, STMFBIO_SYNC_BLITTER) < 0)
@@ -472,11 +472,7 @@ int RenderString(char *string, int _sx, int _sy, int maxwidth, int layout, int s
 					if(sscanf(rptr+1,"%4d",&i)==1)
 					{
 						rptr+=4;
-#ifdef MARTII
-						_sx = psx + OFFSET_MED + scale2res(i);
-#else
 						_sx=scale2res(i);
-#endif
 					}
 				break;
 			}

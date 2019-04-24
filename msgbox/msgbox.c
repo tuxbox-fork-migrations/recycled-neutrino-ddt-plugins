@@ -17,12 +17,20 @@
 	typeof (b) __b = (b); \
 	__a > __b ? __a : __b; })
 
-#define M_VERSION 2.12
+#define M_VERSION 2.13
+
+#ifndef CONFIGDIR
+#define CONFIGDIR "/var/tuxbox/config"
+#endif
+#ifndef DATADIR
+#define DATADIR "/usr/share/tuxbox"
+#endif
+#ifndef FONTDIR
+#define FONTDIR "/usr/share/fonts"
+#endif
 
 #define NCF_FILE CONFIGDIR "/neutrino.conf"
-#ifndef MARTII
-#define HDF_FILE	"/tmp/.msgbox_hidden"
-#endif
+#define HDF_FILE "/tmp/.msgbox_hidden"
 
 #define FONT2 FONTDIR "/pakenham.ttf"
 // if font is not in usual place, we look here:
@@ -557,9 +565,7 @@ int ix,tv,found=0, spr, resolution;
 int dloop=1, rcc=-1;
 char rstr[BUFSIZE]={0}, *rptr=NULL, *aptr=NULL;
 time_t tm1,tm2;
-#ifndef MARTII
 FILE *fh;
-#endif
 
 		if(argc<2)
 		{
