@@ -26,9 +26,7 @@ PKG_CHECK_MODULES(PNG,libpng)
 AC_OUTPUT([
 Makefile
 include/Makefile
-tuxcom/Makefile
 tuxwetter/Makefile
-msgbox/Makefile
 input/Makefile
 getrc/Makefile
 shellexec/Makefile
@@ -73,6 +71,7 @@ fx2/solitair/Makefile
 #fx2/sol/Makefile
 #fx2/c64emu/Makefile
 #fx2/sudoku/Makefile
+#msgbox/Makefile
 #tuxmail/Makefile
 #tuxmail/daemon/Makefile
 #tuxcal/Makefile
