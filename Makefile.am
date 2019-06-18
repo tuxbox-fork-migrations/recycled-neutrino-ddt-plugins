@@ -5,6 +5,11 @@ SUBDIRS = \
 #	include tuxcom tuxwetter msgbox input getrc shellexec fx2
 #	include tuxmail tuxtxt tuxcom tuxcal tuxclock fx2 vncviewer enigma shellexec tuxwetter sysinfo clock logomask blockads links
 
+if BOXTYPE_ARMBOX
+SUBDIRS += \
+	stb-startup
+endif
+
 #if BOXTYPE_DREAMBOX
 #SUBDIRS += pip mosaic
 #else
