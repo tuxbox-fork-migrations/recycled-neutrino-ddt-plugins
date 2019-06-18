@@ -1,7 +1,8 @@
 AUTOMAKE_OPTIONS = gnu
 
 SUBDIRS = \
-	include tuxcom tuxwetter msgbox input getrc shellexec fx2
+	include tuxwetter input getrc shellexec fx2
+#	include tuxcom tuxwetter msgbox input getrc shellexec fx2
 #	include tuxmail tuxtxt tuxcom tuxcal tuxclock fx2 vncviewer enigma shellexec tuxwetter sysinfo clock logomask blockads links
 
 #if BOXTYPE_DREAMBOX
