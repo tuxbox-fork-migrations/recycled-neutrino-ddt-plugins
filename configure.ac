@@ -31,6 +31,7 @@ input/Makefile
 getrc/Makefile
 shellexec/Makefile
 stb-startup/Makefile
+stb-startup-tuxbox/Makefile
 fx2/Makefile
 fx2/lemm/Makefile
 fx2/master/Makefile

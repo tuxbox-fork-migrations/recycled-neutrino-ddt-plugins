@@ -10,6 +10,11 @@ SUBDIRS += \
 	stb-startup
 endif
 
+#if BOXTYPE_ARMBOX
+#SUBDIRS += \
+#	stb-startup-tuxbox
+#endif
+
 #if BOXTYPE_DREAMBOX
 #SUBDIRS += pip mosaic
 #else
