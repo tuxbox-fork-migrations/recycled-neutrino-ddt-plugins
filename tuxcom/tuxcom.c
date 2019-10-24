@@ -988,6 +988,8 @@ int main()
 	if (rc < 0)
 #if HAVE_DUCKBOX_HARDWARE || BOXMODEL_VUSOLO4K || BOXMODEL_VUDUO4K || BOXMODEL_VUULTIMO4K || BOXMODEL_VUUNO4K || BOXMODEL_VUUNO4KSE || BOXMODEL_VUZERO4K || BOXMODEL_VUDUO
 		rc = open("/dev/input/event0", O_RDONLY);
+#elif BOXMODEL_H7
+		rc = open("/dev/input/event2", O_RDONLY);
 #else
 		rc = open("/dev/input/event1", O_RDONLY);
 #endif
