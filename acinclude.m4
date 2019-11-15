@@ -179,10 +179,6 @@ AC_ARG_WITH(boxtype,
 			BOXTYPE="duckbox"
 			BOXMODEL="$withval"
 			;;
-		arivalink200)
-			BOXTYPE="duckbox"
-			BOXMODEL="$withval"
-			;;
 		tf*)
 			BOXTYPE="duckbox"
 			BOXMODEL="$withval"
@@ -205,12 +201,12 @@ AC_ARG_WITH(boxtype,
 
 AC_ARG_WITH(boxmodel,
 	[  --with-boxmodel         valid for generic: raspi
-                          valid for duckbox: ufs910, ufs912, ufs913, ufs922, atevio7500, fortis_hdbox, octagon1008, cuberevo, cuberevo_mini, cuberevo_mini2, cuberevo_250hd, cuberevo_2000hd, cuberevo_3000hd, ipbox9900, ipbox99, ipbox55, arivalink200, tf7700, hl101
+                          valid for duckbox: ufs910, ufs912, ufs913, ufs922, atevio7500, fortis_hdbox, octagon1008, cuberevo, cuberevo_mini, cuberevo_mini2, cuberevo_250hd, cuberevo_2000hd, cuberevo_3000hd, ipbox9900, ipbox99, ipbox55, tf7700, hl101
                           valid for spark: spark, spark7162
                           valid for armbox: hd51, hd60, vusolo4k, vuduo4k, vuultimo4k, vuuno4k, vuuno4kse, vuzero4k, bre2ze4k, h7
                           valid for mipsbox: vuduo],
 	[case "${withval}" in
-		ufs910|ufs912|ufs913|ufs922|atevio7500|fortis_hdbox|octagon1008|cuberevo|cuberevo_mini|cuberevo_mini2|cuberevo_250hd|cuberevo_2000hd|cuberevo_3000hd|ipbox9900|ipbox99|ipbox55|arivalink200|tf7700|hl101)
+		ufs910|ufs912|ufs913|ufs922|atevio7500|fortis_hdbox|octagon1008|cuberevo|cuberevo_mini|cuberevo_mini2|cuberevo_250hd|cuberevo_2000hd|cuberevo_3000hd|ipbox9900|ipbox99|ipbox55|tf7700|hl101)
 			if test "$BOXTYPE" = "duckbox"; then
 				BOXMODEL="$withval"
 			else
@@ -280,7 +276,6 @@ AM_CONDITIONAL(BOXMODEL_CUBEREVO_3000HD, test "$BOXMODEL" = "cuberevo_3000hd")
 AM_CONDITIONAL(BOXMODEL_IPBOX9900, test "$BOXMODEL" = "ipbox9900")
 AM_CONDITIONAL(BOXMODEL_IPBOX99, test "$BOXMODEL" = "ipbox99")
 AM_CONDITIONAL(BOXMODEL_IPBOX55, test "$BOXMODEL" = "ipbox55")
-AM_CONDITIONAL(BOXMODEL_ARIVALINK200, test "$BOXMODEL" = "arivalink200")
 AM_CONDITIONAL(BOXMODEL_TF7700, test "$BOXMODEL" = "tf7700")
 AM_CONDITIONAL(BOXMODEL_HL101, test "$BOXMODEL" = "hl101")
 
@@ -354,8 +349,6 @@ elif test "$BOXMODEL" = "ipbox99"; then
 	AC_DEFINE(BOXMODEL_IPBOX99, 1, [ipbox99])
 elif test "$BOXMODEL" = "ipbox55"; then
 	AC_DEFINE(BOXMODEL_IPBOX55, 1, [ipbox55])
-elif test "$BOXMODEL" = "arivalink200"; then
-	AC_DEFINE(BOXMODEL_ARIVALINK200, 1, [arivalink200])
 elif test "$BOXMODEL" = "tf7700"; then
 	AC_DEFINE(BOXMODEL_TF7700, 1, [tf7700])
 elif test "$BOXMODEL" = "hl101"; then
