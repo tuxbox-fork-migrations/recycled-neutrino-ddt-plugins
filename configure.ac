@@ -30,6 +30,7 @@ tuxwetter/Makefile
 input/Makefile
 getrc/Makefile
 shellexec/Makefile
+stb-backup/Makefile
 stb-startup/Makefile
 stb-startup-tuxbox/Makefile
 fx2/Makefile
