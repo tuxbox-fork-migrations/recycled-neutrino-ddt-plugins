@@ -2,7 +2,7 @@
 # Script for complete image backup
 # (C) 2018-2019 DboxOldie / BPanther / Frankenstone / Fritz
 # License: GPLv2 or later
-Version="1.12d vom 21.11.2019"
+Version="1.13 vom 22.11.2019"
 #
 file=$0
 model=`cat /proc/stb/info/model`
@@ -23,7 +23,7 @@ bz2=$(which bzip2)
 hexd=$(which hexdump)
 xxdmp=$(which xxd)
 new_layout=0
-magic_number="0x016f2818" # HD51 / BRE2ZE4K / VUSOLO4K / VUDUO4K / VUZERO4K / UTLIMATE4K / UNO4K / UNO4KSE / ZGEMMA H7
+magic_number="0x016f2818" # HD51 / BRE2ZE4K / ZGEMMA H7 / VUSOLO4K / VUDUO4K / VUZERO4K / UTLIMATE4K / UNO4K / UNO4KSE
 dtb_magic_number="0xd00dfeed"
 
 #
@@ -53,8 +53,8 @@ fi
 rootnumber=`echo ${rootmtd:8:2}`
 mmcprefix=`echo ${rootmtd:0:8}`
 
-echo "  Image Backup (Version: $Version) - (C) 2018-2019 DboxOldie / BPanther"
-echo "  AX HD51 4K, Bre2ze 4K, VU+ DUO 4K, VU+ UNO 4K, VU+ UNO 4K SE, VU+ ZERO 4K, VU+ ULTIMO 4K, VU+ SOLO 4K  und ZGEMMA H7"
+echo "  Image Backup (Version: $Version) - (C) 2018-2019 DboxOldie / BPanther / Frankenstone / Fritz"
+echo "  AX HD51 4K, Bre2ze 4K, ZGEMMA H7, VU+ DUO 4K, VU+ UNO 4K, VU+ UNO 4K SE, VU+ ZERO 4K, VU+ ULTIMO 4K und VU+ SOLO 4K"
 echo
 if [ "$model" == "hd51" -o "$model" == "h7" -o "$model" == "bre2ze4k" ]; then
 	echo "  Image Backup für Boxmodel '$model' startet..."
