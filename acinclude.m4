@@ -143,10 +143,6 @@ AC_ARG_WITH(boxtype,
 			BOXTYPE="spark"
 			BOXMODEL="$withval"
 			;;
-		dm*)
-			BOXTYPE="dreambox"
-			BOXMODEL="$withval"
-			;;
 		ufs*)
 			BOXTYPE="duckbox"
 			BOXMODEL="$withval"
@@ -164,10 +160,6 @@ AC_ARG_WITH(boxtype,
 			BOXMODEL="$withval"
 			;;
 		hs7*)
-			BOXTYPE="duckbox"
-			BOXMODEL="$withval"
-			;;
-		dp*)
 			BOXTYPE="duckbox"
 			BOXMODEL="$withval"
 			;;
