@@ -175,7 +175,7 @@ AC_ARG_WITH(boxtype,
 			BOXTYPE="duckbox"
 			BOXMODEL="$withval"
 			;;
-		hd51|hd60|bre2ze4k|vusolo4k|vuduo4k|vuultimo4k|vuzero4k|vuuno4k|vuuno4kse|h7)
+		hd51|bre2ze4k|vusolo4k|vuduo4k|vuultimo4k|vuzero4k|vuuno4k|vuuno4kse|h7)
 			BOXTYPE="armbox"
 			BOXMODEL="$withval"
 			;;
@@ -191,7 +191,7 @@ AC_ARG_WITH(boxmodel,
 	[  --with-boxmodel         valid for generic: raspi
                           valid for duckbox: ufs910, ufs912, ufs913, ufs922, atevio7500, fortis_hdbox, octagon1008, cuberevo, cuberevo_mini, cuberevo_mini2, cuberevo_250hd, cuberevo_2000hd, cuberevo_3000hd, ipbox9900, ipbox99, ipbox55, tf7700
                           valid for spark: spark, spark7162
-                          valid for armbox: hd51, hd60, vusolo4k, vuduo4k, vuultimo4k, vuuno4k, vuuno4kse, vuzero4k, bre2ze4k, h7
+                          valid for armbox: hd51, vusolo4k, vuduo4k, vuultimo4k, vuuno4k, vuuno4kse, vuzero4k, bre2ze4k, h7
                           valid for mipsbox: vuduo],
 	[case "${withval}" in
 		ufs910|ufs912|ufs913|ufs922|atevio7500|fortis_hdbox|octagon1008|cuberevo|cuberevo_mini|cuberevo_mini2|cuberevo_250hd|cuberevo_2000hd|cuberevo_3000hd|ipbox9900|ipbox99|ipbox55|tf7700)
@@ -215,7 +215,7 @@ AC_ARG_WITH(boxmodel,
 				AC_MSG_ERROR([unknown model $withval for boxtype $BOXTYPE])
 			fi
 			;;
-		hd51|hd60|bre2ze4k|vusolo4k|vuduo4k|vuultimo4k|vuzero4k|vuuno4k|vuuno4kse|h7)
+		hd51|bre2ze4k|vusolo4k|vuduo4k|vuultimo4k|vuzero4k|vuuno4k|vuuno4kse|h7)
 			if test "$BOXTYPE" = "armbox"; then
 				BOXMODEL="$withval"
 			else
@@ -267,7 +267,6 @@ AM_CONDITIONAL(BOXMODEL_IPBOX55, test "$BOXMODEL" = "ipbox55")
 AM_CONDITIONAL(BOXMODEL_TF7700, test "$BOXMODEL" = "tf7700")
 
 AM_CONDITIONAL(BOXMODEL_HD51, test "$BOXMODEL" = "hd51")
-AM_CONDITIONAL(BOXMODEL_HD60, test "$BOXMODEL" = "hd60")
 AM_CONDITIONAL(BOXMODEL_VUSOLO4K, test "$BOXMODEL" = "vusolo4k")
 AM_CONDITIONAL(BOXMODEL_VUDUO4K, test "$BOXMODEL" = "vuduo4k")
 AM_CONDITIONAL(BOXMODEL_VUULTIMO4K, test "$BOXMODEL" = "vuultimo4k")
@@ -340,8 +339,6 @@ elif test "$BOXMODEL" = "tf7700"; then
 	AC_DEFINE(BOXMODEL_TF7700, 1, [tf7700])
 elif test "$BOXMODEL" = "hd51"; then
 	AC_DEFINE(BOXMODEL_HD51, 1, [HD51 / AX51])
-elif test "$BOXMODEL" = "hd60"; then
-	AC_DEFINE(BOXMODEL_HD60, 1, [HD60 / AX60])
 elif test "$BOXMODEL" = "vusolo4k"; then
 	AC_DEFINE(BOXMODEL_VUSOLO4K, 1, [vusolo4k])
 elif test "$BOXMODEL" = "vuduo4k"; then
