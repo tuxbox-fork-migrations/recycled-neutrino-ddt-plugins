@@ -8,7 +8,8 @@ SUBDIRS = \
 if BOXTYPE_ARMBOX
 if BOXMODEL_VUPLUS_ARM
 SUBDIRS += \
-	stb-startup-vu
+	stb-startup-vu \
+	stb-backup
 else
 SUBDIRS += \
 	stb-startup \
