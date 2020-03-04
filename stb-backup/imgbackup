@@ -61,27 +61,30 @@ do
 	parm=$1
 	[ "$parm" == "none" ] && archive=$parm
 	[ "$(echo ${parm:0:1})" == "/" ] && save_path=$parm
-	partition=$2
-	if [ "$partition" == "-m1" ]; then
+	if [ "$parm" == "-m1" ]; then
 		[ "$model" == "hd51" -o "$model" == "h7" -o "$model" == "bre2ze4k" ] && [ $new_layout == 0 ] && rootmtd=mmcblk0p3 && multi=1
 		[ "$model" == "solo4k" -o "$model" == "ultimo4k" -o "$model" == "uno4k" -o "$model" == "uno4kse" ] && rootmtd=mmcblk0p5 && multi=1
 		[ "$model" == "zero4k" ] && rootmtd=mmcblk0p8 && multi=1
 		[ "$model" == "duo4k" ] && rootmtd=mmcblk0p10 && multi=1
-	elif [ "$partition" == "-m2" ]; then
+		destname="$(echo ${parm:1:2})-"$destname
+	elif [ "$parm" == "-m2" ]; then
 		[ "$model" == "hd51" -o "$model" == "h7" -o "$model" == "bre2ze4k" ] && [ $new_layout == 0 ] && rootmtd=mmcblk0p5 && multi=1
 		[ "$model" == "solo4k" -o "$model" == "ultimo4k" -o "$model" == "uno4k" -o "$model" == "uno4kse" ] && rootmtd=mmcblk0p7 && multi=1
 		[ "$model" == "zero4k" ] && rootmtd=mmcblk0p10 && multi=1
 		[ "$model" == "duo4k" ] && rootmtd=mmcblk0p12 && multi=1
-	elif [ "$partition" == "-m3" ]; then
+		destname="$(echo ${parm:1:2})-"$destname
+	elif [ "$parm" == "-m3" ]; then
 		[ "$model" == "hd51" -o "$model" == "h7" -o "$model" == "bre2ze4k" ] && [ $new_layout == 0 ] && rootmtd=mmcblk0p7 && multi=1
 		[ "$model" == "solo4k" -o "$model" == "ultimo4k" -o "$model" == "uno4k" -o "$model" == "uno4kse" ] && rootmtd=mmcblk0p9 && multi=1
 		[ "$model" == "zero4k" ] && rootmtd=mmcblk0p12 && multi=1
 		[ "$model" == "duo4k" ] && rootmtd=mmcblk0p14 && multi=1
-	elif [ "$partition" == "-m4" ]; then
+		destname="$(echo ${parm:1:2})-"$destname
+	elif [ "$parm" == "-m4" ]; then
 		[ "$model" == "hd51" -o "$model" == "h7" -o "$model" == "bre2ze4k" ] && [ $new_layout == 0 ] && rootmtd=mmcblk0p9 && multi=1
 		[ "$model" == "solo4k" -o "$model" == "ultimo4k" -o "$model" == "uno4k" -o "$model" == "uno4kse" ] && rootmtd=mmcblk0p11 && multi=1
 		[ "$model" == "zero4k" ] && rootmtd=mmcblk0p14 && multi=1
 		[ "$model" == "duo4k" ] && rootmtd=mmcblk0p16 && multi=1
+		destname="$(echo ${parm:1:2})-"$destname
 	fi
 	shift
 done
