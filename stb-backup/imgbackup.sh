@@ -1,3 +1,3 @@
 #!/bin/sh
-/var/tuxbox/plugins/imgbackup
+/var/tuxbox/plugins/imgbackup gui
 exit 0
