@@ -1,7 +1,7 @@
 #!/bin/sh
 # Script for complete image backup
 # License: GPLv2 or later
-Version="1.19 vom 20.03.2020"
+Version="1.20 vom 20.03.2020"
 Copyright="(C) 2018-2020 DboxOldie / BPanther / Frankenstone / Fritz"
 
 #
@@ -87,6 +87,7 @@ do
 	parm=$1
 	[ "$parm" == "none" ] && archive=$parm
 	[ "$(echo ${parm:0:1})" == "/" ] && save_path=$parm
+	[ "$parm" == "select_dir" ] && select_dir=1
 	if [ "$parm" == "gui" ]; then
 		gui_mode=1
 		msgbox title="Partitions-Backup erstellen" msg="~cDiese Partitionen stehen zur Auswahl:" select="Partition 1, Partition 2, Partition 3, Partition 4" order=4 default=$bkp_part
@@ -126,7 +127,7 @@ do
 	shift
 done
 
-if [ "$gui_mode" == "1" ]; then
+if [ "$gui_mode" == "1" ] || [ "$select_dir" == "1" ]; then
 	msgb=0
 	OPT=$save_path,`echo "" && mount | grep /dev/sd | awk '{print $3.","}' && mount | grep /mnt | awk '{print $3.","}'`
 	OPT=`echo "$OPT" | grep -v "/tmp/mnt"`
