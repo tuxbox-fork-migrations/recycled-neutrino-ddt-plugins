@@ -1,7 +1,7 @@
 #!/bin/sh
 # Script for complete image backup
 # License: GPLv2 or later
-Version="1.17 vom 19.03.2020"
+Version="1.18 vom 20.03.2020"
 Copyright="(C) 2018-2020 DboxOldie / BPanther / Frankenstone / Fritz"
 
 #
@@ -66,10 +66,10 @@ do
 	[ "$(echo ${parm:0:1})" == "/" ] && save_path=$parm
 	if [ "$parm" == "gui" ]; then
 		gui_mode=1
-		msgbox title="Partitions-Backup erstellen" msg="~cDiese Partitionen stehen zur Auswahl:" select="Partition 1, Partition 2, Partition 3, Partition 4"
+		msgbox title="Partitions-Backup erstellen" msg="~cDiese Partitionen stehen zur Auswahl:" select="Partition 1, Partition 2, Partition 3, Partition 4" order=4
 		parm=-m$?
 		[ "$parm" == "-m0" ] && echo "  Abbruch!" && exit
-		echo "  Backup Partition: ${parm:2:3}"
+		B_PART=`echo "Backup Partition: ${parm:2:3}"`
 	fi
 	if [ "$parm" == "-m1" ]; then
 		[ "$model" == "hd51" -o "$model" == "h7" -o "$model" == "bre2ze4k" ] && [ $new_layout == 0 ] && rootmtd=mmcblk0p3 && multi=1
@@ -105,8 +105,9 @@ done
 
 if [ "$gui_mode" == "1" ]; then
 	msgb=0
-	OPT=$save_path,`echo "" && mount | grep /dev/sda1 | awk '{print $3.","}' && mount | grep /dev/sdb1 | awk '{print $3.","}' && mount | grep /dev/sdc1 | awk '{print $3.","}'`
-	msgbox title="Verzeichnis auswählen" msg="" select="$OPT"
+	OPT=$save_path,`echo "" && mount | grep /dev/sd | awk '{print $3.","}' && mount | grep /mnt | awk '{print $3.","}'`
+	OPT=`echo "$OPT" | grep -v "/tmp/mnt"`
+	msgbox title="Hauptverzeichnis auswählen" msg="" select="$OPT" order=2
 	msgb=$?
 	if [ "$msgb" != "0" ]; then
 		cnt=0
@@ -118,7 +119,22 @@ if [ "$gui_mode" == "1" ]; then
 	else
 		echo "  Abbruch!" && exit
 	fi
-	echo "  Backup Verzeichnis: $save_path"
+	msgb=0
+	OPT=`echo "" && find $save_path -type d -maxdepth 3 | awk '{print $1.","}'`
+	OPT=`echo "$OPT" | grep -v "/tmp/mnt"`
+	msgbox title="Unterverzeichnis auswählen" msg="" select="$OPT" order=2
+	msgb=$?
+	if [ "$msgb" != "0" ]; then
+		cnt=0
+		for DIR in $OPT; do
+			cnt=$((cnt + 1))
+			DIR=`echo "$DIR" | cut -d "," -f1`
+			[ "$cnt" == "$msgb" ] && save_path=$DIR && break
+		done
+	else
+		echo "  Abbruch!" && exit
+	fi
+	B_DIR=`echo "Backup Verzeichnis: $save_path"`
 fi
 
 [ "$archive" == "none" ] && save_path="$save_path/$destname"
@@ -129,8 +145,11 @@ mmcprefix=`echo ${rootmtd:0:8}`
 echo "  Image Backup (Version: $Version) - $Copyright"
 echo "  AX HD51 4K, Bre2ze 4K, ZGEMMA H7, VU+ DUO 4K, VU+ UNO 4K, VU+ UNO 4K SE, VU+ ZERO 4K, VU+ ULTIMO 4K und VU+ SOLO 4K"
 echo
+echo "  $B_PART"
+echo "  $B_DIR"
+echo
 
-if [ "$save_path" == "/tmp" ]; then
+if [ "${save_path:0:4}" == "/tmp" ]; then
 	mkdir /tmp/tmp_mount
 	mount /dev/$rootmtd /tmp/tmp_mount
 	[ -e /tmp/tmp_mount/usr/bin/enigma2.sh ] && e2_found=1
@@ -138,6 +157,10 @@ if [ "$save_path" == "/tmp" ]; then
 	rmdir /tmp/tmp_mount
 	[ "$e2_found" == "1" ] && echo "  STOP, E2 passt nicht in /tmp !" && exit
 fi
+
+df $save_path | grep -q tmpfs && DIR_CHECK=$? || DIR_CHECK=$?
+[ "$DIR_CHECK" == "0" ] && [ "${save_path:0:4}" != "/tmp" ] && echo "  Das gewählte Verzeichnis ist ungültig !" && exit
+
 
 if [ "$model" == "hd51" -o "$model" == "h7" -o "$model" == "bre2ze4k" ]; then
 	echo "  Image Backup für Boxmodel '$model' startet..."
