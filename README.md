@@ -1,2 +1,2 @@
-neutrino-mp-plugins
+neutrino-ddt-plugins
 ===================
