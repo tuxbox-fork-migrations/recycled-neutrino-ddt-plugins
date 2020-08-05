@@ -96,7 +96,7 @@ select_backup_dir() {
 		rootfs_size=`df /dev/$rootmtd | tail -n1 | awk '{print $3}'`
 	fi
 	rootfs_size=$((rootfs_size * 2 + 5038080 / 1024))
-	save_path_size=`df "$save_path" | tail -n1 | awk '{print $4}'`
+	save_path_size=`df "$save_path" | tail -n1 | awk '{print $2}'`
 	IFS=$IFS_OLD
 }
 
