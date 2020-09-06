@@ -14,6 +14,25 @@
 #define BUFSIZE 	1024
 #define I_VERSION	2.12
 
+FT_Error 		error;
+FT_Library		library;
+FTC_Manager		manager;
+FTC_SBitCache		cache;
+FTC_SBit		sbit;
+#if FREETYPE_MAJOR == 2 && FREETYPE_MINOR == 0
+FTC_Image_Desc		desc;
+#else
+FTC_ImageTypeRec	desc;
+#endif
+FT_Face			face;
+FT_UInt			prev_glyphindex;
+FT_Bool			use_kerning;
+
+struct fb_fix_screeninfo fix_screeninfo;
+struct fb_var_screeninfo var_screeninfo;
+
+int fb;
+int startx, starty, sx, ex, sy, ey;
 
 #define FONT2 FONTDIR "/pakenham.ttf"
 // if font is not in usual place, we look here:
