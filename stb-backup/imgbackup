@@ -1,7 +1,7 @@
 #!/bin/sh
 # Script for complete image backup
 # License: GPLv2 or later
-Version="1.26 vom 22.09.2020"
+Version="1.26a vom 27.09.2020"
 Copyright="(C) 2018-2020 DboxOldie / BPanther / Frankenstone / Fritz"
 
 #
@@ -182,7 +182,7 @@ check_df=`df "$save_path" | tail -n1 | wc -w`
 [ $check_df -eq 5 ] && save_path_size=`df "$save_path" | tail -n1 | awk '{print $3}'` || save_path_size=`df "$save_path" | tail -n1 | awk '{print $4}'`
 
 echo "  Image Backup (Version: $Version) - $Copyright"
-echo "  AX HD51 4K, Bre2ze 4K, ZGEMMA H7, VU+ DUO 4K, VU+ UNO 4K, VU+ UNO 4K SE, VU+ ZERO 4K, VU+ ULTIMO 4K und VU+ SOLO 4K"
+echo "  AX HD51 4K, Bre2ze 4K, ZGEMMA H7, VU+ DUO 4K, VU+ DUO 4K SE, VU+ UNO 4K, VU+ UNO 4K SE, VU+ ZERO 4K, VU+ ULTIMO 4K und VU+ SOLO 4K"
 echo
 echo "  $B_PART"
 echo "  $B_DIR"
