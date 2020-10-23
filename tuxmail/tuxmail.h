@@ -1,14 +1,8 @@
-/******************************************************************************
- *                        <<< TuxMail - Mail Plugin >>>
- *                (c) Thomas "LazyT" Loewe 2003 (LazyT@gmx.net)
- ******************************************************************************/
 
-#include "config.h"
+#ifndef __TUXMAIL_H__
+#define __TUXMAIL_H__
 
-#if !defined(HAVE_DVB_API_VERSION) && defined(HAVE_OST_DMX_H)
-#define HAVE_DVB_API_VERSION 1
-#endif
-
+//#include "config.h"
 #include <errno.h>
 #include <fcntl.h>
 #include <signal.h>
@@ -17,9 +11,8 @@
 #include <string.h>
 #include <unistd.h>
 #include <linux/fb.h>
-#if HAVE_DVB_API_VERSION == 3
 #include <linux/input.h>
-#endif
+
 #include <sys/ioctl.h>
 #include <sys/mman.h>
 #include <sys/socket.h>
@@ -30,20 +23,29 @@
 #include FT_CACHE_H
 #include FT_CACHE_SMALL_BITMAPS_H
 
-#include <plugin.h>
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
+#ifndef CONFIGDIR
+#define CONFIGDIR "/var/tuxbox/config"
+#endif
+#ifndef FONTDIR
+#define FONTDIR	"/usr/share/fonts"
+#endif
 
 #define SCKFILE "/tmp/tuxmaild.socket"
 #define LCKFILE "/tmp/lcd.locked"
 #define RUNFILE "/var/etc/.tuxmaild"
-#define CFGPATH "/var/tuxbox/config/tuxmail/"
-#define CFGFILE "tuxmail.conf"
-#define SPMFILE "spamlist"
+#define CFGPATH CONFIGDIR "/tuxmail"
+#define CFGFILE "/tuxmail.conf"
+#define SPMFILE "/spamlist"
 #define POP3FILE "/tmp/tuxmail.pop3"
 #define SMTPFILE "/tmp/tuxmail.smtp"
 #define NOTIFILE "/tmp/tuxmail.new"
-#define TEXTFILE "/var/tuxbox/config/tuxmail/mailtext"
-#define ADDRFILE "/var/tuxbox/config/tuxmail/tuxmail.addr"
-#define T9FILE   "/var/tuxbox/config/tuxmail/tuxmail.t9"
+#define TEXTFILE CFGPATH "/mailtext"
+#define ADDRFILE CFGPATH "/tuxmail.addr"
+#define T9FILE   CFGPATH" /tuxmail.t9"
 #define KBLCKFILE "/tmp/keyboard.lck"										//! file to lock keyboard-conversion
 
 #define OE_START "/etc/rc2.d/S99tuxmail"
@@ -52,67 +54,12 @@
 
 #define MAXMAIL 100
 
+// freetype stuff
+#define FONT FONTDIR "/neutrino.ttf"
+// if font is not in usual place, we look here:
+#define FONT2 FONTDIR "/pakenham.ttf"
+
 // rc codes
-
-#if HAVE_DVB_API_VERSION == 1
-
-#define	RC1_0		0x5C00
-#define	RC1_1		0x5C01
-#define	RC1_2		0x5C02
-#define	RC1_3		0x5C03
-#define	RC1_4		0x5C04
-#define	RC1_5		0x5C05
-#define	RC1_6		0x5C06
-#define	RC1_7		0x5C07
-#define	RC1_8		0x5C08
-#define	RC1_9		0x5C09
-#define	RC1_STANDBY	0x5C0C
-#define	RC1_UP		0x5C0E
-#define	RC1_DOWN	0x5C0F
-#define	RC1_PLUS	0x5C16
-#define	RC1_MINUS	0x5C17
-#define	RC1_HOME	0x5C20
-#define	RC1_DBOX	0x5C27
-#define	RC1_MUTE	0x5C28
-#define	RC1_RED		0x5C2D
-#define	RC1_RIGHT	0x5C2E
-#define	RC1_LEFT	0x5C2F
-#define	RC1_OK		0x5C30
-#define	RC1_BLUE	0x5C3B
-#define	RC1_YELLOW	0x5C52
-#define	RC1_GREEN	0x5C55
-#define	RC1_HELP	0x5C82
-
-// kb codes
-
-#define KEY_0		0x5C00
-#define KEY_1		0x5C01
-#define KEY_2		0x5C02
-#define KEY_3		0x5C03
-#define KEY_4		0x5C04
-#define KEY_5		0x5C05
-#define KEY_6		0x5C06
-#define KEY_7		0x5C07
-#define KEY_8		0x5C08
-#define KEY_9		0x5C09
-#define KEY_POWER	0x5C0C
-#define KEY_UP		0x5C0E
-#define KEY_DOWN	0x5C0F
-#define KEY_VOLUMEUP	0x5C16
-#define KEY_VOLUMEDOWN	0x5C17
-#define KEY_HOME	0x5C20
-#define KEY_SETUP	0x5C27
-#define KEY_MUTE	0x5C28
-#define KEY_RED		0x5C2D
-#define KEY_RIGHT	0x5C2E
-#define KEY_LEFT	0x5C2F
-#define KEY_OK		0x5C30
-#define KEY_BLUE	0x5C3B
-#define KEY_YELLOW	0x5C52
-#define KEY_GREEN	0x5C55
-#define KEY_HELP	0x5C82
-
-#endif
 
 #define	RC_0			'0'
 #define	RC_1			'1'
@@ -127,7 +74,7 @@
 
 #define	RC_RIGHT	0x0191
 #define	RC_LEFT		0x0192
-#define	RC_UP			0x0193
+#define	RC_UP		0x0193
 #define	RC_DOWN		0x0194
 #define	RC_PLUS		0x0195
 #define	RC_MINUS	0x0196
@@ -224,21 +171,23 @@ int rcaltgrtable[] =
 
 // defines for mail-reading/writing
  
-#define BORDERSIZE 2
-#define FONTHEIGHT_BIG 40
-#define FONTHEIGHT_NORMAL 32
-#define FONTHEIGHT_SMALL 24
-#define FONT_OFFSET_BIG 10
+#define BORDERSIZE 4
+#define FONTHEIGHT_BIG 30
+#define FONTHEIGHT_NORMAL 24
+#define FONTHEIGHT_SMALL 20
+#define FONT_OFFSET_BIG 6
 #define FONT_OFFSET 5
-#define VIEWX  619
 #define VIEWY  504
 #define INFOBOXY   125
+#define MBOX_WIDTH_NORMAL 360
+#define MBOX_WIDTH_BIG 420
+#define MBOX_HEIGHT_NORMAL 160
 #define KEYBOX_SPACE  5
 #define KEYBOX_HEIGHT 25
-#define KEYBOX_WIDTH  90
+#define KEYBOX_WIDTH  120
 
 
-#define MAXINFOLINES 15
+#define MAXINFOLINES 16
 #define MAXLINELEN	 80
 
 #define KEYBOX_KEYS 12
@@ -288,34 +237,24 @@ char *szKeyBBoxKey[KEYBOX_KEYS] = {
 #endif
 
 char *szDirectStyle[4] = {
-"ABC", "Abc", "abc", "keyboard" };
+"ABC", "Abc", "abc", "Keyboard" };
 
 // functions
 
-void ShowMessage(int message);
-int CheckPIN(int Account);
-void SaveAndReloadDB(int iSave);
+void ShowMessage (int message);
+int CheckPIN (int Account);
+void SaveAndReloadDB (int iSave);
+void PaintMessageBox (int width, int height, int button);
 
-// freetype stuff
-
-#define FONT FONTDIR "/pakenham.ttf"
-
+enum {BUT_EXIT = 1, BUT_OK, BUT_OKEXIT};
 enum {LEFT, CENTER, RIGHT};
 enum {SMALL, NORMAL, BIG};
 
-#if (FREETYPE_MAJOR > 2 || (FREETYPE_MAJOR == 2 && (FREETYPE_MINOR > 1 || (FREETYPE_MINOR == 1 && FREETYPE_PATCH >= 8))))
-#define FT_NEW_CACHE_API
-#endif
-
 FT_Library		library;
 FTC_Manager		manager;
-FTC_SBitCache		cache;
+static FTC_SBitCache		cache;
 FTC_SBit		sbit;
-#if FREETYPE_MAJOR  == 2 && FREETYPE_MINOR == 0
-FTC_ImageDesc		desc;
-#else
 FTC_ImageTypeRec	desc;
-#endif
 FT_Face			face;
 FT_UInt			prev_glyphindex;
 FT_Bool			use_kerning;
@@ -327,6 +266,7 @@ char versioninfo_p[12], versioninfo_d[12] = "?.??";
 char admin = 'Y';
 char osd = 'G';
 int skin = 1;
+int pal = 0;
 int startdelay = 30;
 int intervall = 15;
 char logging = 'Y';
@@ -377,13 +317,15 @@ struct
 	char suser[64];
 	char spass[64];
 	char inbox[64];
+	int  ssl;
 	struct mi mailinfo[MAXMAIL];
 
 }maildb[10];
 
 // devs
 
-int fb, rc, kb, lcd;
+int fb, kb, lcd;
+int rc;
 
 // daemon commands
 
@@ -391,6 +333,7 @@ enum {GET_STATUS, SET_STATUS, RELOAD_SPAMLIST, GET_VERSION, GET_MAIL, SEND_MAIL,
 
 // framebuffer stuff
 
+enum {UP, DOWN};
 enum {FILL, GRID};
 enum {TRANSP, WHITE, SKIN0, SKIN1, SKIN2, ORANGE, GREEN, YELLOW, RED};
 enum {NODAEMON, STARTDONE, STARTFAIL, STOPDONE, STOPFAIL, BOOTON, BOOTOFF, ADD2SPAM, DELSPAM, SPAMFAIL, INFO, GETMAIL, GETMAILFAIL, SENDMAILDONE, SENDMAILFAIL};
@@ -400,29 +343,16 @@ unsigned char *lfb = 0, *lbb = 0;
 struct fb_fix_screeninfo fix_screeninfo;
 struct fb_var_screeninfo var_screeninfo;
 
+unsigned char bgra[][9][4] =
+{		// Transp			White				 skin0				skin1				skin2				Orange				Green				Yellow				Red
+	{"\x00\x00\x00\x00", "\xFF\xFF\xFF\xFF", "\x80\x00\x00\xD7", "\x80\x40\x00\xD7", "\xFF\x80\x00\xD7", "\x00\xC0\xFF\xFF", "\x00\xD0\x00\xFF", "\x00\xE8\xE8\xFF", "\x04\x04\xC0\xFF" },
+	{"\x00\x00\x00\x00", "\xFF\xFF\xFF\xFF", "\x4D\x3A\x25\xD7", "\x77\x63\x4A\xD7", "\xC1\xAC\x97\xD7", "\x00\xC0\xFF\xFF", "\x00\xD0\x00\xFF", "\x00\xE8\xE8\xFF", "\x04\x04\xC0\xFF" },
+	{"\x00\x00\x00\x00", "\xFF\xFF\xFF\xFF", "\x00\x00\x00\xFF", "\x80\x00\x00\xFF", "\xFF\x80\x00\xFF", "\x00\xC0\xFF\xFF", "\x00\xD0\x00\xFF", "\x00\xE8\xE8\xFF", "\x04\x04\xC0\xFF" }
+};
 
-unsigned short rd1[] = {0xFF<<8, 0x00<<8, 0x00<<8, 0x00<<8, 0xFF<<8, 0x00<<8, 0xFF<<8, 0xFF<<8};
-unsigned short gn1[] = {0xFF<<8, 0x00<<8, 0x40<<8, 0x80<<8, 0xC0<<8, 0xFF<<8, 0xFF<<8, 0x00<<8};
-unsigned short bl1[] = {0xFF<<8, 0x80<<8, 0x80<<8, 0xFF<<8, 0x00<<8, 0x00<<8, 0x00<<8, 0x00<<8};
-unsigned short tr1[] = {0x0000,  0x0A00,  0x0A00,  0x0A00,  0x0000,  0x0000,  0x0000,  0x0000 };
-
-struct fb_cmap colormap1 = {1, 8, rd1, gn1, bl1, tr1};
-
-unsigned short rd2[] = {0xFF<<8, 0x25<<8, 0x4A<<8, 0x97<<8, 0xFF<<8, 0x00<<8, 0xFF<<8, 0xFF<<8};
-unsigned short gn2[] = {0xFF<<8, 0x3A<<8, 0x63<<8, 0xAC<<8, 0xC0<<8, 0xFF<<8, 0xFF<<8, 0x00<<8};
-unsigned short bl2[] = {0xFF<<8, 0x4D<<8, 0x77<<8, 0xC1<<8, 0x00<<8, 0x00<<8, 0x00<<8, 0x00<<8};
-unsigned short tr2[] = {0x0000,  0x0A00,  0x0A00,  0x0A00,  0x0000,  0x0000,  0x0000,  0x0000 };
-
-struct fb_cmap colormap2 = {1, 8, rd2, gn2, bl2, tr2};
-
-unsigned short rd3[] = {0xFF<<8, 0x00<<8, 0x00<<8, 0x00<<8, 0xFF<<8, 0x00<<8, 0xE8<<8, 0xFF<<8, 0xb0<<8, 0x00<<8, 0x50<<8, 0x00<<8, 0x50<<8, 0x00<<8};
-unsigned short gn3[] = {0xFF<<8, 0x00<<8, 0x00<<8, 0x80<<8, 0xC0<<8, 0xd0<<8, 0xE8<<8, 0x00<<8, 0xb0<<8, 0xff<<8, 0x50<<8, 0x00<<8, 0x50<<8, 0x40<<8};
-unsigned short bl3[] = {0xFF<<8, 0x00<<8, 0x80<<8, 0xFF<<8, 0x00<<8, 0x00<<8, 0x00<<8, 0x00<<8, 0xb0<<8, 0x00<<8, 0x50<<8, 0x80<<8, 0x50<<8, 0xff<<8};
-unsigned short tr3[] = {0x0000,  0x0000,  0x0000,  0x0000,  0x0000,  0x0000,  0x0000,  0x0000,  0x0000 , 0x0000 , 0x0000 , 0x80ff , 0x80ff , 0x0000 };
-
-struct fb_cmap colormap3 = {1, 14, rd3, gn3, bl3, tr3};
-
-int startx, starty, sx, ex, sy, ey;
+int startx, starty, sx, ex, sy, ey, mx, my, bw, bh;
+int preset;
+int viewx, viewy;
 char online;
 char mailfile;
 char mailsend;
@@ -430,52 +360,48 @@ char maildir[256];
 int mailcache = 0;
 char szInfo[MAXINFOLINES][MAXLINELEN];
 
-#if HAVE_DVB_API_VERSION == 3
-
 struct input_event ev;
-
-#endif
 
 unsigned short rccode;
 unsigned char kbcode;
-int sim_key = 0;
+//int sim_key = 0;
 char tch[100];
 
 
 char scroll_up[] =
 {
-	SKIN0, SKIN0, SKIN0, SKIN0, SKIN0, SKIN0, WHITE, WHITE, SKIN0, SKIN0, SKIN0, SKIN0, SKIN0, SKIN0,
-	SKIN0, SKIN0, SKIN0, SKIN0, SKIN0, SKIN0, WHITE, WHITE, SKIN0, SKIN0, SKIN0, SKIN0, SKIN0, SKIN0,
-	SKIN0, SKIN0, SKIN0, SKIN0, SKIN0, WHITE, WHITE, WHITE, WHITE, SKIN0, SKIN0, SKIN0, SKIN0, SKIN0,
-	SKIN0, SKIN0, SKIN0, SKIN0, SKIN0, WHITE, WHITE, WHITE, WHITE, SKIN0, SKIN0, SKIN0, SKIN0, SKIN0,
-	SKIN0, SKIN0, SKIN0, SKIN0, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, SKIN0, SKIN0, SKIN0, SKIN0,
-	SKIN0, SKIN0, SKIN0, SKIN0, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, SKIN0, SKIN0, SKIN0, SKIN0,
-	SKIN0, SKIN0, SKIN0, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, SKIN0, SKIN0, SKIN0,
-	SKIN0, SKIN0, SKIN0, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, SKIN0, SKIN0, SKIN0,
-	SKIN0, SKIN0, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, SKIN0, SKIN0,
-	SKIN0, SKIN0, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, SKIN0, SKIN0,
-	SKIN0, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, SKIN0,
-	SKIN0, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, SKIN0,
-	WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE,
-	WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE
+	0,0,0,0,0,0,1,1,0,0,0,0,0,0,
+	0,0,0,0,0,0,1,1,0,0,0,0,0,0,
+	0,0,0,0,0,1,1,1,1,0,0,0,0,0,
+	0,0,0,0,0,1,1,1,1,0,0,0,0,0,
+	0,0,0,0,1,1,1,1,1,1,0,0,0,0,
+	0,0,0,0,1,1,1,1,1,1,0,0,0,0,
+	0,0,0,1,1,1,1,1,1,1,1,0,0,0,
+	0,0,0,1,1,1,1,1,1,1,1,0,0,0,
+	0,0,1,1,1,1,1,1,1,1,1,1,0,0,
+	0,0,1,1,1,1,1,1,1,1,1,1,0,0,
+	0,1,1,1,1,1,1,1,1,1,1,1,1,0,
+	0,1,1,1,1,1,1,1,1,1,1,1,1,0,
+	1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+	1,1,1,1,1,1,1,1,1,1,1,1,1,1
 };
 
 char scroll_dn[] =
 {
-	WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE,
-	WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE,
-	SKIN0, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, SKIN0,
-	SKIN0, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, SKIN0,
-	SKIN0, SKIN0, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, SKIN0, SKIN0,
-	SKIN0, SKIN0, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, SKIN0, SKIN0,
-	SKIN0, SKIN0, SKIN0, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, SKIN0, SKIN0, SKIN0,
-	SKIN0, SKIN0, SKIN0, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, SKIN0, SKIN0, SKIN0,
-	SKIN0, SKIN0, SKIN0, SKIN0, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, SKIN0, SKIN0, SKIN0, SKIN0,
-	SKIN0, SKIN0, SKIN0, SKIN0, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, SKIN0, SKIN0, SKIN0, SKIN0,
-	SKIN0, SKIN0, SKIN0, SKIN0, SKIN0, WHITE, WHITE, WHITE, WHITE, SKIN0, SKIN0, SKIN0, SKIN0, SKIN0,
-	SKIN0, SKIN0, SKIN0, SKIN0, SKIN0, WHITE, WHITE, WHITE, WHITE, SKIN0, SKIN0, SKIN0, SKIN0, SKIN0,
-	SKIN0, SKIN0, SKIN0, SKIN0, SKIN0, SKIN0, WHITE, WHITE, SKIN0, SKIN0, SKIN0, SKIN0, SKIN0, SKIN0,
-	SKIN0, SKIN0, SKIN0, SKIN0, SKIN0, SKIN0, WHITE, WHITE, SKIN0, SKIN0, SKIN0, SKIN0, SKIN0, SKIN0
+	1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+	1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+	0,1,1,1,1,1,1,1,1,1,1,1,1,0,
+	0,1,1,1,1,1,1,1,1,1,1,1,1,0,
+	0,0,1,1,1,1,1,1,1,1,1,1,0,0,
+	0,0,1,1,1,1,1,1,1,1,1,1,0,0,
+	0,0,0,1,1,1,1,1,1,1,1,0,0,0,
+	0,0,0,1,1,1,1,1,1,1,1,0,0,0,
+	0,0,0,0,1,1,1,1,1,1,0,0,0,0,
+	0,0,0,0,1,1,1,1,1,1,0,0,0,0,
+	0,0,0,0,0,1,1,1,1,0,0,0,0,0,
+	0,0,0,0,0,1,1,1,1,0,0,0,0,0,
+	0,0,0,0,0,0,1,1,0,0,0,0,0,0,
+	0,0,0,0,0,0,1,1,0,0,0,0,0,0
 };
 
 char circle[] =
@@ -736,3 +662,5 @@ char lcd_digits[] =
 	1,1,0,0,0,0,0,0,1,1,
 	0,1,1,1,1,1,1,1,1,0,
 };
+
+#endif

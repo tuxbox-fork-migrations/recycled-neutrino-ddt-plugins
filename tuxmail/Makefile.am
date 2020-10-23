@@ -4,19 +4,28 @@ AM_CPPFLAGS = \
 	@FREETYPE_CFLAGS@ \
 	-I$(top_srcdir)/include
 
-noinst_LTLIBRARIES = tuxmail.la
+plugindir = $(PLUGINDIR)
 
-tuxmail_la_SOURCES = tuxmail.c
+plugin_PROGRAMS = tuxmail.so
 
-tuxmail_la_LIBADD = \
+tuxmail_so_SOURCES = \
+	tuxmail.c \
+	rc_device.c
+
+tuxmail_so_LDADD = \
 	@FREETYPE_LIBS@
 
-tuxmail_la_LDFLAGS = -rpath $(PLUGINDIR) -module -avoid-version
+plugin_DATA = \
+	tuxmail.cfg \
+	tuxmail_hint.png
 
-install-exec-local:
-	install -d $(DESTDIR)$(PLUGINDIR)
-	install -d $(DESTDIR)$(CONFIGDIR)
-	install -d $(DESTDIR)$(CONFIGDIR)/tuxmail
-	$(LIBTOOL) --mode=install install tuxmail.la $(DESTDIR)$(PLUGINDIR)
-	install -m 0644 $(srcdir)/tuxmail.cfg $(DESTDIR)$(PLUGINDIR)
-	install -m 0644 $(srcdir)/tuxmail.conf $(DESTDIR)$(CONFIGDIR)/tuxmail
+tuxmaildir = $(CONFIGDIR)/tuxmail
+
+tuxmail_DATA = \
+	tuxmail.conf
+
+tuxmail_SCRIPTS = \
+	tuxmail.onreadmail
+
+uninstall-hook:
+	-rmdir $(DESTDIR)$(tuxmaildir)

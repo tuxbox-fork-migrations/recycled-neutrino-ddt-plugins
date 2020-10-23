@@ -1,0 +1,20 @@
+#!/bin/sh
+
+case $1 in
+	start)
+		if [ -e /var/tuxbox/config/.tuxcald ]; then
+			echo "starting tuxcald ..."
+			tuxcald
+		fi
+	;;
+	stop)
+		if [ -e /var/tuxbox/config/.tuxcald ]; then
+			echo "stopping tuxcald ..."
+			pid=$(cat /var/run/tuxcald.pid 2>/dev/null)
+			test -n "$pid" && kill $pid || true
+		fi
+	;;
+	*)
+		echo "[${0##*/}] Usage: $0 {start|stop}"
+	;;
+esac

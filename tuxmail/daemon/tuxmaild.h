@@ -21,6 +21,10 @@
 #include <arpa/inet.h>
 #include <syslog.h>
 
+#include <openssl/rand.h>
+#include <openssl/ssl.h>
+#include <openssl/err.h>
+
 #include "audio.h"
 
 #define DSP "/dev/sound/dsp"
@@ -32,10 +36,17 @@
 #define DATA	0x61746164
 #define PCM	1
 
-#define CFGPATH "/var/tuxbox/config/tuxmail/"
-#define CFGFILE "tuxmail.conf"
-#define SPMFILE "spamlist"
-#define SNDFILE "tuxmail.wav"
+#ifndef CONFIGDIR
+#define CONFIGDIR "/var/tuxbox/config"
+#endif
+#ifndef FONTDIR
+#define FONTDIR	"/usr/share/fonts"
+#endif
+
+#define CFGPATH CONFIGDIR "/tuxmail"
+#define CFGFILE "/tuxmail.conf"
+#define SPMFILE "/spamlist"
+#define SNDFILE "/tuxmail.wav"
 #define SCKFILE "/tmp/tuxmaild.socket"
 #define LOGFILE "/tmp/tuxmaild.log"
 #define PIDFILE "/tmp/tuxmaild.pid"
@@ -43,7 +54,7 @@
 #define POP3FILE "/tmp/tuxmail.pop3"
 #define SMTPFILE "/tmp/tuxmail.smtp"
 #define NOTIFILE "/tmp/tuxmail.new"
-#define WAKEFILE "tuxmail.onreadmail"
+#define WAKEFILE "/tuxmail.onreadmail"
 
 #define bool char
 #define true 1
@@ -157,6 +168,7 @@ struct
 	int  mail_new;
 	int  mail_unread;
 	int  mail_read;
+	int  ssl;
 
 }account_db[10];
 
@@ -194,6 +206,14 @@ struct CHUNK
 	unsigned long	ChunkID;
 	unsigned long	ChunkSize;
 };
+
+// SSL
+typedef struct {
+	SSL *sslHandle;
+	SSL_CTX *sslContext;
+} connection;
+
+connection *c;
 
 // some data
 

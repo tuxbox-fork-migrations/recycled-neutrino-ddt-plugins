@@ -17,8 +17,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
  ******************************************************************************/
-// lots of code is from the tuxmail-project
 
+#include <fb_device.h>
 #include "tuxcald.h"
 
 /******************************************************************************
@@ -37,7 +37,7 @@ void ReadConf()
 	char line_buffer[256];
 
 	// open config-file
-	if (!(fd_conf = fopen(CFGPATH CFGFILE, "r")))
+	if (!(fd_conf = fopen(CONFIGDIR CFGFILE, "r")))
 	{
 		printf("TuxCal <Config not found, using defaults>\n");
 		return;
@@ -100,11 +100,11 @@ void ReadConf()
 		}
 		else if((ptr = strstr(line_buffer, "POS_X=")))
 		{
-			sscanf(ptr + 6, "%d", &startx);
+			sscanf(ptr + 6, "%d", &Startx);
 		}
 		else if((ptr = strstr(line_buffer, "POS_Y=")))
 		{
-			sscanf(ptr + 6, "%d", &starty);
+			sscanf(ptr + 6, "%d", &Starty);
 		}
 		else if((ptr = strstr(line_buffer, "SHOW=")))
 		{
@@ -197,7 +197,7 @@ int WriteConf()
 	FILE *fd_conf;
 
 	// open config-file
-	if (!(fd_conf = fopen(CFGPATH CFGFILE , "w")))
+	if (!(fd_conf = fopen(CONFIGDIR CFGFILE , "w")))
 	{
 		return 0;
 	}
@@ -215,8 +215,8 @@ int WriteConf()
 	fprintf(fd_conf, "WEBPORT=%d\n", webport);
 	fprintf(fd_conf, "WEBUSER=%s\n", webuser);
 	fprintf(fd_conf, "WEBPASS=%s\n\n", webpass);
-	fprintf(fd_conf, "POS_X=%d\n", startx);
-	fprintf(fd_conf, "POS_Y=%d\n", starty);
+	fprintf(fd_conf, "POS_X=%d\n", Startx);
+	fprintf(fd_conf, "POS_Y=%d\n", Starty);
 	fprintf(fd_conf, "SHOW=%c\n", show_clockatstart);
 	fprintf(fd_conf, "DATE=%c\n", disp_date);
 	fprintf(fd_conf, "CLOCK=%c\n", disp_clock);
@@ -243,18 +243,19 @@ int WriteConf()
  \param afacs					: FT_Face*
  \return 							: FT_Error
 */
-FT_Error MyFaceRequester(FTC_FaceID face_id, FT_Library library, FT_Pointer request_data, FT_Face *aface)
+FT_Error MyFaceRequester(FTC_FaceID face_id, FT_Library _library, FT_Pointer request_data, FT_Face *aface)
 {
 	FT_Error result;
+	(void)request_data; /* avoid compiler warning about unused argument */
 
-	result = FT_New_Face(library, face_id, 0, aface);
+	result = FT_New_Face(_library, face_id, 0, aface);
 
 	if (!result) printf("TuxCal <Font \"%s\" loaded>\n", (char*)face_id);
 	else printf("TuxCal <Font \"%s\" failed>\n", (char*)face_id);
 	
 	return result;
 }
-
+#if 0
 /******************************************************************************
  * FindColors
  ******************************************************************************/
@@ -309,7 +310,7 @@ void FindColors()
     colormap=NULL;
 	}
 }
-
+#endif
 /******************************************************************************
  * OpenFB
  ******************************************************************************/
@@ -323,15 +324,14 @@ int OpenFB(void)
 {
 	FT_Error error;
 
-	colormap=NULL;
+//	colormap=NULL;
 
 	// framebuffer stuff
-#ifdef FB_DEVICE
-	if ((fbdev = open(FB_DEVICE, O_RDWR))<0)
-#else
-	if ((fbdev = open("/dev/fb/0", O_RDWR))<0)
-#endif
-	{
+	/* open framebuffer */
+	fbdev = open(FB_DEVICE, O_RDWR);
+	if (fbdev < 0)
+		fbdev = open(FB_DEVICE_FALLBACK, O_RDWR);
+	if (fbdev < 0) {
 		slog ? syslog(LOG_DAEMON | LOG_INFO, "open fb failed"): printf("TuxCalD <open fb failed>");
 		return 0;
 	}
@@ -386,32 +386,28 @@ int OpenFB(void)
 		return 0;
 	}
 
-	if ((error = FTC_Manager_Lookup_Face(manager, FONT, &face)))
+	if ((error = FTC_Manager_LookupFace(manager, FONT, &face)))
 	{
-		slog ? syslog(LOG_DAEMON | LOG_INFO, "FTC_Manager_Lookup_Face failed with Errorcode 0x%.2X", error): printf("TuxCalD <FTC_Manager_Lookup_Face failed with Errorcode 0x%.2X>\n", error);
-		FTC_Manager_Done(manager);
-		FT_Done_FreeType(library);
-		munmap(lfb, fix_screeninfo.smem_len);
-		close(fbdev);
-		return 0;
+		if ((error = FTC_Manager_LookupFace(manager, FONT2, &face)))
+		{
+			slog ? syslog(LOG_DAEMON | LOG_INFO, "FTC_Manager_LookupFace failed with Errorcode 0x%.2X", error): printf("TuxCalD <FTC_Manager_LookupFace failed with Errorcode 0x%.2X>\n", error);
+			FTC_Manager_Done(manager);
+			FT_Done_FreeType(library);
+			munmap(lfb, fix_screeninfo.smem_len);
+			close(fbdev);
+			return 0;
+		}
+		else
+			desc.face_id = FONT2;
 	}
-
+	else
+		desc.face_id = FONT;
 	use_kerning = FT_HAS_KERNING(face);
 
-#ifdef FT_NEW_CACHE_API
-	desc.face_id = FONT;
-#else
-	desc.font.face_id = FONT;
-#endif
-
-#if FREETYPE_MAJOR  == 2 && FREETYPE_MINOR == 0
-		desc.type = ftc_image_mono;
-#else
-		desc.flags = FT_LOAD_MONOCHROME;
-#endif
+	desc.flags = FT_LOAD_MONOCHROME;
 
 	// init backbuffer
-	if (!(lbb = malloc(var_screeninfo.xres*var_screeninfo.yres)))
+	if (!( lbb = malloc ( fix_screeninfo.line_length*var_screeninfo.yres )))
 	{
 		slog ? syslog(LOG_DAEMON | LOG_INFO, "allocating of Backbuffer failed"): printf("TuxCalD <allocating of Backbuffer failed>\n");
 		FTC_Manager_Done(manager);
@@ -421,18 +417,19 @@ int OpenFB(void)
 		return 0;
 	}
 
-	memset(lbb, 0, var_screeninfo.xres*var_screeninfo.yres);
+	memset ( lbb, 0, fix_screeninfo.line_length*var_screeninfo.yres );
 
 	// i'm not sure if this is ok
-	sx=var_screeninfo.xoffset;
-	sy=var_screeninfo.yoffset;
-	ex=sx+var_screeninfo.xres;
-	ey=sy+var_screeninfo.yres;
-
+	Sx=var_screeninfo.xoffset;
+	Sy=var_screeninfo.yoffset;
+	Ex=Sx+var_screeninfo.xres;
+	Ey=Sy+var_screeninfo.yres;
+#if 0
 	// find blach or white in the colormap
 	if (disp_detect) 
 	{
   	bps=var_screeninfo.bits_per_pixel;
+
     if(fix_screeninfo.visual==FB_VISUAL_PSEUDOCOLOR)
     {
       colormap=(struct fb_cmap*)malloc(sizeof(struct fb_cmap));
@@ -453,9 +450,10 @@ int OpenFB(void)
   			return 0;
     	}
     }
+
 		FindColors();	
 	}
-
+#endif
 	return 1;
 }
 
@@ -470,10 +468,11 @@ int OpenFB(void)
 */
 void ClearScreen(void)
 {
-	if (iFB)
+	struct stat keybuf;
+	if (iFB && (stat(KBLCKFILE,&keybuf) != 0))
 	{
-		memset(lbb, 0, var_screeninfo.xres*var_screeninfo.yres);								// clear buffer for framebuffer-writing to transparent
-		memcpy(lfb, lbb, var_screeninfo.xres*var_screeninfo.yres);							// empty framebuffer
+		memset(lbb, 0, fix_screeninfo.line_length*var_screeninfo.yres);	// clear buffer for framebuffer-writing to transparent
+		memcpy(lfb, lbb, fix_screeninfo.line_length*var_screeninfo.yres);	// empty framebuffer
 	}
 }
 
@@ -522,6 +521,7 @@ int RenderChar(FT_ULong currentchar, int sx, int sy, int ex, int color)
 	FT_UInt glyphindex;
 	FT_Vector kerning;
 	FTC_Node anode;
+	currentchar=currentchar & 0xFF;
 
 	//load char
 	if (!(glyphindex = FT_Get_Char_Index(face, currentchar)))
@@ -565,7 +565,8 @@ int RenderChar(FT_ULong currentchar, int sx, int sy, int ex, int color)
 
 					if ((sbit->buffer[row * sbit->pitch + pitch]) & 1<<bit)
 					{
-						*(lbb + startx + sx + sbit->left + kerning.x + x + var_screeninfo.xres*(starty + sy - sbit->top + y)) = color;
+						memcpy ( lbb + Startx*4 + sx*4 + ( sbit->left + kerning.x + x ) *4 + fix_screeninfo.line_length* ( Starty + sy - sbit->top + y ), "\xf2\xff\xff\xc0", 4 );
+
 					}
 
 					x++;
@@ -587,7 +588,7 @@ int RenderChar(FT_ULong currentchar, int sx, int sy, int ex, int color)
  * calculate used pixels on screen for output
  
 */
-int GetStringLen(unsigned char *string)
+int GetStringLen(char *string)
 {
 	int stringlen = 0;
 
@@ -611,34 +612,22 @@ int GetStringLen(unsigned char *string)
  * render a string to the screen
  
 */
-void RenderString(unsigned char *string, int sx, int sy, int maxwidth, int layout, int size, int color)
+void RenderString(char *string, int sx, int sy, int maxwidth, int layout, int size, int color)
 {
 	int stringlen, ex, charwidth;
 
 	// set size
 	if(size == SMALL)
 	{
-#ifdef FT_NEW_CACHE_API
 		desc.width = desc.height = FONTSIZE_SMALL;
-#else
-		desc.font.pix_width = desc.font.pix_height = FONTSIZE_SMALL;
-#endif
 	}
 	else if (size == NORMAL)
 	{
-#ifdef FT_NEW_CACHE_API
 		desc.width = desc.height = FONTSIZE_NORMAL;
-#else
-		desc.font.pix_width = desc.font.pix_height = FONTSIZE_NORMAL;
-#endif
 	}
 	else
 	{
-#ifdef FT_NEW_CACHE_API
 		desc.width = desc.height = FONTSIZE_BIG;
-#else
-		desc.font.pix_width = desc.font.pix_height = FONTSIZE_BIG;
-#endif
 	}
 
 	// set alignment
@@ -649,11 +638,7 @@ void RenderString(unsigned char *string, int sx, int sy, int maxwidth, int layou
 		switch(layout)
 		{
 			case FIXEDCENTER:
-#ifdef FT_NEW_CACHE_API
 				stringlen = (desc.width/2) * strlen(string);
-#else
-				stringlen = (desc.font.pix_width/2) * strlen(string);
-#endif
 
 			case CENTER:
 			{
@@ -664,11 +649,8 @@ void RenderString(unsigned char *string, int sx, int sy, int maxwidth, int layou
 			} break;
 
 			case FIXEDRIGHT:
-#ifdef FT_NEW_CACHE_API
 				stringlen = (desc.width/2) * strlen(string);
-#else
-				stringlen = (desc.font.pix_width/2) * strlen(string);
-#endif
+
 			case RIGHT:
 			{
 				if(stringlen < maxwidth)
@@ -690,11 +672,7 @@ void RenderString(unsigned char *string, int sx, int sy, int maxwidth, int layou
 		if ((charwidth = RenderChar(*string, sx, sy, ex, color)) == -1)  return; // string > maxwidth 
 
 		if ((layout == FIXEDLEFT) || (layout == FIXEDCENTER) || (layout == FIXEDRIGHT))
-#ifdef FT_NEW_CACHE_API
 			sx += (desc.width/2);
-#else
-			sx += (desc.font.pix_width/2);
-#endif
 		else 
 			sx += charwidth;
 		string++;
@@ -715,40 +693,42 @@ void RenderString(unsigned char *string, int sx, int sy, int maxwidth, int layou
  \param color	: color to paint with
  \return      : none
 */
-void RenderBox(int sx, int sy, int ex, int ey, int mode, int color)
+void RenderBox ( int sx, int sy, int ex, int ey, int mode, int color )
 {
 	int loop;
+	int tx;
+	(void)color;
 
-	// paint a box with solid color
-	if (mode == FILL)
+	if ( mode == FILL )
 	{
-		// for all lines of the box
-		for (; sy <= ey; sy++)
+		for ( ; sy < ey; sy++ )
 		{
-			// fill the line with the color
-			memset(lbb + startx + sx + var_screeninfo.xres*(starty + sy), color, ex-sx + 1);
+			for ( tx=0; tx < ( ex-sx ); tx++ )
+			{
+				memcpy ( lbb + Startx*4 + sx*4 + ( tx*4 ) + fix_screeninfo.line_length* ( Starty + sy ),"\x13\x13\xef\xff", 4 );
+			}
 		}
 	}
-	// paint a grid around the rectangle
 	else
 	{
-		// lines
-		for (loop = sx; loop <= ex; loop++)
+		// hor lines
+
+		for ( loop = sx; loop <= ex; loop++ )
 		{
-			*(lbb + startx+loop + var_screeninfo.xres*(sy+starty)) = color;
-			*(lbb + startx+loop + var_screeninfo.xres*(sy+1+starty)) = color;
-			*(lbb + startx+loop + var_screeninfo.xres*(ey-1+starty)) = color;
-			*(lbb + startx+loop + var_screeninfo.xres*(ey+starty)) = color;
+			memcpy ( lbb + Startx*4+loop*4 + fix_screeninfo.line_length* ( sy+Starty ), "\x4d\x3a\x25\xc0", 4 );
+			memcpy ( lbb + Startx*4+loop*4 + fix_screeninfo.line_length* ( sy+1+Starty ), "\x4d\x3a\x25\xc0", 4 );
+			memcpy ( lbb + Startx*4+loop*4 + fix_screeninfo.line_length* ( ey-1+Starty ), "\x4d\x3a\x25\xc0", 4 );
+			memcpy ( lbb + Startx*4+loop*4 + fix_screeninfo.line_length* ( ey+Starty ), "\x4d\x3a\x25\xc0", 4 );
 		}
 
 		// columns
 
-		for (loop = sy; loop <= ey; loop++)
+		for ( loop = sy; loop <= ey; loop++ )
 		{
-			*(lbb + startx+sx + var_screeninfo.xres*(loop+starty)) = color;
-			*(lbb + startx+sx+1 + var_screeninfo.xres*(loop+starty)) = color;
-			*(lbb + startx+ex-1 + var_screeninfo.xres*(loop+starty)) = color;
-			*(lbb + startx+ex + var_screeninfo.xres*(loop+starty)) = color;
+			memcpy ( lbb + Startx*4+sx*4 + fix_screeninfo.line_length* ( loop+Starty ), "\xB0\xB0\xB0\xFF", 4 );
+			memcpy ( lbb + Startx*4+ ( sx+1 ) *4 + fix_screeninfo.line_length* ( loop+Starty ), "\xB0\xB0\xB0\xFF", 4 );
+			memcpy ( lbb + Startx*4+ ( ex-1 ) *4 + fix_screeninfo.line_length* ( loop+Starty ), "\xB0\xB0\xB0\xFF", 4 );
+			memcpy ( lbb + Startx*4+ex*4 + fix_screeninfo.line_length* ( loop+Starty ), "\xB0\xB0\xB0\xFF", 4 );
 		}
 	}
 }
@@ -760,8 +740,12 @@ void RenderBox(int sx, int sy, int ex, int ey, int mode, int color)
  * render a integer to the screen
  
 */
-void RenderInt(unsigned char *string, int sx, int sy, int maxwidth, int layout, int size, int color, int colorgrid, int colorfill)
+void RenderInt( char *string, int sx, int sy, int maxwidth, int layout, int size, int color, int colorgrid, int colorfill)
 {
+/*
+	printf("[%s] %s sx=%i, sy=%i, maxwidth=%i, layout=%i, size=%i, color=%i, grid=%i, fill=%i\n",
+			__FUNCTION__, string, sx, sy, maxwidth, layout, size, color, colorgrid, colorfill);
+*/
 	int x,y,cx,cy;
 	int sizey=FONTSIZE_NORMAL;
 	
@@ -793,7 +777,8 @@ void RenderInt(unsigned char *string, int sx, int sy, int maxwidth, int layout, 
 void RenderSObject(int sx, int sy, int color, int iType)
 {
 	int x, y;
-  char* pObj=sym_letter;
+	char* pObj=sym_letter;
+	(void)color;
 
 	// choose the object
 /*	
@@ -812,7 +797,7 @@ void RenderSObject(int sx, int sy, int color, int iType)
 		for (x = 0; x < OBJ_SX; x++)				// for all lines
 		{
 			if (*pObj++)											// only paint if mask-value set
-				memset(lbb + startx + sx + x + var_screeninfo.xres*(starty + sy + y), color, 1);
+				memcpy(lbb + Startx*4 + sx*4 + x*4 + fix_screeninfo.line_length*(Starty + sy + y), "\xff\x54\x00\xff", 4);
 		}
 	}
 }
@@ -1036,9 +1021,9 @@ void AddDays(int* pday, int* pmonth, int* pyear, int adddays)
  - Fronleichnam (+60), 
 
 Der Muttertag ist der zweite Sonntag im Mai, 
-das Erntedankfest der erste Sonntag im Oktober (jedoch nicht überall!). 
+das Erntedankfest der erste Sonntag im Oktober (jedoch nicht ueberall!). 
 Der 1. Advent ist der Sonntag nach dem 26. November; 
-der Buß- und Bettag liegt 11 Tage vor dem 1. Advent. 
+der Bu. - und Bettag liegt 11 Tage vor dem 1. Advent. 
 
  
 */
@@ -1086,9 +1071,9 @@ void CalcEastern(int year, int* month, int* day)
  - Fronleichnam (+60), 
 
 Der Muttertag ist der zweite Sonntag im Mai, 
-das Erntedankfest der erste Sonntag im Oktober (jedoch nicht überall!). 
+das Erntedankfest der erste Sonntag im Oktober (jedoch nicht ueberall!). 
 Der 1. Advent ist der Sonntag nach dem 26. November; 
-der Buß- und Bettag liegt 11 Tage vor dem 1. Advent. 
+der Bu. - und Bettag liegt 11 Tage vor dem 1. Advent. 
 
  
 */
@@ -1099,85 +1084,85 @@ void FillEasternDays(int year)
 	
 	CalcEastern(year, &mon, &day);
 	mon1=mon; day1=day;
-	varaibledays[OFFSET_E-1].mon = mon;			// eastern
-	varaibledays[OFFSET_E-1].day = day;
+	variabledays[OFFSET_E-1].mon = mon;			// eastern
+	variabledays[OFFSET_E-1].day = day;
 	AddDays(&day, &mon, &year, 1);
-	varaibledays[OFFSET_EM-1].mon = mon;		// eastern monday
-	varaibledays[OFFSET_EM-1].day = day;
+	variabledays[OFFSET_EM-1].mon = mon;		// eastern monday
+	variabledays[OFFSET_EM-1].day = day;
 	
 	AddDays(&day, &mon, &year, 19);					// +39 days from eastern
 	AddDays(&day, &mon, &year, 19);
-	varaibledays[OFFSET_H-1].mon = mon;			// christi himmelfahrt
-	varaibledays[OFFSET_H-1].day = day;
+	variabledays[OFFSET_H-1].mon = mon;			// christi himmelfahrt
+	variabledays[OFFSET_H-1].day = day;
 	
 	AddDays(&day, &mon, &year, 10);
-	varaibledays[OFFSET_P-1].mon = mon;			// pfingsten
-	varaibledays[OFFSET_P-1].day = day;
+	variabledays[OFFSET_P-1].mon = mon;			// pfingsten
+	variabledays[OFFSET_P-1].day = day;
 	AddDays(&day, &mon, &year, 1);
-	varaibledays[OFFSET_PM-1].mon = mon;		// pfingsten montag
-	varaibledays[OFFSET_PM-1].day = day;
+	variabledays[OFFSET_PM-1].mon = mon;		// pfingsten montag
+	variabledays[OFFSET_PM-1].day = day;
 	
 	AddDays(&day, &mon, &year, 10);
-	varaibledays[OFFSET_F-1].mon = mon;			// fronleichnam
-	varaibledays[OFFSET_F-1].day = day;
+	variabledays[OFFSET_F-1].mon = mon;			// fronleichnam
+	variabledays[OFFSET_F-1].day = day;
 	
 	AddDays(&day1, &mon1, &year, -2);
-	varaibledays[OFFSET_KF-1].mon = mon1;		// karfreitag
-	varaibledays[OFFSET_KF-1].day = day1;
+	variabledays[OFFSET_KF-1].mon = mon1;		// karfreitag
+	variabledays[OFFSET_KF-1].day = day1;
 	AddDays(&day1, &mon1, &year, -1);
-	varaibledays[OFFSET_GD-1].mon = mon1;		// gruendonnerstag
-	varaibledays[OFFSET_GD-1].day = day1;
+	variabledays[OFFSET_GD-1].mon = mon1;		// gruendonnerstag
+	variabledays[OFFSET_GD-1].day = day1;
 
 	AddDays(&day1, &mon1, &year, -23);
 	AddDays(&day1, &mon1, &year, -20);
-	varaibledays[OFFSET_A-1].mon = mon1;		// aschermittwoch
-	varaibledays[OFFSET_A-1].day = day1;
+	variabledays[OFFSET_A-1].mon = mon1;		// aschermittwoch
+	variabledays[OFFSET_A-1].day = day1;
 	AddDays(&day1, &mon1, &year, -2);
-	varaibledays[OFFSET_RM-1].mon = mon1;		// rosenmontag
-	varaibledays[OFFSET_RM-1].day = day1;
+	variabledays[OFFSET_RM-1].mon = mon1;		// rosenmontag
+	variabledays[OFFSET_RM-1].day = day1;
 
 	//mothersday is 2. sunday in may
 	int iWDay;
 	iWDay=DayOfWeek(1,5,year);
-	varaibledays[OFFSET_M-1].mon = 5;
-	varaibledays[OFFSET_M-1].day = 15-iWDay;
+	variabledays[OFFSET_M-1].mon = 5;
+	variabledays[OFFSET_M-1].day = 15-iWDay;
 	
 	// sommertime
 	iWDay=DayOfWeek(31,3,year);
-	if (iWDay!=7)	varaibledays[OFFSET_SZ-1].day = 31-iWDay;
-	else varaibledays[OFFSET_SZ-1].day = 31;
-	varaibledays[OFFSET_SZ-1].mon = 3;
+	if (iWDay!=7)	variabledays[OFFSET_SZ-1].day = 31-iWDay;
+	else variabledays[OFFSET_SZ-1].day = 31;
+	variabledays[OFFSET_SZ-1].mon = 3;
 
 	// wintertime	
 	iWDay=DayOfWeek(31,10,year);
-	if (iWDay!=7)	varaibledays[OFFSET_WZ-1].day = 31-iWDay;
-	else varaibledays[OFFSET_WZ-1].day = 31;
-	varaibledays[OFFSET_WZ-1].mon = 10;
+	if (iWDay!=7)	variabledays[OFFSET_WZ-1].day = 31-iWDay;
+	else variabledays[OFFSET_WZ-1].day = 31;
+	variabledays[OFFSET_WZ-1].mon = 10;
 	
-	varaibledays[OFFSET_W0-1].day=24;					// heiliger abend
-	varaibledays[OFFSET_W0-1].mon=12;
-	varaibledays[OFFSET_W1-1].day=25;					// 1. weihnachtstag
-	varaibledays[OFFSET_W1-1].mon=12;
-	varaibledays[OFFSET_W2-1].day=26;					// 2. weihnachtstag
-	varaibledays[OFFSET_W2-1].mon=12;
-	varaibledays[OFFSET_3K-1].day=6;					// hl. 3 koenige
-	varaibledays[OFFSET_3K-1].mon=1;
-	varaibledays[OFFSET_N-1].day=1;						// neujahr
-	varaibledays[OFFSET_N-1].mon=1;
-	varaibledays[OFFSET_S-1].day=31;					// sylvester
-	varaibledays[OFFSET_S-1].mon=12;
-	varaibledays[OFFSET_V-1].day=14;					// valentinstag
-	varaibledays[OFFSET_V-1].mon=2;
-	varaibledays[OFFSET_1M-1].day=1;					// 1. may
-	varaibledays[OFFSET_1M-1].mon=5;
-	varaibledays[OFFSET_MH-1].day=15;					// maria himmelfahrt
-	varaibledays[OFFSET_MH-1].mon=8;
-	varaibledays[OFFSET_NI-1].day=6;					// nikolaus
-	varaibledays[OFFSET_NI-1].mon=12;
-	varaibledays[OFFSET_ND-1].day=3;					// tag der deutschen einheit
-	varaibledays[OFFSET_ND-1].mon=10;
-	varaibledays[OFFSET_NA-1].day=26;					// nationalfeiertag oesterreich
-	varaibledays[OFFSET_NA-1].mon=10;
+	variabledays[OFFSET_W0-1].day=24;					// heiliger abend
+	variabledays[OFFSET_W0-1].mon=12;
+	variabledays[OFFSET_W1-1].day=25;					// 1. weihnachtstag
+	variabledays[OFFSET_W1-1].mon=12;
+	variabledays[OFFSET_W2-1].day=26;					// 2. weihnachtstag
+	variabledays[OFFSET_W2-1].mon=12;
+	variabledays[OFFSET_3K-1].day=6;					// hl. 3 koenige
+	variabledays[OFFSET_3K-1].mon=1;
+	variabledays[OFFSET_N-1].day=1;						// neujahr
+	variabledays[OFFSET_N-1].mon=1;
+	variabledays[OFFSET_S-1].day=31;					// sylvester
+	variabledays[OFFSET_S-1].mon=12;
+	variabledays[OFFSET_V-1].day=14;					// valentinstag
+	variabledays[OFFSET_V-1].mon=2;
+	variabledays[OFFSET_1M-1].day=1;					// 1. may
+	variabledays[OFFSET_1M-1].mon=5;
+	variabledays[OFFSET_MH-1].day=15;					// maria himmelfahrt
+	variabledays[OFFSET_MH-1].mon=8;
+	variabledays[OFFSET_NI-1].day=6;					// nikolaus
+	variabledays[OFFSET_NI-1].mon=12;
+	variabledays[OFFSET_ND-1].day=3;					// tag der deutschen einheit
+	variabledays[OFFSET_ND-1].mon=10;
+	variabledays[OFFSET_NA-1].day=26;					// nationalfeiertag oesterreich
+	variabledays[OFFSET_NA-1].mon=10;
 }
 
 /******************************************************************************
@@ -1212,7 +1197,7 @@ int IsEvent(int day, int month, int year)
 		{
 			// first check for any of the holidays: eastern, etc.
 			for (i=1;i<=NOF_VDAYS;i++)
-				if ((varaibledays[i-1].mon==month) && (varaibledays[i-1].day==day))
+				if ((variabledays[i-1].mon==month) && (variabledays[i-1].day==day))
 				{
 					iEventType[j][iCnt++]=MAXENTRYS+i;
 					iCntEvents[j]++;
@@ -1336,7 +1321,7 @@ void LoadDatabase(void)
 	char* p2;
 	
 	// read the tuxcal-event-file
-	if ((fd_evt = fopen(CFGPATH EVTFILE, "r"))!=NULL)
+	if ((fd_evt = fopen(CONFIGDIR EVTFILE, "r"))!=NULL)
 	{
 		// read line by line
 		while (fgets(linebuffer, sizeof(linebuffer), fd_evt))
@@ -1474,7 +1459,7 @@ void SaveDatabase(void)
 	char info_yr2[5];
 		
 	// open the tuxcal-event-file
-	if ((fd_evt = fopen(CFGPATH EVTFILE, "w"))!=NULL)
+	if ((fd_evt = fopen(CONFIGDIR EVTFILE, "w"))!=NULL)
 	{
 		while (iEntry<MAXENTRYS)
 		{
@@ -1576,6 +1561,7 @@ void ReadSTimer()
 */
 void *InterfaceThread(void *arg)
 {
+	(void)arg;
 	int fd_sock, fd_conn;																					// file for socket and connection
 	struct sockaddr_un srvaddr;
 	socklen_t addrlen;
@@ -1645,8 +1631,8 @@ void *InterfaceThread(void *arg)
 				slog ? syslog(LOG_DAEMON | LOG_INFO, "update") : printf("TuxCalD <update>\n");
 				int iOnlineTmp = online;
 				online = 0;																															// stop output now
-				memset(lbb, 0, var_screeninfo.xres*var_screeninfo.yres);								// clear buffer for framebuffer-writing to transparent
-				memcpy(lfb, lbb, var_screeninfo.xres*var_screeninfo.yres);							// empty framebuffer
+				memset(lbb, 0, fix_screeninfo.line_length*var_screeninfo.yres);								// clear buffer for framebuffer-writing to transparent
+				memcpy(lfb, lbb,fix_screeninfo.line_length*var_screeninfo.yres);// empty framebuffer
 				ReadConf();																															// load configuration
 				LoadDatabase();																													// load database
 				online = iOnlineTmp;
@@ -1713,7 +1699,7 @@ void SwapEndianChunk(unsigned char *chunk)
 	wave->ChunkID = (wave->ChunkID << 24) | ((wave->ChunkID & 0x0000ff00) << 8) | ((wave->ChunkID & 0x00ff0000) >> 8) | (wave->ChunkID >> 24);
 	wave->ChunkSize = (wave->ChunkSize << 24) | ((wave->ChunkSize & 0x0000ff00) << 8) | ((wave->ChunkSize & 0x00ff0000) >> 8) | (wave->ChunkSize >> 24);
 }
-
+#if 0
 /******************************************************************************
  * PlaySound
  ******************************************************************************/
@@ -1850,12 +1836,12 @@ void PlaySound(unsigned char *file)
 
 	close(dsp);
 }
-
+#endif 
 /******************************************************************************
  * EncodeBase64
  ******************************************************************************/
 // from tuxmaild
-void EncodeBase64(char *decodedstring, int decodedlen)
+void EncodeBase64(char *DecodedString, int decodedlen)
 {
 	char encodingtable[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 	int src_index, dst_index;
@@ -1863,10 +1849,10 @@ void EncodeBase64(char *decodedstring, int decodedlen)
 	memset(encodedstring, 0, sizeof(encodedstring));
 	for(src_index = dst_index = 0; src_index < decodedlen; src_index += 3, dst_index += 4)
 	{
-		encodedstring[0 + dst_index] = encodingtable[decodedstring[src_index] >> 2];
-		encodedstring[1 + dst_index] = encodingtable[(decodedstring[src_index] & 3) << 4 | decodedstring[1 + src_index] >> 4];
-		encodedstring[2 + dst_index] = encodingtable[(decodedstring[1 + src_index] & 15) << 2 | decodedstring[2 + src_index] >> 6];
-		encodedstring[3 + dst_index] = encodingtable[decodedstring[2 + src_index] & 63];
+		encodedstring[0 + dst_index] = encodingtable[DecodedString[src_index] >> 2];
+		encodedstring[1 + dst_index] = encodingtable[(DecodedString[src_index] & 3) << 4 | DecodedString[1 + src_index] >> 4];
+		encodedstring[2 + dst_index] = encodingtable[(DecodedString[1 + src_index] & 15) << 2 | DecodedString[2 + src_index] >> 6];
+		encodedstring[3 + dst_index] = encodingtable[DecodedString[2 + src_index] & 63];
 	}
 
 	if(decodedlen % 3)
@@ -2072,16 +2058,16 @@ void NotifyUser()
 		}
 		close(sock);
 	}
-	
+#if 0 //FIXME
 	// audio notify
 	if (audio == 'Y')
 	{
-		if (iCntTmEvents) PlaySound(CFGPATH SNDFILE3);
-		else if (iBirthday) PlaySound(CFGPATH SNDFILE1);
-		else PlaySound(CFGPATH SNDFILE2);
+		if (iCntTmEvents) PlaySound(CONFIGDIR SNDFILE3);
+		else if (iBirthday) PlaySound(CONFIGDIR SNDFILE1);
+		else PlaySound(CONFIGDIR SNDFILE2);
 	}
-			
-	sprintf(tmp_buffer,"%s %d %d",CFGPATH SHELLFILE,iCntTmEvents,iBirthday);
+#endif			
+	sprintf(tmp_buffer,"%s %d %d",CONFIGDIR SHELLFILE,iCntTmEvents,iBirthday);
 	system(tmp_buffer);
 }		
 
@@ -2131,7 +2117,12 @@ void SigHandler(int signal)
 			else fclose(fopen(CLKFILE, "w"));
 			if (slog) syslog(LOG_DAEMON | LOG_INFO, "show/hide the clock");
 			else printf("TuxCalD <show/hide the clock>\n");
-			break;	
+			break;
+		default:
+			fprintf(stderr, "TuxcalD <error> - killed with signal %i\n", signal);
+			unlink(PIDFILE);
+			unlink(SCKFILE);
+			exit(1);
 	}
 }
 
@@ -2140,7 +2131,7 @@ void SigHandler(int signal)
  ******************************************************************************/
 int main(int argc, char **argv)
 {
-	char cvs_revision[] = "$Revision$";
+	char cvs_revision[] = "$Revision: 1.13 $";
 	int param, nodelay = 0;
 	pthread_t thread_id;
 	void *thread_result = 0;
@@ -2161,12 +2152,14 @@ int main(int argc, char **argv)
 				slog = 1;
 				openlog("TuxCalD", LOG_ODELAY, LOG_DAEMON);
 			}
+#if 0
 			else if(!strcmp(argv[param], "-play"))
 			{
 				param++;
 				PlaySound(argv[param]);
 				return 0;
 			}
+#endif
 			else if(!strcmp(argv[param], "-v"))
 			{
 				printf("%s\r\n",versioninfo_d);
@@ -2253,6 +2246,13 @@ int main(int argc, char **argv)
 		return -1;
 	}
 
+	if (signal(SIGSEGV, SigHandler) == SIG_ERR)
+	{
+		slog ? syslog(LOG_DAEMON | LOG_INFO, "Installation of Signalhandler for SIGSEGV failed") : printf("TuxCalD <Installation of Signalhandler for SIGSEGV failed>\n");
+		return -1;
+	}
+
+
 	// install communication interface
 	if (pthread_create(&thread_id, NULL, InterfaceThread, NULL))
 	{
@@ -2293,6 +2293,7 @@ int main(int argc, char **argv)
 	int iNewMails = 0;																		// new mail received by tuxmail	
 	int iFG;
 	int iBG;
+	struct stat keybuf;
 	
 	// check events until signal to finish
 	do
@@ -2344,9 +2345,9 @@ int main(int argc, char **argv)
 					show_clock = 'N';
 				}
 			}
-			
+
 			//------------------- part for showing the clock		
-			if ((iFB) && (disp_clock=='Y') && (show_clock=='Y'))					// should we display the clock
+			if ((iFB) && (disp_clock=='Y') && (show_clock=='Y') && (stat(KBLCKFILE,&keybuf) != 0))					// should we display the clock
 			{				
 				char line[10];
 				if (disp_mail=='Y')
@@ -2364,7 +2365,8 @@ int main(int argc, char **argv)
 					{
 						if (iNewMails)	
 						{
-							ClearScreen();
+							//ClearScreen();
+							memset(lbb, 0, fix_screeninfo.line_length*var_screeninfo.yres);
 						}
 						iNewMails=0;
 					}
@@ -2377,9 +2379,8 @@ int main(int argc, char **argv)
 					}
 					iNewMails=0;
 				}
-				
-				strftime(info,MAXCLOCKINFOLEN,infomsgclock[(disp_sec == 'Y') ? 1 : 0],at);		
-				iLen1=(strlen(info)*iFontSize)/2;				
+				strftime(info,MAXCLOCKINFOLEN,infomsgclock[(disp_sec == 'Y') ? 1 : 0],at);
+				iLen1=(strlen(info)*iFontSize)/2;
 				if (iNewMails)
 				{
 					RenderBox(0,8,iFontSize*2,iFontSize+2,FILL,iBG);
@@ -2390,7 +2391,7 @@ int main(int argc, char **argv)
 					}
 					else RenderSObject((iFontSize*2-OBJ_SX)/2,(iFontSize-OBJ_SY)/2+8,iFG,OBJ_LETTER);
 				}
-				RenderInt(info,iNewMails?(iFontSize*2+5):0,iFontSize,iLen1, (startx>(ex/2))?FIXEDRIGHT:FIXEDLEFT, iFont, iFG,-1,iBG);
+				RenderInt(info,iNewMails?(iFontSize*2+5):0,iFontSize,iLen1, (Startx>(Ex/2))?FIXEDRIGHT:FIXEDLEFT, iFont, iFG,-1,iBG);
 				if (iNewMails) iLen1+=(iFontSize*2+5);
 				
 				iLen2=0;
@@ -2398,28 +2399,28 @@ int main(int argc, char **argv)
 				{
 					strftime(info,MAXCLOCKINFOLEN,infomsg[0][osdidx],at);
 					iLen2=(strlen(info)*iFontSize)/2;
-					RenderInt(info,0,2*iFontSize,iLen2, (startx>(ex/2))?FIXEDRIGHT:FIXEDLEFT, iFont, iFG,-1,iBG);
+					RenderInt(info,0,2*iFontSize,iLen2, (Startx>(Ex/2))?FIXEDRIGHT:FIXEDLEFT, iFont, iFG,-1,iBG);
 				}
 				
 				int iLen;
 				iLen=(iLen1>iLen2)?iLen1:iLen2;
 				
 				// output to framebuffer	
-				pmem1=lfb+starty*var_screeninfo.xres+startx;
-				pmem2=lbb+(starty+3)*var_screeninfo.xres+startx;
+				pmem1=lfb+Starty*fix_screeninfo.line_length+Startx*4;
+				pmem2=lbb+(Starty+3)*fix_screeninfo.line_length+Startx*4;
 				if (iNewMails) pmem1-=(OBJ_SX+15);
 				for (y=0;y<(iFontSize);y++)
 				{			
-					memcpy(pmem1,pmem2,iLen);
-					pmem1+=var_screeninfo.xres;
-					pmem2+=var_screeninfo.xres;
+					memcpy(pmem1,pmem2,iLen*4);
+					pmem1+=fix_screeninfo.line_length;
+					pmem2+=fix_screeninfo.line_length;
 				}
 				if (disp_date=='Y')
 					for (y=0;y<(iFontSize);y++)
 					{			
-						memcpy(pmem1,pmem2,iLen);
-						pmem1+=var_screeninfo.xres;
-						pmem2+=var_screeninfo.xres;
+						memcpy(pmem1,pmem2,iLen*4);
+						pmem1+=fix_screeninfo.line_length;
+						pmem2+=fix_screeninfo.line_length;
 					}
 			}
 			
