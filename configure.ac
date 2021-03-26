@@ -33,7 +33,6 @@ shellexec/Makefile
 stb-backup/Makefile
 stb-startup/Makefile
 stb-startup-tuxbox/Makefile
-stb-startup-vu/Makefile
 tuxmail/Makefile
 tuxmail/daemon/Makefile
 tuxcal/Makefile

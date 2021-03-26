@@ -6,15 +6,9 @@ SUBDIRS = \
 #	include tuxmail tuxtxt tuxcom tuxcal tuxclock fx2 vncviewer enigma shellexec tuxwetter sysinfo clock logomask blockads links
 
 if BOXTYPE_ARMBOX
-if BOXMODEL_VUPLUS_ARM
-SUBDIRS += \
-	stb-startup-vu \
-	stb-backup
-else
 SUBDIRS += \
 	stb-startup \
 	stb-backup
-endif
 endif
 
 #if BOXTYPE_ARMBOX
