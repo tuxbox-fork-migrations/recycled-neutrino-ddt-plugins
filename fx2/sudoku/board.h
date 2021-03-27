@@ -47,7 +47,7 @@ typedef struct {
 #define LEVEL_MAX		7
 #define LEVEL_DEFAULT		5
 
-#define GAMEFILE		PLIGINDIR  "/sudoku.sav"
+#define GAMEFILE		PLUGINDIR  "/sudoku.sav"
 #define SETTINGSFILE		CONFIGDIR "/sudoku.conf"
 #define SETTINGSFILE_VERSION	2
 

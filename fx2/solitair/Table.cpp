@@ -391,7 +391,7 @@ void CTable::Load()
 {
 	int SavShowCards = 0;
 
-	FILE* sav = fopen( PLIGINDIR "/solitair.sav", "rb" );
+	FILE* sav = fopen( PLUGINDIR "/solitair.sav", "rb" );
 
 	if( sav == NULL ) return;
 
