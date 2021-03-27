@@ -498,9 +498,9 @@ int tetris_exec( int fdfb, int fdrc, int fdlcd, char *cfgfile )
 		free(line);
 	}
 
-	fd = open( GAMESDIR "/tetris.hscore", O_RDONLY );
+	fd = open( PLUGINDIR "/tetris.hscore", O_RDONLY );
 	if ( fd == -1 ) {
-		mkdir( GAMESDIR, 567 );
+		mkdir( PLUGINDIR, 567 );
 		for( i=0; i < 8; i++ ) {
 			strcpy(hsc[i].name,"nobody");
 			hsc[i].points=30;
@@ -610,7 +610,7 @@ int tetris_exec( int fdfb, int fdrc, int fdlcd, char *cfgfile )
 	FBClose();
 
 	/* save hscore */
-	fd = open( GAMESDIR "/tetris.hscore", O_CREAT|O_WRONLY, 438 );
+	fd = open( PLUGINDIR "/tetris.hscore", O_CREAT|O_WRONLY, 438 );
 	if ( fd != -1 ) {
 		write( fd, hsc, sizeof(hsc) );
 		close(fd);

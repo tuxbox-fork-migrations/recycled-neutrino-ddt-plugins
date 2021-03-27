@@ -245,7 +245,7 @@ void CTable::MoveCursor(unsigned char _direction)
 
 void CTable::Save()
 {
-	FILE* sav = fopen( GAMESDIR "/solitair.sav", "wb" );
+	FILE* sav = fopen( PLUGINDIR "/solitair.sav", "wb" );
 
 	if( sav == NULL ) return;
 
@@ -391,7 +391,7 @@ void CTable::Load()
 {
 	int SavShowCards = 0;
 
-	FILE* sav = fopen( GAMESDIR "/solitair.sav", "rb" );
+	FILE* sav = fopen( PLIGINDIR "/solitair.sav", "rb" );
 
 	if( sav == NULL ) return;
 
