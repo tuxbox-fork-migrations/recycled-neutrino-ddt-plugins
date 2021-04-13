@@ -1,7 +1,7 @@
 #!/bin/sh
 # Script for complete image backup
 # License: GPLv2 or later
-Version="1.26a vom 27.09.2020"
+Version="1.27 vom 16.03.2021"
 Copyright="(C) 2018-2020 DboxOldie / BPanther / Frankenstone / Fritz"
 
 #
@@ -39,7 +39,8 @@ read_bootargs()
 {
 	rootsubdir=""
 	kdev=""
-	for i in $(cat /sys/firmware/devicetree/base/chosen/bootargs);do
+	[ -e /sys/firmware/devicetree/base/chosen/bootargs ] && bootargs="/sys/firmware/devicetree/base/chosen/bootargs" || bootargs="/proc/cmdline"
+	for i in $(cat $bootargs);do
 		[ -n "$(echo $i | grep 'root=')" ] && rootmtd=$(echo $i | cut -d '=' -f2 | cut -d '/' -f3)
 		[ -n "$(echo $i | grep 'rootsubdir=')" ] && rootsubdir=$(echo $i | cut -d '=' -f2)
 		[ -n "$(echo $i | grep 'kernel=')" ] && kdev=$(echo $i | cut -d '=' -f2)
@@ -117,6 +118,15 @@ do
 	[ "$parm" == "none" ] && archive=$parm
 	[ "$(echo ${parm:0:1})" == "/" ] && save_path=$parm
 	[ "$parm" == "select_dir" ] && select_dir=1
+
+	if [ "$parm" == "gui" ] && [ "$model" == "solo4k" -o "$model" == "ultimo4k" -o "$model" == "uno4k" -o "$model" == "uno4kse" ] && [ "$rootmtd" == "mmcblk0p4" ]; then
+		parm="nogui" && select_dir=1
+	elif [ "$parm" == "gui" ] && [ "$model" == "zero4k" ] && [ "$rootmtd" == "mmcblk0p7" ]; then
+		parm="nogui" && select_dir=1
+	elif [ "$parm" == "gui" ] && [ "$model" == "duo4k" -o "$model" == "duo4kse" ] && [ "$rootmtd" == "mmcblk0p9" ]; then
+		parm="nogui" && select_dir=1
+	fi
+
 	if [ "$parm" == "gui" ]; then
 		gui_mode=1
 		msgbox title="Partitions-Backup erstellen" msg="~cDiese Partitionen stehen zur Auswahl:" select="Partition 1, Partition 2, Partition 3, Partition 4" order=4 default=$bkp_part
