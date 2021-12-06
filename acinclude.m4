@@ -191,7 +191,7 @@ AC_ARG_WITH(boxtype,
 			BOXTYPE="duckbox"
 			BOXMODEL="$withval"
 		;;
-		hd51|multibox|multiboxse|hd60|hd61|bre2ze4k|vusolo4k|vuduo4k|vuduo4kse|vuultimo4k|vuzero4k|vuuno4kse|vuuno4k|h7|osmini4k|osmio4k|osmio4kplus|sf8008|sf8008m|ustym4kpro|h9combo)
+		hd51|multibox|multiboxse|hd60|hd61|bre2ze4k|vusolo4k|vuduo4k|vuduo4kse|vuultimo4k|vuzero4k|vuuno4kse|vuuno4k|h7|osmini4k|osmio4k|osmio4kplus|sf8008|sf8008m|ustym4kpro|h9combo|h9s)
 			BOXTYPE="armbox"
 			BOXMODEL="$withval"
 		;;
@@ -209,7 +209,7 @@ AC_ARG_WITH(boxmodel,
 	AS_HELP_STRING([--with-boxmodel], [valid for generic: raspi])
 AS_HELP_STRING([], [valid for duckbox: ufs910, ufs912, ufs913, ufs922, atevio7500, fortis_hdbox, octagon1008, cuberevo, cuberevo_mini, cuberevo_mini2, cuberevo_250hd, cuberevo_2000hd, cuberevo_3000hd, ipbox9900, ipbox99, ipbox55, tf7700])
 AS_HELP_STRING([], [valid for spark: spark, spark7162])
-AS_HELP_STRING([], [valid for armbox: bre2ze4k, hd51, multibox, multiboxse, hd60, hd61, vusolo4k, vuduo4k, vuduo4kse, vuultimo4k, vuzero4k, vuuno4kse, vuuno4k, h7, osmini4k, osmio4k, osmio4kplus, sf8008, sf8008m, ustym4kpro, h9combo])
+AS_HELP_STRING([], [valid for armbox: bre2ze4k, hd51, multibox, multiboxse, hd60, hd61, vusolo4k, vuduo4k, vuduo4kse, vuultimo4k, vuzero4k, vuuno4kse, vuuno4k, h7, osmini4k, osmio4k, osmio4kplus, sf8008, sf8008m, ustym4kpro, h9combo, h9s])
 AS_HELP_STRING([], [valid for mipsbox: vuduo, vuduo2, dm8000, gb800se, osnino, osninoplus, osninopro]),
 	[case "${withval}" in
 		ufs910|ufs912|ufs913|ufs922|atevio7500|fortis_hdbox|octagon1008|cuberevo|cuberevo_mini|cuberevo_mini2|cuberevo_250hd|cuberevo_2000hd|cuberevo_3000hd|ipbox9900|ipbox99|ipbox55|tf7700)
@@ -226,7 +226,7 @@ AS_HELP_STRING([], [valid for mipsbox: vuduo, vuduo2, dm8000, gb800se, osnino, o
 				AC_MSG_ERROR([unknown model $withval for boxtype $BOXTYPE])
 			fi
 		;;
-		hd51|multibox|multiboxse|hd60|hd61|bre2ze4k|vusolo4k|vuduo4k|vuduo4kse|vuultimo4k|vuzero4k|vuuno4kse|vuuno4k|h7|osmini4k|osmio4k|osmio4kplus|sf8008|sf8008m|ustym4kpro|h9combo)
+		hd51|multibox|multiboxse|hd60|hd61|bre2ze4k|vusolo4k|vuduo4k|vuduo4kse|vuultimo4k|vuzero4k|vuuno4kse|vuuno4k|h7|osmini4k|osmio4k|osmio4kplus|sf8008|sf8008m|ustym4kpro|h9combo|h9s)
 			if test "$BOXTYPE" = "armbox"; then
 				BOXMODEL="$withval"
 			else
@@ -310,6 +310,7 @@ AM_CONDITIONAL(BOXMODEL_SF8008, test "$BOXMODEL" = "sf8008")
 AM_CONDITIONAL(BOXMODEL_SF8008M, test "$BOXMODEL" = "sf8008m")
 AM_CONDITIONAL(BOXMODEL_USTYM4KPRO, test "$BOXMODEL" = "ustym4kpro")
 AM_CONDITIONAL(BOXMODEL_H9COMBO, test "$BOXMODEL" = "h9combo")
+AM_CONDITIONAL(BOXMODEL_H9S, test "$BOXMODEL" = "h9s")
 
 AM_CONDITIONAL(BOXMODEL_RASPI, test "$BOXMODEL" = "raspi")
 
@@ -429,6 +430,8 @@ elif test "$BOXMODEL" = "ustym4kpro"; then
 	AC_DEFINE(BOXMODEL_USTYM4KPRO, 1, [ustym4kpro])
 elif test "$BOXMODEL" = "h9combo"; then
 	AC_DEFINE(BOXMODEL_H9COMBO, 1, [h9combo])
+elif test "$BOXMODEL" = "h9s"; then
+	AC_DEFINE(BOXMODEL_H9S, 1, [h9s])
 fi
 
 # all vuplus BOXMODELs

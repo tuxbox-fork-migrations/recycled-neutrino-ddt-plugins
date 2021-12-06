@@ -8,7 +8,7 @@
 #define RC_DEVICE_FALLBACK "/dev/input/event0"
 #endif
 
-#elif BOXMODEL_H7 || BOXMODEL_H9COMBO
+#elif BOXMODEL_H7 || BOXMODEL_H9COMBO || BOXMODEL_H9S
 #ifndef RC_DEVICE
 #define RC_DEVICE "/dev/input/event2"
 #endif
