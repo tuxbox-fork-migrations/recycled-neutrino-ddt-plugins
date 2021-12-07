@@ -988,7 +988,7 @@ int main()
 	if (rc < 0)
 #if HAVE_DUCKBOX_HARDWARE || BOXMODEL_VUPLUS_ALL
 		rc = open("/dev/input/event0", O_RDONLY);
-#elif BOXMODEL_H7 || BOXMODEL_H9COMBO || BOXMODEL_H9S
+#elif BOXMODEL_H7 || BOXMODEL_H9COMBO || BOXMODEL_H9
 		rc = open("/dev/input/event2", O_RDONLY);
 #else
 		rc = open("/dev/input/event1", O_RDONLY);
