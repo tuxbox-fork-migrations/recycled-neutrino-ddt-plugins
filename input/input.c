@@ -605,9 +605,10 @@ int main (int argc, char **argv)
 		stride = DEFAULT_XRES;
 #else
 		stride = fix_screeninfo.line_length/sizeof(uint32_t);
-		if (stride == 7680 && var_screeninfo.xres == 1280) {
+#if !BOXMODEL_VUPLUS_ALL
+		if (stride == 7680 && var_screeninfo.xres == 1280)
+#endif
 			var_screeninfo.yres = 1080;
-		}
 		if(!(lbb = malloc(var_screeninfo.xres*var_screeninfo.yres*sizeof(uint32_t))))
 		{
 			perror(__plugin__ " <allocating of Backbuffer>\n");
