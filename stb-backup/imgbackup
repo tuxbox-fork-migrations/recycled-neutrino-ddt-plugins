@@ -1,8 +1,8 @@
 #!/bin/sh
 # Script for complete image backup
 # License: GPLv2 or later
-Version="1.32 vom 13.10.2022"
-Copyright="(C) 2018-2021 DboxOldie / BPanther / Frankenstone / Fritz"
+Version="1.32 vom 14.10.2022"
+Copyright="(C) 2018-2022 DboxOldie / BPanther / Frankenstone / Fritz"
 
 #
 file=$0
@@ -111,7 +111,7 @@ select_backup_dir() {
 #
 # Root und Kernel Partition bestimmen
 #
-if [ "$model" == "hd51" -o "$model" == "h7" -o "$model" == "bre2ze4k" -o "$model" == "e4hdultra" ]; then
+if [ "$model" == "hd51" -o "$model" == "h7" -o "$model" == "bre2ze4k" -o "$model" == "e4hd" ]; then
 	read_bootargs
 else
 	read_bootargs_vu
@@ -143,7 +143,7 @@ do
 		B_PART=`echo "Backup Partition: ${parm:2:3}"`
 	fi
 	if [ "$parm" == "-m1" ]; then
-		if [ "$model" == "hd51" -o "$model" == "h7" -o "$model" == "bre2ze4k" -o "$model" == "e4hdultra" ]; then
+		if [ "$model" == "hd51" -o "$model" == "h7" -o "$model" == "bre2ze4k" -o "$model" == "e4hd" ]; then
 			[ $new_layout == 0 ] && rootmtd=mmcblk0p3 && multi=1
 			[ $new_layout == 1 ] && kernelnumber=2 && rootsubdir="linuxrootfs1" && rootmtd=mmcblk0p3 && multi=1
 		elif [ "$model" == "solo4k" -o "$model" == "ultimo4k" -o "$model" == "uno4k" -o "$model" == "uno4kse" -o "$model" == "zero4k" -o "$model" == "duo4k" -o "$model" == "duo4kse" ]; then
@@ -152,7 +152,7 @@ do
 		destname="$(echo ${parm:1:2})-"$destname
 		B_PART=`echo "Backup Partition: ${parm:2:3}"`
 	elif [ "$parm" == "-m2" ]; then
-		if [ "$model" == "hd51" -o "$model" == "h7" -o "$model" == "bre2ze4k" -o "$model" == "e4hdultra" ]; then
+		if [ "$model" == "hd51" -o "$model" == "h7" -o "$model" == "bre2ze4k" -o "$model" == "e4hd" ]; then
 			[ $new_layout == 0 ] && rootmtd=mmcblk0p5 && multi=1
 			[ $new_layout == 1 ] && kernelnumber=4 && rootsubdir="linuxrootfs2" && rootmtd=$multidev && multi=1
 		elif [ "$model" == "solo4k" -o "$model" == "ultimo4k" -o "$model" == "uno4k" -o "$model" == "uno4kse" -o "$model" == "zero4k" -o "$model" == "duo4k" -o "$model" == "duo4kse" ]; then
@@ -161,7 +161,7 @@ do
 		destname="$(echo ${parm:1:2})-"$destname
 		B_PART=`echo "Backup Partition: ${parm:2:3}"`
 	elif [ "$parm" == "-m3" ]; then
-		if [ "$model" == "hd51" -o "$model" == "h7" -o "$model" == "bre2ze4k" -o "$model" == "e4hdultra" ]; then
+		if [ "$model" == "hd51" -o "$model" == "h7" -o "$model" == "bre2ze4k" -o "$model" == "e4hd" ]; then
 			[ $new_layout == 0 ] && rootmtd=mmcblk0p7 && multi=1
 			[ $new_layout == 1 ] && kernelnumber=5 && rootsubdir="linuxrootfs3" && rootmtd=$multidev && multi=1
 		elif [ "$model" == "solo4k" -o "$model" == "ultimo4k" -o "$model" == "uno4k" -o "$model" == "uno4kse" -o "$model" == "zero4k" -o "$model" == "duo4k" -o "$model" == "duo4kse" ]; then
@@ -170,7 +170,7 @@ do
 		destname="$(echo ${parm:1:2})-"$destname
 		B_PART=`echo "Backup Partition: ${parm:2:3}"`
 	elif [ "$parm" == "-m4" ]; then
-		if [ "$model" == "hd51" -o "$model" == "h7" -o "$model" == "bre2ze4k" -o "$model" == "e4hdultra" ]; then
+		if [ "$model" == "hd51" -o "$model" == "h7" -o "$model" == "bre2ze4k" -o "$model" == "e4hd" ]; then
 			[ $new_layout == 0 ] && rootmtd=mmcblk0p9 && multi=1
 			[ $new_layout == 1 ] && kernelnumber=6 && rootsubdir="linuxrootfs4" && rootmtd=$multidev && multi=1
 		elif [ "$model" == "solo4k" -o "$model" == "ultimo4k" -o "$model" == "uno4k" -o "$model" == "uno4kse" -o "$model" == "zero4k" -o "$model" == "duo4k" -o "$model" == "duo4kse" ]; then
@@ -219,7 +219,7 @@ echo
 df "$save_path" | grep -q tmpfs && DIR_CHECK=$? || DIR_CHECK=$?
 [ "$DIR_CHECK" == "0" ] && [ "${save_path:0:4}" != "/tmp" ] && echo "  Das gewählte Verzeichnis ist ungültig !" && exit
 
-if [ "$model" == "hd51" -o "$model" == "h7" -o "$model" == "bre2ze4k" -o "$model" == "e4hdultra" ]; then
+if [ "$model" == "hd51" -o "$model" == "h7" -o "$model" == "bre2ze4k" -o "$model" == "e4hd" ]; then
 	echo "  Image Backup für Boxmodel '$model' startet..."
 	[ $new_layout == 0 ] && kernelnumber=$((rootnumber - 1))
 elif [ "$model" == "solo4k" -o "$model" == "ultimo4k" -o "$model" == "uno4k" -o "$model" == "uno4kse" ]; then
