@@ -77,6 +77,7 @@ elseif boxmodel == "e4hd" then
 	root2 = 5
 	root3 = 7
 	root4 = 9
+	vumodel = boxmodel
 else
 	return
 end
