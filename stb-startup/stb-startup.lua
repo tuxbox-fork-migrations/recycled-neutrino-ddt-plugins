@@ -400,7 +400,7 @@ function make_cmdline(boxname, rn, rp)
 			cmdline = "boot emmcflash0.kernel" .. rn ..  " 'brcm_cma=440M@328M brcm_cma=192M@768M root=/dev/mmcblk0p" .. rp .. " rw rootwait " .. boxname .. "_4.boxmode=1'\n"
 		end
 	elseif boxname == "e4hd" then
-		cmdline = "boot emmcflash0.kernel" .. rn ..  " 'brcm_cma=504M@264M brcm_cma=192M@768M brcm_cma=1024M@2048M root=/dev/mmcblk0p" .. rp .. " rw rootwait " .. boxname .. "_4.boxmode=5'\n"
+		cmdline = "boot emmcflash0.kernel" .. rn ..  " 'brcm_cma=504M@264M brcm_cma=192M@768M brcm_cma=1024M@2048M root=/dev/mmcblk0p" .. rp .. " rw rootwait 8100s_4.boxmode=5'\n"
 	end
 	return cmdline
 end
