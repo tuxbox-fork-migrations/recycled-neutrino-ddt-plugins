@@ -267,13 +267,8 @@ unsigned short tr[] = {0x0000,  0x0000,  0x0000,  0x0000,  0x0000,  0x0000,  0x0
 struct fb_cmap colormap = {1, 14, rd, gn, bl, tr};
 #endif
 
-
 int trans_map     [] = {BLUE1,BLUE_TRANSP,TRANSP};
 int trans_map_mark[] = {GRAY2,GRAY_TRANSP,GRAY_TRANSP};
-
-#if defined HAVE_DBOX_HARDWARE
-struct input_event ev;
-#endif
 
 unsigned short rccode;
 char kbcode;

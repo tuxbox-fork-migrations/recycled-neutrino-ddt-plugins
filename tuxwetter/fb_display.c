@@ -22,9 +22,6 @@
 //#include "config.h"
 #include <string.h>
 #include <stdio.h>
-#ifdef HAVE_DBOX_HARDWARE
-#include <dbox/fb.h>
-#endif
 #include "tuxwetter.h"
 #include "parser.h"
 //#include "bmps.h"

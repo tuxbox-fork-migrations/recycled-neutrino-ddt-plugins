@@ -37,7 +37,7 @@ static int sync_blitter = 0;
  * GetRCCode  (Code from Tuxmail)
  ******************************************************************************/
 
-#if defined HAVE_DBOX_HARDWARE || HAVE_SPARK_HARDWARE || defined(HAVE_DUCKBOX_HARDWARE) || HAVE_ARM_HARDWARE || HAVE_MIPS_HARDWARE
+#if HAVE_SPARK_HARDWARE || defined(HAVE_DUCKBOX_HARDWARE) || HAVE_ARM_HARDWARE || HAVE_MIPS_HARDWARE
 int GetRCCode()
 {
 	static int count = 0;
@@ -3063,7 +3063,7 @@ int DoEditString(int x, int y, int width, unsigned int maxchars, char* str, int 
 
 	do{
 		while (GetRCCode(RC_EDIT) == 0);
-//#ifdef HAVE_DBOX_HARDWARE
+
 		if ((rccode >=0x20) && (rccode < 0x0100))
 		{
 		  kbcode=rccode;
@@ -3102,7 +3102,7 @@ int DoEditString(int x, int y, int width, unsigned int maxchars, char* str, int 
 		}
 		else
 		  kbcode = 0;
-//#endif
+
 		if (kbcode != 0 && markmode == 0)
 		{
 			if (kbcode == 0x7f) // backspace
