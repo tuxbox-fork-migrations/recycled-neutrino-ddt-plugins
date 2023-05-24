@@ -37,7 +37,7 @@ static int sync_blitter = 0;
  * GetRCCode  (Code from Tuxmail)
  ******************************************************************************/
 
-#if defined HAVE_DBOX_HARDWARE || defined HAVE_COOL_HARDWARE || HAVE_TRIPLEDRAGON || HAVE_SPARK_HARDWARE || defined(HAVE_DUCKBOX_HARDWARE) || HAVE_ARM_HARDWARE || HAVE_MIPS_HARDWARE
+#if defined HAVE_DBOX_HARDWARE || HAVE_SPARK_HARDWARE || defined(HAVE_DUCKBOX_HARDWARE) || HAVE_ARM_HARDWARE || HAVE_MIPS_HARDWARE
 int GetRCCode()
 {
 	static int count = 0;
@@ -982,7 +982,7 @@ int main()
 	}
 
 	/* open Remote Control */
-#if HAVE_COOL_HARDWARE || HAVE_TRIPLEDRAGON || HAVE_SPARK_HARDWARE || HAVE_DUCKBOX_HARDWARE || HAVE_ARM_HARDWARE || HAVE_MIPS_HARDWARE
+#if HAVE_SPARK_HARDWARE || HAVE_DUCKBOX_HARDWARE || HAVE_ARM_HARDWARE || HAVE_MIPS_HARDWARE
 	rc = open("/dev/input/nevis_ir", O_RDONLY);
 #if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_DUCKBOX_HARDWARE) || defined(HAVE_ARM_HARDWARE)
 	if (rc < 0)
