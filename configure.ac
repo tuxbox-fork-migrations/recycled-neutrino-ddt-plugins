@@ -29,6 +29,7 @@ include/Makefile
 tuxwetter/Makefile
 input/Makefile
 getrc/Makefile
+pr-auto-timer/Makefile
 shellexec/Makefile
 stb-backup/Makefile
 stb-startup/Makefile

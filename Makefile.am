@@ -8,7 +8,13 @@ SUBDIRS = \
 if BOXTYPE_ARMBOX
 SUBDIRS += \
 	stb-startup \
-	stb-backup
+	stb-backup \
+	pr-auto-timer
+endif
+
+if BOXTYPE_MIPSBOX
+SUBDIRS += \
+	pr-auto-timer
 endif
 
 #if BOXTYPE_ARMBOX
@@ -25,4 +31,3 @@ endif
 #pkgconfigdir = $(libdir)/pkgconfig
 #pkgconfig_DATA = \
 #	tuxbox-plugins.pc
-
