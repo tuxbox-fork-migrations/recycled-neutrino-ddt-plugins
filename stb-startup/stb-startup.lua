@@ -4,7 +4,7 @@
 -- STB-Startup for HD51/H7/BRE2ZE4K
 --
 -- Changed, now also for VU+ SOLO 4K, VU+ DUO 4K, VU+ DUO 4K SE, VU+ ULTIMO 4K, VU+ UNO 4K, VU+ UNO 4K SE, VU+ ZERO 4K and E4HD 4K ULTRA
--- by BPanther 13/Oct/2022
+-- by BPanther 29/Jul/2023
 --
 -- Redistribution and use in source and binary forms, with or without modification, 
 -- are permitted provided that the following conditions are met:
