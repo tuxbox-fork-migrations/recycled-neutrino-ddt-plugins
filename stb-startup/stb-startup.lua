@@ -378,11 +378,11 @@ repeat
 		root = root2
 		rootnum = 2
 		colorkey = true
-	elseif (msg == RC['yellow']) then
+	elseif (count_root() > 2 and msg == RC['yellow']) then
 		root = root3
 		rootnum = 3
 		colorkey = true
-	elseif (msg == RC['blue']) then
+	elseif (count_root() > 3 and msg == RC['blue']) then
 		root = root4
 		rootnum = 4
 		colorkey = true
