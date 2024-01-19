@@ -146,7 +146,7 @@ do
 			msgbox title="parted nicht gefunden" msg="~cPartitionen auf 4 gesetzt." icon="error"
 			part_count=4
 		else
-			[ $new_layout == 1 ] && part_count=`$prtd /dev/mmcblk0 print | grep -c  linuxkernel` || part_count=`$prtd /dev/mmcblk0 print | grep -c  rootfs`
+			[ $new_layout == 1 ] && part_count=`$prtd /dev/mmcblk0 print | grep -c linuxkernel` || part_count=`$prtd /dev/mmcblk0 print | grep -c rootfs`
 		fi
 		[ $part_count -gt 2 ] && PART_3=", Partition 3"
 		[ $part_count -gt 3 ] && PART_4=", Partition 4"
