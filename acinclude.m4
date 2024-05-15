@@ -195,7 +195,7 @@ AC_ARG_WITH(boxtype,
 			BOXTYPE="armbox"
 			BOXMODEL="$withval"
 		;;
-		vuduo|vuduo2|vuuno|vuultimo|dm8000|gb800se|osnino|osninoplus|osninopro)
+		vuduo|vuduo2|vuuno|vuultimo|dm820|dm8000|gb800se|osnino|osninoplus|osninopro)
 			BOXTYPE="mipsbox"
 			BOXMODEL="$withval"
 		;;
@@ -210,7 +210,7 @@ AC_ARG_WITH(boxmodel,
 AS_HELP_STRING([], [valid for duckbox: ufs910, ufs912, ufs913, ufs922, atevio7500, fortis_hdbox, octagon1008, cuberevo, cuberevo_mini, cuberevo_mini2, cuberevo_250hd, cuberevo_2000hd, cuberevo_3000hd, ipbox9900, ipbox99, ipbox55, tf7700])
 AS_HELP_STRING([], [valid for spark: spark, spark7162])
 AS_HELP_STRING([], [valid for armbox: bre2ze4k, hd51, e4hdultra, multibox, multiboxse, hd60, hd61, vusolo4k, vuduo4k, vuduo4kse, vuultimo4k, vuzero4k, vuuno4kse, vuuno4k, h7, osmini4k, osmio4k, osmio4kplus, sf8008, sf8008m, ustym4kpro, h9combo, h9])
-AS_HELP_STRING([], [valid for mipsbox: vuduo, vuduo2, vuuno, vuultimo, dm8000, gb800se, osnino, osninoplus, osninopro]),
+AS_HELP_STRING([], [valid for mipsbox: vuduo, vuduo2, vuuno, vuultimo, dm820, dm8000, gb800se, osnino, osninoplus, osninopro]),
 	[case "${withval}" in
 		ufs910|ufs912|ufs913|ufs922|atevio7500|fortis_hdbox|octagon1008|cuberevo|cuberevo_mini|cuberevo_mini2|cuberevo_250hd|cuberevo_2000hd|cuberevo_3000hd|ipbox9900|ipbox99|ipbox55|tf7700)
 			if test "$BOXTYPE" = "duckbox"; then
@@ -233,7 +233,7 @@ AS_HELP_STRING([], [valid for mipsbox: vuduo, vuduo2, vuuno, vuultimo, dm8000, g
 				AC_MSG_ERROR([unknown model $withval for boxtype $BOXTYPE])
 			fi
 		;;
-		vuduo|vuduo2|vuuno|vuultimo|dm8000|gb800se|osnino|osninoplus|osninopro)
+		vuduo|vuduo2|vuuno|vuultimo|dm820|dm8000|gb800se|osnino|osninoplus|osninopro)
 			if test "$BOXTYPE" = "mipsbox"; then
 				BOXMODEL="$withval"
 			else
@@ -302,6 +302,7 @@ AM_CONDITIONAL(BOXMODEL_VUDUO, test "$BOXMODEL" = "vuduo")
 AM_CONDITIONAL(BOXMODEL_VUDUO2, test "$BOXMODEL" = "vuduo2")
 AM_CONDITIONAL(BOXMODEL_VUUNO, test "$BOXMODEL" = "vuuno")
 AM_CONDITIONAL(BOXMODEL_VUULTIMO, test "$BOXMODEL" = "vuultimo")
+AM_CONDITIONAL(BOXMODEL_DM820, test "$BOXMODEL" = "dm820")
 AM_CONDITIONAL(BOXMODEL_DM8000, test "$BOXMODEL" = "dm8000")
 AM_CONDITIONAL(BOXMODEL_GB800SE, test "$BOXMODEL" = "gb800se")
 AM_CONDITIONAL(BOXMODEL_OSNINO, test "$BOXMODEL" = "osnino")
@@ -407,6 +408,8 @@ elif test "$BOXMODEL" = "vuuno4k"; then
 	AC_DEFINE(BOXMODEL_VUUNO4K, 1, [vuuno4k])
 elif test "$BOXMODEL" = "vuduo"; then
 	AC_DEFINE(BOXMODEL_VUDUO, 1, [vuduo])
+elif test "$BOXMODEL" = "dm820"; then
+	AC_DEFINE(BOXMODEL_DM820, 1, [dm820])
 elif test "$BOXMODEL" = "dm8000"; then
 	AC_DEFINE(BOXMODEL_DM8000, 1, [dm8000])
 elif test "$BOXMODEL" = "vuduo2"; then
